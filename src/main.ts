@@ -4,6 +4,8 @@ import { createCountdownView } from "./ui/countdown";
 import { createArrival } from "./ui/arrival";
 import { startScene } from "./scene/scene";
 import { createPointer } from "./input/pointer";
+import { createAudioPlayer } from "./audio/player";
+import { bindAudioToggle } from "./ui/audio-toggle";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const view = createCountdownView({
@@ -15,6 +17,8 @@ const arrival = createArrival({
   arrival: document.getElementById("arrival") as HTMLElement,
 });
 const pointer = createPointer();
+const audio = createAudioPlayer("/audio/aubade.opus");
+bindAudioToggle(document.getElementById("audio-toggle") as HTMLButtonElement, audio);
 
 const t0 = performance.now();
 const uniforms = {
