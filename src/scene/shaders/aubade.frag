@@ -35,6 +35,18 @@ float fbm(vec2 p) {
   return v;
 }
 
+float stars(vec2 uv, float density) {
+  vec2 grid = uv * vec2(uResolution.x / 6.0, uResolution.y / 6.0);
+  vec2 cell = floor(grid);
+  vec2 cellUv = fract(grid) - 0.5;
+  float h = hash21(cell);
+  float spawn = step(0.985, h);
+  float d = length(cellUv);
+  float core = smoothstep(0.15, 0.0, d);
+  float twinkle = 0.5 + 0.5 * sin(uTime * 1.5 + h * 30.0);
+  return core * spawn * twinkle * density;
+}
+
 vec3 dawnGradient(float y, float arrival) {
   float yy = clamp(y + arrival * 0.18, 0.0, 1.0);
   vec3 c0 = vec3(0.039, 0.016, 0.094);
@@ -58,10 +70,13 @@ void main() {
 
   vec3 col = dawnGradient(uv.y, uArrival);
 
-  // fBm fog tint
   vec2 fogUv = uv * vec2(2.5, 4.0) + parallax + vec2(uTime * 0.012, uTime * 0.02);
   float fog = fbm(fogUv);
   col += vec3(0.18, 0.06, 0.20) * (fog - 0.5) * 0.6;
+
+  // Stars fade in toward the top of the screen, fade out as arrival completes
+  float starDensity = smoothstep(0.35, 0.85, uv.y) * (1.0 - uArrival * 0.6);
+  col += vec3(1.0, 0.95, 1.0) * stars(uv + parallax * 0.3, starDensity);
 
   gl_FragColor = vec4(col, 1.0);
 }
