@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { createMaterial, applyUniforms, setResolution, type SceneUniforms } from "./shader";
+import { createFlower } from "./flower";
 
 export type SceneHandle = {
   pause: () => void;
@@ -12,20 +13,35 @@ export function startScene(
   getUniforms: () => SceneUniforms
 ): SceneHandle {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const pixelRatio = Math.min(window.devicePixelRatio, 2);
+  renderer.setPixelRatio(pixelRatio);
+  renderer.autoClear = false;
 
-  const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-  const geometry = new THREE.PlaneGeometry(2, 2);
-  const material = createMaterial();
-  const quad = new THREE.Mesh(geometry, material);
-  scene.add(quad);
+  // --- Background: orthographic fullscreen quad with dawn shader ---
+  const bgScene = new THREE.Scene();
+  const bgCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const bgGeometry = new THREE.PlaneGeometry(2, 2);
+  const bgMaterial = createMaterial();
+  const bgQuad = new THREE.Mesh(bgGeometry, bgMaterial);
+  bgScene.add(bgQuad);
+
+  // --- Foreground: perspective camera with the 3D particle flower ---
+  const fgScene = new THREE.Scene();
+  const fgCamera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  fgCamera.position.set(0, 0, 3.6);
+  fgCamera.lookAt(0, 0.25, 0);
+
+  const flower = createFlower(pixelRatio);
+  flower.mesh.position.set(0, 0.35, 0);
+  fgScene.add(flower.mesh);
 
   function resize() {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     renderer.setSize(w, h, false);
-    setResolution(material, w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
+    setResolution(bgMaterial, w * pixelRatio, h * pixelRatio);
+    fgCamera.aspect = w / h;
+    fgCamera.updateProjectionMatrix();
   }
   resize();
 
@@ -38,8 +54,23 @@ export function startScene(
 
   function frame() {
     if (stopped || paused) return;
-    applyUniforms(material, getUniforms());
-    renderer.render(scene, camera);
+
+    const u = getUniforms();
+    applyUniforms(bgMaterial, u);
+    flower.update(u.time, u.arrival);
+
+    // Subtle camera parallax driven by pointer
+    const px = (u.pointer[0] - 0.5) * 0.25;
+    const py = (u.pointer[1] - 0.5) * 0.2;
+    fgCamera.position.x += (px - fgCamera.position.x) * 0.06;
+    fgCamera.position.y += (py - fgCamera.position.y) * 0.06;
+    fgCamera.lookAt(0, 0.25, 0);
+
+    renderer.clear();
+    renderer.render(bgScene, bgCamera);
+    renderer.clearDepth();
+    renderer.render(fgScene, fgCamera);
+
     raf = requestAnimationFrame(frame);
   }
   frame();
@@ -59,9 +90,10 @@ export function startScene(
       stopped = true;
       cancelAnimationFrame(raf);
       ro.disconnect();
+      flower.dispose();
+      bgGeometry.dispose();
+      bgMaterial.dispose();
       renderer.dispose();
-      geometry.dispose();
-      material.dispose();
     },
   };
 }
