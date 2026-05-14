@@ -5,8 +5,6 @@ import { createCountdownView } from "./ui/countdown";
 import { createArrival } from "./ui/arrival";
 import { startScene } from "./scene/scene";
 import { createPointer } from "./input/pointer";
-import { createAudioPlayer } from "./audio/player";
-import { bindAudioToggle } from "./ui/audio-toggle";
 
 function supportsWebGL(): boolean {
   try {
@@ -38,8 +36,6 @@ const arrival = createArrival({
   arrival: document.getElementById("arrival") as HTMLElement,
 });
 const pointer = createPointer();
-const audio = createAudioPlayer("/audio/aubade.opus");
-bindAudioToggle(document.getElementById("audio-toggle") as HTMLButtonElement, audio);
 
 const t0 = performance.now();
 const uniforms = {
