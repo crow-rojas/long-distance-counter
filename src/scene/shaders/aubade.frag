@@ -47,8 +47,6 @@ float stars(vec2 uv, float density) {
   return core * spawn * twinkle * density;
 }
 
-// Eight drifting blurred ellipses. Each one wraps in y and gets a horizontal
-// sway from the time-based sine. Result reads as petals / soft particles.
 float petals(vec2 uv) {
   float total = 0.0;
   for (int i = 0; i < 8; i++) {
@@ -57,18 +55,30 @@ float petals(vec2 uv) {
     float seedY = hash21(vec2(fi, 13.7));
     float speed = 0.018 + 0.025 * hash21(vec2(fi, 21.3));
     float sway = 0.04 * sin(uTime * (0.4 + 0.6 * hash21(vec2(fi, 5.0))) + fi);
-
     vec2 center = vec2(
       fract(seedX + sway),
       fract(seedY - uTime * speed)
     );
-
     vec2 diff = (uv - center) * vec2(1.0, 1.7);
     float r = length(diff);
     float petal = smoothstep(0.035, 0.0, r);
     total += petal * (0.5 + 0.5 * seedX);
   }
   return total;
+}
+
+// Luminous arc: a slightly rotated quadratic curve across the upper third.
+float arc(vec2 uv) {
+  // Rotate uv slightly so the arc tilts
+  float a = -0.08;
+  vec2 c = uv - vec2(0.5, 0.7);
+  vec2 r = vec2(c.x * cos(a) - c.y * sin(a), c.x * sin(a) + c.y * cos(a));
+  // y = -k * x^2 along rotated frame; distance from that curve
+  float curveY = -2.5 * r.x * r.x;
+  float d = abs(r.y - curveY);
+  float core = smoothstep(0.004, 0.0, d);
+  float glow = smoothstep(0.05, 0.0, d) * 0.4;
+  return core + glow;
 }
 
 vec3 dawnGradient(float y, float arrival) {
@@ -88,6 +98,15 @@ vec3 dawnGradient(float y, float arrival) {
   return col;
 }
 
+float vignette(vec2 uv) {
+  vec2 d = uv - 0.5;
+  return smoothstep(0.85, 0.30, length(d));
+}
+
+float grain(vec2 uv) {
+  return hash21(uv * uResolution + fract(uTime) * 100.0) - 0.5;
+}
+
 void main() {
   vec2 uv = vUv;
   vec2 parallax = (uPointer - 0.5) * 0.04;
@@ -101,9 +120,15 @@ void main() {
   float starDensity = smoothstep(0.35, 0.85, uv.y) * (1.0 - uArrival * 0.6);
   col += vec3(1.0, 0.95, 1.0) * stars(uv + parallax * 0.3, starDensity);
 
-  // Petals — soft pink, in the lower 80% of the screen
   float petalMask = smoothstep(0.95, 0.2, uv.y);
   col += vec3(1.0, 0.75, 0.85) * petals(uv) * 0.55 * petalMask;
+
+  float arcAmount = arc(uv + parallax * 0.5);
+  col += vec3(1.0, 0.85, 0.9) * arcAmount * (0.55 + 0.45 * uArrival);
+
+  col *= mix(0.5, 1.0, vignette(uv));
+
+  col += vec3(grain(uv)) * 0.05;
 
   gl_FragColor = vec4(col, 1.0);
 }
