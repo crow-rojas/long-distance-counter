@@ -27,13 +27,16 @@ export function startScene(
 
   // --- Foreground: perspective camera with the 3D particle flower ---
   const fgScene = new THREE.Scene();
-  const fgCamera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-  fgCamera.position.set(0, 0, 3.6);
-  fgCamera.lookAt(0, 0.25, 0);
+  const fgCamera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+  fgCamera.position.set(0, 0.2, 3.2);
+  fgCamera.lookAt(0, 0.55, 0);
 
   const flower = createFlower(pixelRatio);
-  flower.mesh.position.set(0, 0.35, 0);
-  fgScene.add(flower.mesh);
+  // Flower lives in the upper portion of the viewport so the countdown
+  // sits cleanly below it.
+  flower.group.position.set(0, 0.55, 0);
+  flower.group.scale.setScalar(0.85);
+  fgScene.add(flower.group);
 
   function resize() {
     const w = canvas.clientWidth;
@@ -60,11 +63,11 @@ export function startScene(
     flower.update(u.time, u.arrival);
 
     // Subtle camera parallax driven by pointer
-    const px = (u.pointer[0] - 0.5) * 0.25;
-    const py = (u.pointer[1] - 0.5) * 0.2;
+    const px = (u.pointer[0] - 0.5) * 0.18;
+    const py = 0.2 + (u.pointer[1] - 0.5) * 0.12;
     fgCamera.position.x += (px - fgCamera.position.x) * 0.06;
     fgCamera.position.y += (py - fgCamera.position.y) * 0.06;
-    fgCamera.lookAt(0, 0.25, 0);
+    fgCamera.lookAt(0, 0.55, 0);
 
     renderer.clear();
     renderer.render(bgScene, bgCamera);

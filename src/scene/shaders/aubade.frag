@@ -98,9 +98,13 @@ void main() {
   float starDensity = smoothstep(0.55, 1.00, uv.y) * (1.0 - uArrival * 0.7);
   col += vec3(1.0, 0.97, 1.0) * stars(uv + parallax * 0.5, starDensity);
 
-  // Subtle warm horizon glow at the bottom
-  float horizon = exp(-pow((uv.y - 0.08) * 9.0, 2.0)) * 0.25;
-  col += vec3(1.0, 0.55, 0.65) * horizon * (0.6 + uArrival * 0.4);
+  // Soft horizon glow band, more contained so countdown stays legible
+  float horizon = exp(-pow((uv.y - 0.05) * 18.0, 2.0)) * 0.18;
+  col += vec3(1.0, 0.55, 0.65) * horizon * (0.5 + uArrival * 0.4);
+
+  // Darken the bottom band where the countdown lives so the typography reads
+  float readZone = smoothstep(0.42, 0.16, uv.y);
+  col *= mix(1.0, 0.55, readZone);
 
   col *= mix(0.55, 1.0, vignette(uv));
   col += vec3(grain(uv)) * 0.045;
