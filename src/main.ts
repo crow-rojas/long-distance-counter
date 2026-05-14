@@ -7,7 +7,24 @@ import { createPointer } from "./input/pointer";
 import { createAudioPlayer } from "./audio/player";
 import { bindAudioToggle } from "./ui/audio-toggle";
 
+function supportsWebGL(): boolean {
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    return false;
+  }
+}
+
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const useShader = supportsWebGL();
+
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+if (!useShader) {
+  canvas.style.display = "none";
+  document.body.classList.add("no-webgl");
+}
+
 const view = createCountdownView({
   days: document.getElementById("days") as HTMLElement,
   time: document.getElementById("time") as HTMLElement,
@@ -27,14 +44,17 @@ const uniforms = {
   arrival: 0,
 };
 
-startScene(canvas, () => uniforms);
+if (useShader) {
+  startScene(canvas, () => uniforms);
+}
 
 let rafId = 0;
 let paused = false;
 
 function tick() {
   if (paused) return;
-  uniforms.time = (performance.now() - t0) / 1000;
+  // Freeze time uniform when reduced motion is set — shader becomes a still
+  uniforms.time = reducedMotion ? 0 : (performance.now() - t0) / 1000;
   uniforms.pointer = pointer.get();
 
   const state = compute(new Date());

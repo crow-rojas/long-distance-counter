@@ -135,3 +135,13 @@ footer {
 @media (prefers-reduced-motion: reduce) {
   #countdown, #arrival { transition: none; }
 }
+
+/* WebGL fallback — static CSS approximation of the dawn shader */
+body.no-webgl {
+  background:
+    radial-gradient(ellipse at 50% 100%, #ffb6c1 0%, transparent 30%),
+    radial-gradient(ellipse at 50% 80%, #ff7eb6 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 60%, #c44a8e 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 30%, #4a1f5c 0%, transparent 70%),
+    linear-gradient(180deg, #0a0418 0%, #1f0830 40%, #4a1f5c 70%, #c44a8e 90%, #ffb6c1 100%);
+}
