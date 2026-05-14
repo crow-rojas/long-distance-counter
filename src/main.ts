@@ -1,5 +1,6 @@
 import "./style.css";
 import { compute } from "./countdown/compute";
+import { TARGET_LABEL } from "./countdown/target";
 import { createCountdownView } from "./ui/countdown";
 import { createArrival } from "./ui/arrival";
 import { startScene } from "./scene/scene";
@@ -25,6 +26,9 @@ if (!useShader) {
   document.body.classList.add("no-webgl");
 }
 
+const labelEl = document.getElementById("label") as HTMLElement;
+labelEl.textContent = TARGET_LABEL;
+
 const view = createCountdownView({
   days: document.getElementById("days") as HTMLElement,
   time: document.getElementById("time") as HTMLElement,
@@ -44,9 +48,7 @@ const uniforms = {
   arrival: 0,
 };
 
-if (useShader) {
-  startScene(canvas, () => uniforms);
-}
+const sceneHandle = useShader ? startScene(canvas, () => uniforms) : null;
 
 let rafId = 0;
 let paused = false;
@@ -69,8 +71,10 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     paused = true;
     cancelAnimationFrame(rafId);
+    sceneHandle?.pause();
   } else {
     paused = false;
+    sceneHandle?.resume();
     tick();
   }
 });

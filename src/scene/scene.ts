@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { createMaterial, applyUniforms, setResolution, type SceneUniforms } from "./shader";
 
 export type SceneHandle = {
+  pause: () => void;
+  resume: () => void;
   stop: () => void;
 };
 
@@ -32,9 +34,10 @@ export function startScene(
 
   let raf = 0;
   let stopped = false;
+  let paused = false;
 
   function frame() {
-    if (stopped) return;
+    if (stopped || paused) return;
     applyUniforms(material, getUniforms());
     renderer.render(scene, camera);
     raf = requestAnimationFrame(frame);
@@ -42,6 +45,16 @@ export function startScene(
   frame();
 
   return {
+    pause() {
+      if (paused || stopped) return;
+      paused = true;
+      cancelAnimationFrame(raf);
+    },
+    resume() {
+      if (!paused || stopped) return;
+      paused = false;
+      frame();
+    },
     stop() {
       stopped = true;
       cancelAnimationFrame(raf);
