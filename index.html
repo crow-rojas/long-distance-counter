@@ -3,10 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0418" />
     <title>dawn</title>
+
+    <meta property="og:title" content="dawn" />
+    <meta property="og:description" content="a countdown · cdmx → scl" />
+    <meta property="og:image" content="/og.jpg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dawn.crowrojas.dev" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
+    <canvas id="canvas" aria-hidden="true"></canvas>
+
+    <main id="hero">
+      <div id="countdown">
+        <div id="days">—</div>
+        <div id="time">—h · —m · —s</div>
+      </div>
+      <div id="arrival" hidden>she's here.</div>
+    </main>
+
+    <footer>
+      <div id="label">CDMX → SCL · 18 · 09 · 26</div>
+      <button id="audio-toggle" type="button" aria-label="Toggle ambient audio" aria-pressed="false">♪</button>
+    </footer>
+
+    <noscript>
+      <p style="position:fixed;inset:0;display:grid;place-items:center;color:#fff;font-family:serif;text-align:center;padding:2rem">
+        dawn · a countdown to 2026-09-18 — enable JavaScript to see the full piece.
+      </p>
+    </noscript>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
