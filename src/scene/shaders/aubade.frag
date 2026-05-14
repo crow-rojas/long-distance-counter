@@ -47,6 +47,30 @@ float stars(vec2 uv, float density) {
   return core * spawn * twinkle * density;
 }
 
+// Eight drifting blurred ellipses. Each one wraps in y and gets a horizontal
+// sway from the time-based sine. Result reads as petals / soft particles.
+float petals(vec2 uv) {
+  float total = 0.0;
+  for (int i = 0; i < 8; i++) {
+    float fi = float(i);
+    float seedX = hash21(vec2(fi, 7.13));
+    float seedY = hash21(vec2(fi, 13.7));
+    float speed = 0.018 + 0.025 * hash21(vec2(fi, 21.3));
+    float sway = 0.04 * sin(uTime * (0.4 + 0.6 * hash21(vec2(fi, 5.0))) + fi);
+
+    vec2 center = vec2(
+      fract(seedX + sway),
+      fract(seedY - uTime * speed)
+    );
+
+    vec2 diff = (uv - center) * vec2(1.0, 1.7);
+    float r = length(diff);
+    float petal = smoothstep(0.035, 0.0, r);
+    total += petal * (0.5 + 0.5 * seedX);
+  }
+  return total;
+}
+
 vec3 dawnGradient(float y, float arrival) {
   float yy = clamp(y + arrival * 0.18, 0.0, 1.0);
   vec3 c0 = vec3(0.039, 0.016, 0.094);
@@ -74,9 +98,12 @@ void main() {
   float fog = fbm(fogUv);
   col += vec3(0.18, 0.06, 0.20) * (fog - 0.5) * 0.6;
 
-  // Stars fade in toward the top of the screen, fade out as arrival completes
   float starDensity = smoothstep(0.35, 0.85, uv.y) * (1.0 - uArrival * 0.6);
   col += vec3(1.0, 0.95, 1.0) * stars(uv + parallax * 0.3, starDensity);
+
+  // Petals — soft pink, in the lower 80% of the screen
+  float petalMask = smoothstep(0.95, 0.2, uv.y);
+  col += vec3(1.0, 0.75, 0.85) * petals(uv) * 0.55 * petalMask;
 
   gl_FragColor = vec4(col, 1.0);
 }
