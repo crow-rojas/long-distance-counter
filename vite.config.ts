@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -12,4 +13,8 @@ export default defineConfig({
     },
   },
   assetsInclude: ["**/*.vert", "**/*.frag", "**/*.glsl"],
+  test: {
+    environment: "node",
+    include: ["tests/**/*.test.ts"],
+  },
 });
