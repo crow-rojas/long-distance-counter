@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { createMaterial, applyUniforms, setResolution, type SceneUniforms } from "./shader";
 import { createFlower } from "./flower";
+import { createDrift } from "./drift";
 
 export type SceneHandle = {
   pause: () => void;
@@ -38,6 +39,10 @@ export function startScene(
   flower.group.scale.setScalar(0.85);
   fgScene.add(flower.group);
 
+  // Petals drifting down from the flower
+  const drift = createDrift(pixelRatio);
+  fgScene.add(drift.mesh);
+
   function resize() {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
@@ -61,6 +66,7 @@ export function startScene(
     const u = getUniforms();
     applyUniforms(bgMaterial, u);
     flower.update(u.time, u.arrival);
+    drift.update(u.time);
 
     // Subtle camera parallax driven by pointer
     const px = (u.pointer[0] - 0.5) * 0.18;
@@ -94,6 +100,7 @@ export function startScene(
       cancelAnimationFrame(raf);
       ro.disconnect();
       flower.dispose();
+      drift.dispose();
       bgGeometry.dispose();
       bgMaterial.dispose();
       renderer.dispose();
