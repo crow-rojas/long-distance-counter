@@ -1,6 +1,7 @@
 import "./style.css";
 import { compute } from "./countdown/compute";
 import { createCountdownView } from "./ui/countdown";
+import { createArrival } from "./ui/arrival";
 import { startScene } from "./scene/scene";
 import { createPointer } from "./input/pointer";
 
@@ -8,6 +9,10 @@ const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const view = createCountdownView({
   days: document.getElementById("days") as HTMLElement,
   time: document.getElementById("time") as HTMLElement,
+});
+const arrival = createArrival({
+  countdown: document.getElementById("countdown") as HTMLElement,
+  arrival: document.getElementById("arrival") as HTMLElement,
 });
 const pointer = createPointer();
 
@@ -27,7 +32,12 @@ function tick() {
   if (paused) return;
   uniforms.time = (performance.now() - t0) / 1000;
   uniforms.pointer = pointer.get();
-  view.update(compute(new Date()));
+
+  const state = compute(new Date());
+  view.update(state);
+  arrival.update(state.arrived);
+  uniforms.arrival = arrival.getUniform();
+
   rafId = requestAnimationFrame(tick);
 }
 

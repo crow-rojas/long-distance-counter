@@ -9,13 +9,22 @@ export type CountdownState = {
   progress: number;
 };
 
-// Anchor for the progress 0→1 ramp. Picked as the day the spec was written
-// (start of the countdown journey). Used only for the `progress` uniform —
-// nothing depends on it being exact.
 const ANCHOR_MS = Date.parse("2026-05-14T00:00:00Z");
 
+// Time travel for manual QA: ?t=ISO offsets `now`. Falls through to real time
+// when the query param is missing or invalid.
+function readOverride(): number | null {
+  if (typeof window === "undefined") return null;
+  const param = new URLSearchParams(window.location.search).get("t");
+  if (!param) return null;
+  const parsed = Date.parse(param);
+  return Number.isFinite(parsed) ? parsed - Date.now() : null;
+}
+
+const offsetMs = readOverride() ?? 0;
+
 export function compute(now: Date): CountdownState {
-  const nowMs = now.getTime();
+  const nowMs = now.getTime() + offsetMs;
   const remaining = TARGET_MS - nowMs;
 
   if (remaining <= 0) {
