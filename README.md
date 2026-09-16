@@ -28,6 +28,7 @@ Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas
 
 - Moverse: flechas o A/D. Saltar: Espacio, W o flecha arriba; mantener para saltar más alto.
 - Hablar: E o un tap en el personaje/botón situado sobre él, cuando Chofis está cerca. Los NPC solo hablan y reaccionan al interactuar.
+- Sentarse: E o un tap en una banca cercana, con Chofis en el suelo. Moverse, saltar, pulsar E o tocar Levantarse permite seguir. El mundo sigue activo y la banca no aumenta la altura de salto.
 - La cámara se acerca durante la conversación y el texto aparece arriba. E, Escape o Seguir cierran el diálogo. La física y los desafíos se pausan durante las conversaciones, la galería y la carta.
 - En móvil aparecen botones de dirección y salto. Con movimiento reducido, se omiten las transiciones de cámara y los efectos decorativos de movimiento.
 - Sonido opcional con un botón: efectos CC0 de Brackeys y Piano 3 de AlkaKrab. Empieza en silencio.
@@ -91,7 +92,7 @@ corepack pnpm@9 test:browser
 
 El runner abre una sesión nueva silenciada, espera a que termine la carga y la cierra al terminar, también ante error o interrupción. No utiliza tus guardados ni pestañas.
 
-Comprueba densidad del canvas y textos, cambios de tamaño, recordatorios de caída, el foco y las teclas tras cambiar el sonido, giros rápidos, salto variable, coyote time, salto anticipado, ausencia de doble salto, transporte sobre islas móviles, caída y recuperación de islas frágiles, pausa durante conversaciones, 82 conexiones, desvío de dibujos, recogida, checkpoints y carta final. La prueba busca un momento de salto viable en las conexiones móviles; no presupone que cualquier momento funcione. Esta comprobación de navegador es local; no forma parte de CI.
+Comprueba densidad del canvas y textos, cambios de tamaño, recordatorios de caída, el foco y las teclas tras cambiar el sonido, giros rápidos, salto variable, coyote time, salto anticipado, ausencia de doble salto, transporte sobre islas móviles, caída y recuperación de islas frágiles, pausa durante conversaciones, 82 conexiones, las dos bancas, desvío de dibujos, recogida, checkpoints y carta final. La prueba busca un momento de salto viable en las conexiones móviles; no presupone que cualquier momento funcione. Esta comprobación de navegador es local; no forma parte de CI.
 
 GitHub Pages publica al hacer push a `main`. La procedencia de música e imágenes queda documentada en `docs/`.
 

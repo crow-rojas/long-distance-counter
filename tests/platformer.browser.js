@@ -2,11 +2,13 @@
 // Exercises actual Phaser physics and DOM in a disposable, muted preview session.
 (async () => {
   if (!new URLSearchParams(location.search).has("t")) throw Error("Use the arrival preview.");
-  const urls = performance.getEntriesByType("resource").map(r=>r.name).filter(u=>u.includes("/src/game/game.ts"));
-  const {game} = await import(urls.findLast(u=>u.includes("?t=")) ?? urls.at(-1));
-  const {default:texts} = await import("/src/game/es.json?import");
-  const {formatText} = await import("/src/game/dialogue.ts");
-  const {PLATFORMS,FRIENDS,ITEMS,CHECKPOINTS} = await import("/src/game/level.ts");
+  // Reuse Vite's loaded URLs, including its HMR queries, rather than importing a second copy.
+  const loaded = path => performance.getEntriesByType("resource")
+    .findLast(entry=>new URL(entry.name).pathname===path)?.name ?? path;
+  const {game} = await import(loaded("/src/game/game.ts"));
+  const {default:texts} = await import(loaded("/src/game/es.json"));
+  const {formatText} = await import(loaded("/src/game/dialogue.ts"));
+  const {BENCHES,PLATFORMS,FRIENDS,ITEMS,CHECKPOINTS} = await import(loaded("/src/game/level.ts"));
   const scene=game.scene.scenes[0], player=scene.player, body=player.body, world=scene.physics.world;
   const check=(ok,message)=>{if(!ok)throw Error(message)};
   const canvasBounds=game.canvas.getBoundingClientRect();
@@ -95,6 +97,50 @@
     const firstReminder=scene.speechUntil;
     body.reset(120,1200);time+=100;scene.update(time);
     check(scene.speechUntil===firstReminder,"Repeated falls repeat the tutorial");
+    let benchJumpHeight=0;
+    for(const bench of BENCHES) {
+      const drawing=scene.children.list.find(child=>child.texture?.key==="bench" && child.x===bench.x);
+      check(drawing,"Bench drawing is missing");
+      reset(bench.x+180,bench.y);drawing.emit("pointerup");
+      check(!scene.seatedBench,"Distant bench teleported the player");
+      body.reset(bench.x,bench.y-100);drawing.emit("pointerup");
+      check(!scene.seatedBench,"Airborne player could sit");
+      reset(bench.x,bench.y);
+      check(!scene.seatedBench && document.querySelector("#interact").textContent===texts.bancas.sentarse,
+        "Bench sat automatically or did not offer interaction");
+      press("E");frame();release("E");advance(2);
+      check(scene.seatedBench?.x===bench.x && scene.avatar.isCropped,"E did not seat Chofis");
+      check(!world.isPaused && scene.input.keyboard.enabled,"Sitting paused the world or disabled input");
+      const clock=scene.levelTime;
+      advance(120);
+      check(scene.levelTime>clock && player.x===bench.x && Math.abs(body.bottom-bench.y)<1,
+        "Seated player drifted or stopped the world");
+      check(Math.abs(scene.avatar.y-(player.y-28))<.01,"Sitting pose is not on the seat");
+      sound.focus();sound.click();sound.click();
+      check(scene.seatedBench?.x===bench.x && document.activeElement===game.canvas,"Sound broke sitting or focus");
+      press("E");frame();release("E");frame();
+      check(!scene.seatedBench && !scene.avatar.isCropped,"E did not stand up");
+      drawing.emit("pointerup");frame();
+      check(scene.seatedBench?.x===bench.x,"Nearby bench tap did not sit");
+      document.querySelector("#interact").focus();document.querySelector("#interact").click();frame();
+      check(!scene.seatedBench && document.activeElement===game.canvas,"Stand button kept focus");
+      document.querySelector("#interact").click();frame();
+      check(scene.seatedBench?.x===bench.x,"Sit button failed");
+      press("RIGHT");advance(3);release("RIGHT");
+      check(!scene.seatedBench && !scene.avatar.isCropped && body.velocity.x>0,"Walking did not stand up");
+      reset(bench.x,bench.y);drawing.emit("pointerup");advance(2);
+      press("SPACE");frame();
+      check(!scene.seatedBench && body.velocity.y<-650 && body.bottom>=bench.y-2,
+        "Bench jump failed or gained artificial height");
+      let top=body.bottom;
+      for(let i=0;i<110;i++){frame();top=Math.min(top,body.bottom)}
+      benchJumpHeight=Math.max(benchJumpHeight,bench.y-top);
+      release("SPACE");
+      reset(bench.x,bench.y);drawing.emit("pointerup");advance(2);
+      scene.touchJump=true;frame();
+      check(!scene.seatedBench && body.velocity.y<0,"Touch jump did not stand up");
+    }
+    reset(120,700);
     // Exercise create() velocities before resetIslands can replace them.
     const movers=scene.platforms.filter(p=>p.definition[3]?.startsWith("moving"));
     const starts=movers.map(p=>({x:p.sprite.x,y:p.sprite.y}));
@@ -132,6 +178,7 @@
     };
     const short=height(false),tall=height(true);
     check(tall>short+60,"Holding jump did not increase its height");
+    check(Math.abs(benchJumpHeight-tall)<2,"Sitting changed jump height or difficulty");
     reset(630,700); player.setVelocityX(340); press("RIGHT"); advance(13);
     check(!body.touching.down,"Coyote test never left the edge");
     press("SPACE");frame(); check(body.velocity.y < -650,"Coyote jump was lost");
@@ -148,6 +195,8 @@
     reset(350,700);press("E");frame();release("E");
     check(document.querySelector("#conversation").open && document.querySelector("#speaker").textContent===texts.personajes.Marin,"E did not open the nearby conversation");
     check(world.isPaused && !scene.input.keyboard.enabled,"Conversation did not pause gameplay");
+    scene.useBench(BENCHES[0]);
+    check(!scene.seatedBench,"Bench interrupted a dialogue");
     check(scene.portraits.get("Marin").frame.name===1,"Marin did not greet on interaction");
     await close();
     const originalName=texts.personajes.Marin;
@@ -232,7 +281,7 @@
     const crow=FRIENDS.find(f=>f.name==="Crow");reset(crow.x-50,crow.y);scene.talk(crow);
     check(document.querySelector("#letter").open && scene.won,"Reunion did not open");await close();frame();
     check(document.querySelector("#objective").textContent===texts.interfaz.objetivoFinal,"Completed game still asks for food");
-    return {passed:true,connections,quickTurns:true,movingPlatforms:true,fragilePlatforms:true,manualDialogue:true,gallery:true,checkpoints:true,reunion:true,shortJump:Math.round(short),heldJump:Math.round(tall)};
+    return {passed:true,connections,benches:true,quickTurns:true,movingPlatforms:true,fragilePlatforms:true,manualDialogue:true,gallery:true,checkpoints:true,reunion:true,shortJump:Math.round(short),heldJump:Math.round(tall)};
   } finally {
     document.querySelector("#fonda dialog[open]")?.close();await wait(20);
     scene.input.keyboard.resetKeys();scene.time.now=originalTime;

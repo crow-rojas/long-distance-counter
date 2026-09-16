@@ -10,7 +10,7 @@ Estas ideas quedan pendientes; no forman parte de esta entrega. El orden es una 
 - [x] **Incorporar los diálogos escritos por Crow.** Conservar sus chistes y forma de hablar; los criterios para próximos textos están en el catálogo.
 - [ ] **Escribir la carta final.** Crow la hará después.
 - [ ] **UI más mínima y con etiquetas claras.** Simplificar objetivos, progreso, interacción y sonido. Conservar nombres accesibles, contraste y botones cómodos para tocar.
-- [ ] **Sentarse en las bancas.** Acercarse y usar E o un tap para sentarse; moverse o saltar para levantarse. Una pausa para disfrutar el lugar.
+- [x] **Sentarse en las bancas.** E o un tap desde cerca para sentarse. Moverse, saltar, E o Levantarse para continuar. Las dos bancas usan el dibujo actual de Chofis, con el mundo activo y la misma altura de salto.
 - [ ] **Personajes con más vida.** Probar parpadeos, pequeños cambios de postura y reacciones al interactuar. Mantener los diálogos manuales y evitar rebotes constantes; respetar movimiento reducido.
 
 ## Después: contar la llegada

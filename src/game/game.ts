@@ -4,7 +4,7 @@ import { isPreview } from "../countdown/compute";
 import { replyFor, formatText } from "./dialogue";
 import texts from "./es.json";
 import { readStamps, readyForCrow } from "./progress";
-import { CHECKPOINTS, FRIENDS, ITEMS, nextStop, PLATFORMS, SIDE_PLATFORMS, WORLD_WIDTH, ZONES, type Platform } from "./level";
+import { BENCHES, CHECKPOINTS, FRIENDS, ITEMS, nextStop, PLATFORMS, SIDE_PLATFORMS, WORLD_WIDTH, ZONES, type Platform } from "./level";
 
 // Exported for browser integration checks; Phaser remains the only game runtime.
 export let game: Phaser.Game;
@@ -87,6 +87,8 @@ export async function startGame(): Promise<void> {
       bufferedUntil = 0;
       touchJump = false;
       nearby: typeof FRIENDS[number] | undefined;
+      nearbyBench?: typeof BENCHES[number];
+      seatedBench?: typeof BENCHES[number];
       speechUntil = 0;
       fallExplained = false;
       foodRecoveryExplained = false;
@@ -192,7 +194,7 @@ export async function startGame(): Promise<void> {
         this.player.setBodySize(this.player.width,this.player.height).setOffset(0,0).setMaxVelocity(340,1100).setDragX(2800);
         this.avatar = this.add.image(this.spawn.x,this.spawn.y,"chofis-front").setOrigin(.5,.9625).setDisplaySize(100,100).setDepth(5);
         this.events.on(Phaser.Scenes.Events.POST_UPDATE,(_time: number, delta: number) => {
-          this.avatar.setPosition(this.player.x,this.player.y);
+          this.avatar.setPosition(this.player.x,this.player.y-(this.seatedBench ? 28 : 0));
           if (!this.focusedFriend) this.updatePlatforms(delta);
         });
         this.events.on(Phaser.Scenes.Events.RENDER,() => this.positionInteraction());
@@ -255,7 +257,7 @@ export async function startGame(): Promise<void> {
         });
         resize();
         this.game.events.on(Phaser.Core.Events.BLUR,() => { held.clear(); this.keys && this.input.keyboard!.resetKeys(); this.bufferedUntil = 0; });
-        interact.addEventListener("click",() => this.talk(),{signal:events.signal});
+        interact.addEventListener("click",() => this.useInteraction(),{signal:events.signal});
         for (const dialog of [conversation,gallery,letter]) {
           dialog.querySelector("button")!.addEventListener("click",() => dialog.close(),{signal:events.signal});
           dialog.addEventListener("close",() => this.resumeGameplay(),{signal:events.signal});
@@ -326,9 +328,10 @@ export async function startGame(): Promise<void> {
           kite.setScale(115/kite.height).setTint(0xe8c2ea);
           if (!reduced) this.tweens.add({targets:kite,y:y-12,angle:3,duration:3600+x/2,yoyo:true,repeat:-1,ease:"Sine.easeInOut"});
         }
-        for (const [x,y] of [[185,700],[13330,650]]) {
-          const bench = this.add.image(x,y,"bench").setOrigin(.5,1).setDepth(-1);
-          bench.setScale(140/bench.width);
+        for (const bench of BENCHES) {
+          this.add.image(bench.x,bench.y,"bench").setOrigin(.5,1).setDepth(-1)
+            .setDisplaySize(140,bench.height).setInteractive({useHandCursor:true})
+            .on("pointerup",() => this.useBench(bench));
         }
         const sign = (x:number,y:number,text:string) => {
           this.add.image(x,y,"sign").setOrigin(.5,1).setDisplaySize(175,135).setDepth(-1);
@@ -365,6 +368,7 @@ export async function startGame(): Promise<void> {
       }
 
       pauseGameplay(friend: typeof FRIENDS[number]) {
+        this.stand();
         this.focusedFriend = friend;
         this.player.setVelocity(0).setAccelerationX(0);
         held.clear(); this.touchJump = false; this.bufferedUntil = 0;
@@ -390,13 +394,14 @@ export async function startGame(): Promise<void> {
       }
 
       positionInteraction() {
-        if (!this.nearby || this.focusedFriend) { interact.hidden = true; return; }
+        const target = this.seatedBench ?? this.nearby ?? this.nearbyBench;
+        if (!target || this.focusedFriend) { interact.hidden = true; return; }
         const camera = this.cameras.main;
         const half = interact.offsetWidth/2+12;
         // The game camera pans and zooms without rotation.
         const origin = camera.getWorldPoint(0,0);
-        const x = (this.nearby.x-origin.x)*camera.zoom/pixelRatio;
-        const y = (this.nearby.y-this.nearby.height-origin.y)*camera.zoom/pixelRatio;
+        const x = (target.x-origin.x)*camera.zoom/pixelRatio;
+        const y = (target.y-target.height-origin.y)*camera.zoom/pixelRatio;
         interact.style.left = `${Phaser.Math.Clamp(x,half,root.clientWidth-half)}px`;
         interact.style.top = `${Math.max(145,y-55)}px`;
       }
@@ -435,6 +440,45 @@ export async function startGame(): Promise<void> {
         speech.textContent = formatText(texts.interfaz.subtitulo,{personaje:name,texto:text});
         speech.hidden = false;
         this.speechUntil = this.time.now+duration;
+      }
+
+      canSit(bench: typeof BENCHES[number]) {
+        const body = this.player.body as Phaser.Physics.Arcade.Body;
+        return !this.focusedFriend && (body.blocked.down || body.touching.down)
+          && Math.abs(body.velocity.y)<1 && Math.abs(this.player.x-bench.x)<90
+          && Math.abs(body.bottom-bench.y)<12;
+      }
+
+      useBench(bench: typeof BENCHES[number]) {
+        if (this.focusedFriend) return;
+        if (this.seatedBench) {
+          if (this.seatedBench === bench) this.stand();
+          return;
+        }
+        if (!this.canSit(bench)) return;
+        // Keep physics on the ground; sitting must not become a higher jump platform.
+        this.player.body!.reset(bench.x,bench.y);
+        this.player.setVelocity(0).setAccelerationX(0);
+        this.seatedBench = bench;
+        this.bufferedUntil = 0;
+        this.touchJump = false;
+        this.landingUntil = 0;
+        this.say(texts.personajes.Fonda,texts.bancas.ayuda,3000);
+        this.game.canvas.focus({preventScroll:true});
+      }
+
+      stand() {
+        if (!this.seatedBench) return;
+        this.seatedBench = undefined;
+        this.avatar.setCrop();
+        this.lastMoving = -1000;
+        this.game.canvas.focus({preventScroll:true});
+      }
+
+      useInteraction() {
+        if (this.seatedBench) this.stand();
+        else if (this.nearby) this.talk();
+        else if (this.nearbyBench) this.useBench(this.nearbyBench);
       }
 
       talk(friend = this.nearby) {
@@ -492,6 +536,7 @@ export async function startGame(): Promise<void> {
         const jumpHeld = this.keys.SPACE.isDown || this.keys.UP.isDown || this.keys.W.isDown || touch.has("jump");
         const jumpPressed = [this.keys.SPACE,this.keys.UP,this.keys.W].some(k => Phaser.Input.Keyboard.JustDown(k)) || this.touchJump;
         this.touchJump = false;
+        if (this.seatedBench && (left || right || jumpPressed)) this.stand();
         if (grounded) this.lastGrounded = time;
         if (jumpPressed) this.bufferedUntil = time+120;
         if (this.bufferedUntil > time && time-this.lastGrounded < 100) {
@@ -515,7 +560,14 @@ export async function startGame(): Promise<void> {
         const breath = reduced || !grounded || direction ? 0 : Math.sin(time/650)*.012;
         this.avatar.setDisplaySize(100*(1+landing*.12-breath),100*(1-landing*.1+breath+(!grounded && !reduced ? .055 : 0)));
         this.avatar.setAngle(reduced ? 0 : direction*3+(!grounded ? direction*2 : 0));
+        if (this.seatedBench) {
+          // Tuck the feet from the existing 320px pose onto the bench seat.
+          this.avatar.setTexture(this.won ? "chofis-happy" : "chofis-front")
+            .setCrop(0,0,320,270).setFlipX(false).setAngle(0)
+            .setDisplaySize(108,88*(1+breath));
+        }
         if (this.player.y > 1050) {
+          this.stand();
           body.reset(this.spawn.x,this.spawn.y);
           this.player.setVelocity(0);
           this.lastGrounded = -1000;
@@ -536,11 +588,13 @@ export async function startGame(): Promise<void> {
         const text = this.won ? texts.interfaz.objetivoFinal : formatText(texts.interfaz.objetivo,{cantidad:stamps.size,instruccion:next.instruction,direccion:next.x < this.player.x-60 ? texts.interfaz.direccionIzquierda : ""});
         if (text !== this.lastObjective) { objective.textContent=text; this.lastObjective=text; }
         this.nearby = FRIENDS.find(friend => Math.abs(friend.x-this.player.x)<100 && Math.abs(friend.y-body.bottom)<85);
-        interact.hidden = !this.nearby;
-        if (this.nearby) {
+        this.nearbyBench = BENCHES.find(bench => this.canSit(bench));
+        interact.hidden = !this.seatedBench && !this.nearby && !this.nearbyBench;
+        if (this.seatedBench) interact.textContent = texts.bancas.levantarse;
+        else if (this.nearby) {
           interact.textContent = this.nearby.name === "Crow" && readyForCrow(stamps) ? texts.interfaz.interaccion.abrazar : this.nearby.name === "Tus dibujos" ? texts.interfaz.interaccion.verDibujos : formatText(texts.interfaz.interaccion.conPersonaje,{personaje:texts.personajes[this.nearby.name]});
-        }
-        if (Phaser.Input.Keyboard.JustDown(this.keys.E)) this.talk();
+        } else if (this.nearbyBench) interact.textContent = texts.bancas.sentarse;
+        if (Phaser.Input.Keyboard.JustDown(this.keys.E)) this.useInteraction();
         if (time > this.speechUntil) speech.hidden=true;
       }
     }

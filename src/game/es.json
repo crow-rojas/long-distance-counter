@@ -60,7 +60,7 @@
       "prefijoTecla": "E: "
     },
     "controles": {
-      "ayudaTeclado": "A y D para moverse   Espacio saltar   E hablar",
+      "ayudaTeclado": "A y D para moverse   Espacio saltar   E interactuar",
       "izquierda": "Izq",
       "derecha": "Der",
       "saltar": "Saltar",
@@ -91,6 +91,11 @@
     "primeraSinComida": "Volviste al checkpoint.",
     "primeraConComida": "Volviste al checkpoint, no perdiste nada:)",
     "conComida": "No perdiste nada:)"
+  },
+  "bancas": {
+    "sentarse": "Sentarse",
+    "levantarse": "Levantarse",
+    "ayuda": "Muévete o salta para levantarte"
   },
   "carteles": {
     "entrada": "Salta",

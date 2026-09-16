@@ -21,6 +21,7 @@ No hace falta editar TypeScript ni instalar una librería de i18n. El archivo se
 | `zonas` | Nombres de las cuatro zonas. |
 | `recogida` | Reacciones de Chofis al recoger comida. |
 | `caidas` | Avisos de checkpoint y conservación de comida. |
+| `bancas` | Botones para sentarse y levantarse, y la indicación para volver a moverse. |
 | `carteles` | Textos de los letreros del mundo. |
 | `galeria` | Título, botón y descripciones accesibles de los dibujos. |
 | `carta` | `titulo`, `texto`, botón `volver` y corazón entre los personajes. El cuerpo sigue provisional. |
@@ -50,6 +51,8 @@ Los textos se muestran literalmente: `<3`, comillas y emojis funcionan. No admit
 ## Cuándo aparece cada variante
 
 Marin, Pibble y Supergirl cambian de respuesta según el objeto correspondiente. Crow distingue un objeto pendiente de varios; el código decide qué comida falta. `dialogos.Crow.completo` conserva la frase escrita por Crow, aunque el encuentro final abre directamente la carta y no muestra ese diálogo. `interfaz.objetivoFinal` es el texto que queda en el HUD después del encuentro.
+
+Las bancas ofrecen `bancas.sentarse` cuando Chofis está cerca y en el suelo. Sentada, el botón cambia a `bancas.levantarse` y aparece `bancas.ayuda` durante tres segundos. También puede levantarse al moverse o saltar; la cámara conserva el encuadre normal.
 
 La galería abre al interactuar con "Tus dibujos". Los avisos de caída aparecen una vez por sesión cuando corresponden. Recargar reinicia esos avisos, pero conserva comida y checkpoint.
 

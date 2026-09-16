@@ -20,6 +20,10 @@ export const PLATFORMS: readonly Platform[] = [
   [13110,650,890,"checkpoint"],
 ];
 export const SIDE_PLATFORMS: readonly Platform[] = [[1630,260,160], [1870,175,240]];
+export const BENCHES = [
+  { x:185, y:700, height:92 },
+  { x:13330, y:650, height:92 },
+] as const;
 export const CHECKPOINTS = PLATFORMS.flatMap((p,index) => p[3] === "checkpoint" ? [index] : []);
 export const ZONES = [
   { name:texts.zonas.entrada, x:0, checkpoint:0 },
