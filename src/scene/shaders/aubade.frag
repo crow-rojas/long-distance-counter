@@ -4,6 +4,7 @@ uniform float uTime;
 uniform vec2 uResolution;
 uniform vec2 uPointer;
 uniform float uArrival;
+uniform float uGame;
 
 varying vec2 vUv;
 
@@ -108,6 +109,10 @@ void main() {
 
   col *= mix(0.55, 1.0, vignette(uv));
   col += vec3(grain(uv)) * 0.045;
+  vec3 gameSky = mix(vec3(0.075,0.092,0.15),vec3(0.27,0.25,0.34),1.0-uv.y);
+  gameSky += vec3(0.08,0.075,0.09)*(fog-0.4);
+  gameSky += vec3(0.65,0.7,0.8)*stars(uv,starDensity)*0.25;
+  col = mix(col,gameSky,uGame);
 
   gl_FragColor = vec4(col, 1.0);
 }

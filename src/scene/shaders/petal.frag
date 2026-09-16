@@ -3,6 +3,7 @@ precision highp float;
 uniform float uTime;
 uniform float uSeed;
 uniform float uArrival;
+uniform float uOpacity;
 
 varying vec2 vUv;
 
@@ -50,5 +51,5 @@ void main() {
   // Arrival shifts colors warmer
   col = mix(col, col + vec3(0.05, 0.04, 0.0), uArrival);
 
-  gl_FragColor = vec4(col, inside * pulse * 0.92);
+  gl_FragColor = vec4(col, inside * pulse * 0.92 * uOpacity);
 }

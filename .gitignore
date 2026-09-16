@@ -2,3 +2,6 @@
 node_modules/
 dist/
 .DS_Store
+# Game Piano Music requires author permission for open-source distribution.
+public/game/audio/piano.mp3
+.env.local

@@ -1,0 +1,50 @@
+#fonda { position: fixed; inset: 0; z-index: 2; opacity: 0; pointer-events: none; transition: opacity 1.8s ease; color: #ffe4ef; background: linear-gradient(#10132126,#10132155),url("/game/cielo-fonda.webp") center/cover; }
+body.playing #fonda { opacity: 1; pointer-events: auto; }
+body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s; }
+#platformer { position: absolute; inset: 0; }
+#platformer canvas { display: block; }
+#fonda button { color: inherit; background: #26132bdd; border: 1px solid #be7fa2; padding: 11px 19px; font: 15px system-ui,sans-serif; border-radius: 7px; cursor: pointer; touch-action: none; }
+#fonda button:focus-visible, #fonda canvas:focus-visible { outline: 2px solid #ffc3df; outline-offset: 4px; }
+#fonda [hidden] { display: none !important; }
+.game-hud { position: absolute; top: calc(var(--letterbox) + 18px); left: max(24px,env(safe-area-inset-left)); right: 24px; pointer-events: none; text-shadow: 0 2px 14px #10051d; }
+.game-hud span { display: block; min-height: 36px; padding-right: 110px; font: 14px/1.5 system-ui,sans-serif; color: #edbad3; }
+#fonda #sound { position: absolute; right: max(24px,env(safe-area-inset-right)); top: calc(var(--letterbox) + 12px); font-size: 12px; padding: 8px 12px; }
+#fonda #reset-preview { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--letterbox) + 10px); padding: 3px 7px; border: 0; background: transparent; font-size: 10px; color: #bcb4c7; }
+#objective { font: 400 clamp(17px,2.4vw,25px)/1.35 "Fraunces Variable",Georgia,serif; margin: 5px 0; max-width: 720px; }
+#speech { position: absolute; left: 50%; bottom: calc(var(--letterbox) + 78px); transform: translateX(-50%); margin: 0; width: min(570px,calc(100% - 36px)); color: #fff3f9; text-align: center; text-shadow: 0 2px 3px #16071f, 0 0 8px #16071f, 0 0 18px #16071f; font: 500 15px/1.6 system-ui,sans-serif; pointer-events: none; }
+#interact { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+#interact::before { content: "E · "; }
+.keyboard-help { position: absolute; bottom: calc(var(--letterbox) + 7px); left: 24px; font: 12px system-ui,sans-serif; color: #e8bad3; pointer-events: none; }
+.touch-controls { display: none; position: absolute; bottom: calc(var(--letterbox) + 14px); left: max(18px,env(safe-area-inset-left)); right: max(18px,env(safe-area-inset-right)); justify-content: space-between; pointer-events: none; }
+.touch-controls div { display: flex; gap: 10px; }
+.touch-controls button { width: 57px; height: 54px; font-size: 25px !important; padding: 0 !important; pointer-events: auto; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.touch-controls button:active { background: #794262 !important; }
+.touch-controls button[data-control="jump"] { width: 72px; font-size: 15px !important; }
+#fonda dialog { width: min(430px,calc(100% - 40px)); max-height: calc(100dvh - 48px); box-sizing: border-box; color: #ffe4ef; background: #22122fec; border: 1px solid #a76b90; border-radius: 12px; padding: 30px; }
+#fonda dialog::backdrop { background: #0a041899; }
+#fonda dialog h1 { font-size: 30px; font-weight: 400; margin: 0 0 14px; }
+#fonda dialog p { font: 16px/1.8 system-ui,sans-serif; }
+.reunion { display: flex; align-items: center; justify-content: center; }
+.reunion img { width: 100px; }
+.reunion span { color: #ffa6c8; }
+.drawings { display: flex; align-items: flex-end; justify-content: center; gap: 20px; margin-bottom: 24px; }
+.drawings img { width: 42%; max-height: 350px; object-fit: contain; }
+#fonda #conversation { top: calc(var(--letterbox) + 40px); bottom: auto; margin: 0 auto; width: min(640px,calc(100% - 32px)); padding: 16px; background: transparent; border: 0; box-shadow: none; text-align: center; text-shadow: 0 2px 4px #101321,0 0 18px #101321; }
+#fonda #conversation #speaker { font: 24px "Fraunces Variable",Georgia,serif; color: #f1d7ae; margin: 0 0 10px; }
+#fonda #conversation #dialogue-text { margin: 0 0 16px; line-height: 1.6; }
+#fonda #conversation::backdrop { background: linear-gradient(#101321d9, #10132122 50%,transparent); }
+#close-conversation::before { content: "E · "; }
+.conversing .game-hud, .conversing .keyboard-help, .conversing .touch-controls, .conversing #sound, .conversing #reset-preview { visibility: hidden; }
+@media (pointer: coarse), (max-width: 700px) {
+  .touch-controls { display: flex; }
+  .keyboard-help { display: none; }
+  .game-hud { left: 19px; top: calc(var(--letterbox) + 12px); }
+  .game-hud span { font-size: 12px; }
+  #objective { font-size: 18px; max-width: 340px; }
+  #speech { bottom: calc(var(--letterbox) + 139px); font-size: 13px; }
+  #interact { font-size: 12px !important; padding: 8px 12px !important; }
+  #interact::before, #close-conversation::before { content: none; }
+  #fonda #conversation { top: calc(var(--letterbox) + 20px); }
+  #fonda #conversation #dialogue-text { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { #fonda, body.playing #hero, body.playing > footer { transition: none; } }

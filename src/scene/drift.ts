@@ -11,7 +11,7 @@ function isMobile(): boolean {
 
 export type DriftHandle = {
   mesh: THREE.Points;
-  update(time: number): void;
+  update(time: number, opacity?: number): void;
   dispose(): void;
 };
 
@@ -53,6 +53,7 @@ export function createDrift(pixelRatio: number): DriftHandle {
     uniforms: {
       uTime: { value: 0 },
       uPixelRatio: { value: pixelRatio },
+      uOpacity: { value: 1 },
     },
     transparent: true,
     depthTest: false,
@@ -64,8 +65,9 @@ export function createDrift(pixelRatio: number): DriftHandle {
 
   return {
     mesh,
-    update(time) {
+    update(time, opacity=1) {
       material.uniforms.uTime.value = time;
+      material.uniforms.uOpacity.value = opacity;
     },
     dispose() {
       geometry.dispose();

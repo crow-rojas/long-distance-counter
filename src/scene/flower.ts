@@ -6,7 +6,7 @@ import centerFrag from "./shaders/center.frag?raw";
 
 export type FlowerHandle = {
   group: THREE.Group;
-  update(time: number, arrival: number): void;
+  update(time: number, arrival: number, opacity?: number): void;
   dispose(): void;
 };
 
@@ -46,6 +46,7 @@ function makePetal(seed: number): THREE.Mesh {
       uTime: { value: 0 },
       uSeed: { value: seed },
       uArrival: { value: 0 },
+      uOpacity: { value: 1 },
     },
     transparent: true,
     depthTest: false,
@@ -89,6 +90,7 @@ function makeCenter(pixelRatio: number): THREE.Points {
     uniforms: {
       uTime: { value: 0 },
       uPixelRatio: { value: pixelRatio },
+      uOpacity: { value: 1 },
     },
     transparent: true,
     depthTest: false,
@@ -137,7 +139,7 @@ export function createFlower(pixelRatio: number): FlowerHandle {
 
   return {
     group,
-    update(time, arrival) {
+    update(time, arrival, opacity=1) {
       // Rotate the entire flower very slowly around Y
       group.rotation.y = time * 0.07;
       group.rotation.z = Math.sin(time * 0.15) * 0.02;
@@ -147,9 +149,11 @@ export function createFlower(pixelRatio: number): FlowerHandle {
         const m = p.material as THREE.ShaderMaterial;
         m.uniforms.uTime.value = time;
         m.uniforms.uArrival.value = arrival;
+        m.uniforms.uOpacity.value = opacity;
       }
       const cm = center.material as THREE.ShaderMaterial;
       cm.uniforms.uTime.value = time;
+      cm.uniforms.uOpacity.value = opacity;
     },
     dispose() {
       for (const p of petals) {

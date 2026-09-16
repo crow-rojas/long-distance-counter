@@ -1,0 +1,179 @@
+// Run with the arrival preview open and Vite running:
+// agent-browser --session chofis-v3 eval --stdin < tests/platformer.browser.js
+// Exercises the actual Phaser physics and DOM. Uses only preview progress; reload afterward.
+(async () => {
+  if (!new URLSearchParams(location.search).has("t")) throw Error("Use the arrival preview.");
+  const urls = performance.getEntriesByType("resource").map(r=>r.name).filter(u=>u.includes("/src/game/game.ts"));
+  const {game} = await import(urls.findLast(u=>u.includes("?t=")) ?? urls.at(-1));
+  const {PLATFORMS,FRIENDS,ITEMS,CHECKPOINTS} = await import("/src/game/level.ts");
+  const scene=game.scene.scenes[0], player=scene.player, body=player.body, world=scene.physics.world;
+  const check=(ok,message)=>{if(!ok)throw Error(message)};
+  const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  const sound=document.querySelector("#sound");
+  for(let i=0;i<2;i++) { sound.focus(); sound.click(); check(document.activeElement===game.canvas,"Sound kept keyboard focus"); }
+  sound.focus();
+  try {
+    sound.dispatchEvent(new KeyboardEvent("keydown",{code:"ArrowRight",keyCode:39,bubbles:true}));
+    await wait(50); check(scene.keys.RIGHT.isDown,"Sound swallowed movement keys");
+    sound.dispatchEvent(new KeyboardEvent("keydown",{code:"Space",keyCode:32,bubbles:true}));
+    await wait(50); check(!scene.keys.SPACE.isDown,"Space on Sound also jumped");
+  } finally {
+    sound.dispatchEvent(new KeyboardEvent("keyup",{code:"ArrowRight",keyCode:39,bubbles:true}));
+    sound.dispatchEvent(new KeyboardEvent("keyup",{code:"Space",keyCode:32,bubbles:true}));
+    scene.input.keyboard.resetKeys(); game.canvas.focus();
+  }
+  let time=scene.time.now;
+  const originalTime=time;
+  const press=key=>scene.keys[key].onDown(new KeyboardEvent("keydown"));
+  const release=key=>scene.keys[key].onUp(new KeyboardEvent("keyup"));
+  const frame=()=>{
+    time+=1000/120; scene.time.now=time;
+    world.update(time,1000/120); scene.update(time,1000/120); world.postUpdate();
+    check(Math.abs(body.width-40.625)<.01 && Math.abs(body.height-58.75)<.01,"Animation changed player collision size");
+  };
+  const advance=n=>{for(let i=0;i<n;i++)frame()};
+  const reset=(x,y)=>{
+    scene.input.keyboard.resetKeys(); body.reset(x,y-25); player.setVelocity(0).setAccelerationX(0);
+    scene.lastGrounded=-1000; scene.bufferedUntil=0; scene.lastMoving=-1000; advance(30);
+  };
+  const resetIslands=()=>{
+    for(const p of scene.platforms) {
+      const [x,y,,kind]=p.definition;
+      p.sprite.body.enable=true; p.sprite.body.reset(x,y);
+      p.sprite.setVelocity(kind==="moving-x"?65:0,kind==="moving-y"?40:0);
+      p.crumbleAt=p.restoreAt=0; p.art.setPosition(x,y).setAlpha(1);
+    }
+  };
+  const close=async()=>{
+    document.querySelector("#fonda dialog[open]")?.close(); await wait(20);
+    check(!scene.focusedFriend && !world.isPaused && scene.input.keyboard.enabled,"Dialogue did not restore gameplay");
+  };
+  game.loop.sleep();
+  try {
+    // Exercise create() velocities before resetIslands can replace them.
+    const movers=scene.platforms.filter(p=>p.definition[3]?.startsWith("moving"));
+    const starts=movers.map(p=>({x:p.sprite.x,y:p.sprite.y}));
+    const moved=new Set();
+    for(let i=0;i<600;i++) {
+      frame();
+      movers.forEach((p,index)=>{
+        const [x,y,,kind]=p.definition;
+        const dx=Math.abs(p.sprite.x-x),dy=Math.abs(p.sprite.y-y);
+        check(kind==="moving-x" ? dx<=52 && dy<.01 : dx<.01 && dy<=42,
+          `${kind} left its route after create(): ${dx}, ${dy}`);
+        check(p.art.alpha>0 && Math.abs(p.art.x-p.sprite.x)<2 && Math.abs(p.art.y-p.sprite.y)<2,
+          "Moving island artwork stopped following its body");
+        if(Math.hypot(p.sprite.x-starts[index].x,p.sprite.y-starts[index].y)>20)moved.add(index);
+      });
+    }
+    check(moved.size===movers.length,"Some moving islands never started moving");
+    resetIslands(); reset(120,700);
+    for(let i=0;i<40;i++) {
+      release(i%2?"RIGHT":"LEFT"); press(i%2?"LEFT":"RIGHT"); frame();
+      check(scene.avatar.texture.key==="chofis-run","Quick turn flashed the front sprite");
+    }
+    release("LEFT"); release("RIGHT"); advance(35);
+    check(scene.avatar.texture.key==="chofis-front","Idle pose never returned after stopping");
+    const height=hold=>{
+      reset(120,700); press("SPACE"); frame(); if(!hold)release("SPACE");
+      let top=body.bottom;
+      for(let i=0;i<110;i++){frame();top=Math.min(top,body.bottom)}
+      return 700-top;
+    };
+    const short=height(false),tall=height(true);
+    check(tall>short+60,"Holding jump did not increase its height");
+    reset(630,700); player.setVelocityX(340); press("RIGHT"); advance(13);
+    check(!body.touching.down,"Coyote test never left the edge");
+    press("SPACE");frame(); check(body.velocity.y < -650,"Coyote jump was lost");
+    advance(20);const before=body.velocity.y;release("SPACE");press("SPACE");frame();
+    check(body.velocity.y>before,"Unexpected double jump");
+    reset(300,700);scene.lastGrounded=-1000;body.reset(300,660);player.setVelocityY(500);press("SPACE");advance(13);
+    check(body.velocity.y<0,"Buffered jump was lost");
+
+    for(const friend of FRIENDS) {
+      reset(friend.x,friend.y);
+      check(!scene.focusedFriend,"NPC started a conversation from proximity");
+      check(scene.tweens.getTweensOf(scene.portraits.get(friend.name)).length===0,"NPC animated from proximity");
+    }
+    reset(350,700);press("E");frame();release("E");
+    check(document.querySelector("#conversation").open && document.querySelector("#speaker").textContent==="Marin","E did not open the nearby conversation");
+    check(world.isPaused && !scene.input.keyboard.enabled,"Conversation did not pause gameplay");
+    check(scene.portraits.get("Marin").frame.name===1,"Marin did not greet on interaction");
+    await close();
+    scene.portraits.get("Marin").emit("pointerup");check(document.querySelector("#conversation").open,"Nearby NPC tap failed");await close();
+    reset(120,700);scene.portraits.get("Marin").emit("pointerup");
+    check(!scene.focusedFriend,"An out-of-range NPC tap worked");
+    const gallery=FRIENDS.find(f=>f.name==="Tus dibujos");reset(gallery.x,gallery.y);scene.talk(gallery);
+    check(document.querySelector("#gallery").open,"Optional drawings did not open");await close();
+    if(JSON.parse(localStorage.getItem("chofis-platformer-preview")??"[]").length<3) {
+      const crow=FRIENDS.find(f=>f.name==="Crow");reset(crow.x-50,crow.y);scene.talk(crow);
+      check(!document.querySelector("#letter").open,"Ending opened before food was collected");await close();
+    }
+
+    for(const kind of ["moving-x","moving-y"]) {
+      resetIslands();const p=scene.platforms.find(p=>p.definition[3]===kind);
+      reset(p.sprite.x+p.definition[2]/2,p.sprite.y);
+      const offset=player.x-p.sprite.x;advance(110);
+      check(Math.abs(player.x-p.sprite.x-offset)<4 && Math.abs(body.bottom-p.sprite.y)<1,`${kind} did not carry the player: ${player.x-p.sprite.x-offset}, ${body.bottom-p.sprite.y}`);
+    }
+    resetIslands();const fragile=scene.platforms.find(p=>p.definition[3]==="fragile");
+    reset(fragile.sprite.x+fragile.definition[2]/2,fragile.sprite.y);
+    check(fragile.crumbleAt>scene.levelTime,"Fragile island did not warn before falling");
+    reset(350,700);scene.talk(FRIENDS[0]);
+    const clock=scene.levelTime,position=scene.platforms[10].sprite.x;
+    advance(180);
+    check(scene.levelTime===clock && scene.platforms[10].sprite.x===position,"Challenges advanced during dialogue");await close();
+    advance(110);check(!fragile.sprite.body.enable,"Fragile island did not fall");
+    advance(310);check(fragile.sprite.body.enable,"Fragile island did not regrow");
+
+    // Find a real takeoff timing for every connection in both directions, including moving islands.
+    const traverse=(fromIndex,toIndex)=>{
+      const direction=toIndex>fromIndex?1:-1;
+      const from=scene.platforms[fromIndex],to=scene.platforms[toIndex];
+      for(const phase of [0,50,130,240,350]) for(const margin of [8,25,45]) {
+        resetIslands();reset(120,700);advance(phase);
+        reset(from.sprite.x+(direction>0?from.definition[2]-margin:margin),from.sprite.y);
+        if(!body.touching.down)continue;
+        player.setVelocityX(direction*340);press(direction>0?"RIGHT":"LEFT");press("SPACE");
+        for(let i=0;i<220;i++) {
+          const target=to.sprite.x+(direction>0?40:to.definition[2]-40);
+          if(direction*(player.x-target)>=-18)release(direction>0?"RIGHT":"LEFT");
+          frame();
+          if(body.touching.down && Math.abs(body.bottom-to.sprite.y)<1 && player.x>to.sprite.x && player.x<to.sprite.x+to.definition[2])return true;
+          if(player.y>950)break;
+        }
+      }
+      return false;
+    };
+    let connections=0;
+    for(let i=0;i<PLATFORMS.length-1;i++) for(const direction of [1,-1]) {
+      const from=direction>0?i:i+1,to=direction>0?i+1:i;
+      check(traverse(from,to),`Cannot traverse ${from} → ${to}: ${JSON.stringify(PLATFORMS[from])} to ${JSON.stringify(PLATFORMS[to])}`);connections++;
+    }
+    // Jump vertically through the one-way island to enter the optional branch.
+    resetIslands();reset(1710,355);press("SPACE");advance(100);
+    check(body.touching.down && Math.abs(body.bottom-260)<1,"Vertical entrance to the drawings is unreachable");connections++;
+    for(const [from,to] of [[40,41],[41,40]]) {
+      check(traverse(from,to),`Optional branch ${from} → ${to} is unreachable`);connections++;
+    }
+    resetIslands();reset(1710,260);press("RIGHT");
+    for(let i=0;i<150;i++) {if(player.x>=1810)release("RIGHT");frame()}
+    check(body.touching.down && Math.abs(body.bottom-355)<1,"Cannot step off the drawings branch back to the main route");connections++;
+    for(const item of ITEMS) {reset(item.x,item.y+35);advance(10)}
+    check(JSON.parse(localStorage.getItem("chofis-platformer-preview")).length===3,"Not all food was collected");
+    resetIslands();const cp=CHECKPOINTS[5];reset(PLATFORMS[cp][0]+120,PLATFORMS[cp][1]);
+    check(localStorage.getItem("chofis-platformer-preview:checkpoint")===String(cp),"Checkpoint was not persisted");
+    const spawn={...scene.spawn};body.reset(player.x,1200);scene.update(time);
+    check(player.x===spawn.x && player.y===spawn.y,"Fall lost the checkpoint");
+    const crow=FRIENDS.find(f=>f.name==="Crow");reset(crow.x-50,crow.y);scene.talk(crow);
+    check(document.querySelector("#letter").open && scene.won,"Reunion did not open");await close();frame();
+    check(document.querySelector("#objective").textContent.includes("La fonda es nuestra"),"Completed game still asks for food");
+    return {passed:true,connections,quickTurns:true,movingPlatforms:true,fragilePlatforms:true,manualDialogue:true,gallery:true,checkpoints:true,reunion:true,shortJump:Math.round(short),heldJump:Math.round(tall)};
+  } finally {
+    document.querySelector("#fonda dialog[open]")?.close();await wait(20);
+    scene.input.keyboard.resetKeys();scene.time.now=originalTime;
+    scene.landingUntil=scene.bufferedUntil=scene.speechUntil=0;scene.lastGrounded=scene.lastMoving=-1000;
+    for(const p of scene.portraits.values())p.setData("poseUntil",0);
+    game.loop.wake();
+  }
+})()

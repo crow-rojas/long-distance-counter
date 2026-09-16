@@ -1,6 +1,7 @@
 precision highp float;
 
 uniform float uTime;
+uniform float uOpacity;
 
 varying float vSeed;
 
@@ -25,5 +26,5 @@ void main() {
   float twinkle = 0.7 + 0.3 * sin(uTime * 2.0 + vSeed * 30.0);
 
   float a = (core * 0.9 + glow) * twinkle;
-  gl_FragColor = vec4(col, a);
+  gl_FragColor = vec4(col, a * uOpacity);
 }

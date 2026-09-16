@@ -17,6 +17,7 @@ export function createMaterial(): THREE.ShaderMaterial {
       uResolution: { value: new THREE.Vector2(1, 1) },
       uPointer: { value: new THREE.Vector2(0.5, 0.5) },
       uArrival: { value: 0 },
+      uGame: { value: 0 },
     },
     depthTest: false,
     depthWrite: false,

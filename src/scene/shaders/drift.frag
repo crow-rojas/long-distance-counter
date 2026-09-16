@@ -1,4 +1,5 @@
 precision highp float;
+uniform float uOpacity;
 
 varying float vAlpha;
 varying float vSeed;
@@ -20,5 +21,5 @@ void main() {
   );
 
   float a = (core * 0.80 + glow) * vAlpha;
-  gl_FragColor = vec4(col, a);
+  gl_FragColor = vec4(col, a * uOpacity);
 }

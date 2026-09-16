@@ -4,6 +4,7 @@ import { createFlower } from "./flower";
 import { createDrift } from "./drift";
 
 export type SceneHandle = {
+  enterGame: () => void;
   pause: () => void;
   resume: () => void;
   stop: () => void;
@@ -59,14 +60,22 @@ export function startScene(
   let raf = 0;
   let stopped = false;
   let paused = false;
+  let gameMode = false;
 
   function frame() {
     if (stopped || paused) return;
 
     const u = getUniforms();
     applyUniforms(bgMaterial, u);
-    flower.update(u.time, u.arrival);
-    drift.update(u.time);
+    if (gameMode) {
+      bgMaterial.uniforms.uGame.value = THREE.MathUtils.lerp(bgMaterial.uniforms.uGame.value,1,.035);
+      if (bgMaterial.uniforms.uGame.value > .999) fgScene.visible = false;
+    }
+    if (fgScene.visible) {
+      const opacity = 1-bgMaterial.uniforms.uGame.value;
+      flower.update(u.time,u.arrival,opacity);
+      drift.update(u.time,opacity);
+    }
 
     // Subtle camera parallax driven by pointer
     const px = (u.pointer[0] - 0.5) * 0.18;
@@ -85,6 +94,13 @@ export function startScene(
   frame();
 
   return {
+    enterGame() {
+      gameMode = true;
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        fgScene.visible = false;
+        bgMaterial.uniforms.uGame.value = 1;
+      }
+    },
     pause() {
       if (paused || stopped) return;
       paused = true;

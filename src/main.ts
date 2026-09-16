@@ -48,17 +48,47 @@ const sceneHandle = useShader ? startScene(canvas, () => uniforms) : null;
 
 let rafId = 0;
 let paused = false;
+let revealingGame = false;
+let gameStarted = false;
+
+async function revealGame() {
+  try {
+    const { startGame } = await import("./game/game");
+    await startGame();
+    gameStarted = true;
+    sceneHandle?.enterGame();
+  } catch {
+    gameStarted = false;
+    // A failed chunk request must leave a way to recover on an intermittent connection.
+    const message = document.getElementById("arrival")!;
+    message.textContent = "Tu sorpresa está lista.";
+    const retry = document.createElement("button");
+    retry.textContent = "Abrir mi sorpresa";
+    retry.style.cssText = "display:block;margin:1rem auto;padding:1rem;pointer-events:auto;font:1rem system-ui;cursor:pointer";
+    retry.addEventListener("click", () => location.reload());
+    message.append(retry);
+  }
+}
 
 function tick() {
   if (paused) return;
   // Freeze time uniform when reduced motion is set — shader becomes a still
   uniforms.time = reducedMotion ? 0 : (performance.now() - t0) / 1000;
   uniforms.pointer = pointer.get();
+  if (gameStarted) {
+    rafId = requestAnimationFrame(tick);
+    return;
+  }
 
   const state = compute(new Date());
   view.update(state);
   arrival.update(state.arrived);
   uniforms.arrival = arrival.getUniform();
+
+  if (state.arrived && !revealingGame) {
+    revealingGame = true;
+    setTimeout(revealGame, reducedMotion ? 0 : 2200);
+  }
 
   rafId = requestAnimationFrame(tick);
 }
