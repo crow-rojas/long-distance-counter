@@ -34,7 +34,7 @@ Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas
 - El canvas y sus textos se dibujan según la densidad de pantalla, hasta 3×. El tamaño visible del mapa y las colisiones no cambian; el giro del celular o cambio de densidad del monitor reajusta canvas, textos y cámara sin recargar.
 - Chofis tiene tres frames de carrera y dos de salto. Marin saluda y señala al hablar; Crow cambia de expresión. Supergirl, Krypto y Pibble conservan sus dibujos.
 - Para escribir más diálogos, leer primero los [criterios y ejemplos de Crow](docs/dialogues.md#criterios-para-los-próximos-textos) y aplicar humanizer respetando sus expresiones.
-- La carta final sigue provisional: editar `LETTER` en [game.ts](src/game/game.ts).
+- Los textos se editan en [es.json](src/game/es.json). La carta final sigue provisional en `carta.texto`; [guía de edición](docs/dialogues.md).
 
 El guardado usa `chofis-platformer-preview` en pruebas y `chofis-platformer` con el reloj real. Cada uno guarda el último checkpoint en la clave correspondiente terminada en `:checkpoint`. Recargar retoma allí; los guardados anteriores sin checkpoint empiezan en la zona del siguiente objeto pendiente. Los índices ajenos a los checkpoints del mapa se descartan. Si el navegador bloquea el almacenamiento, la sesión sigue siendo jugable.
 

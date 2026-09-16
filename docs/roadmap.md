@@ -6,7 +6,7 @@ Estas ideas quedan pendientes; no forman parte de esta entrega. El orden es una 
 
 ## Primero: darle nuestro toque
 
-- [x] **Reunir todos los diálogos en un solo lugar.** [Catálogo de textos y variantes](dialogues.md), con sus fuentes editables. Los diálogos revisados por Crow ya están incorporados al juego.
+- [x] **Reunir todos los diálogos en un solo lugar.** [Guía de textos y variantes](dialogues.md), con el [JSON editable](../src/game/es.json). Los diálogos revisados por Crow ya están incorporados al juego.
 - [x] **Incorporar los diálogos escritos por Crow.** Conservar sus chistes y forma de hablar; los criterios para próximos textos están en el catálogo.
 - [ ] **Escribir la carta final.** Crow la hará después.
 - [ ] **UI más mínima y con etiquetas claras.** Simplificar objetivos, progreso, interacción y sonido. Conservar nombres accesibles, contraste y botones cómodos para tocar.

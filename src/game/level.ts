@@ -1,4 +1,5 @@
 import type { Stamp } from "./progress";
+import texts from "./es.json";
 
 export const WORLD_WIDTH = 14000;
 export type PlatformKind = "checkpoint" | "moving-x" | "moving-y" | "fragile";
@@ -21,10 +22,10 @@ export const PLATFORMS: readonly Platform[] = [
 export const SIDE_PLATFORMS: readonly Platform[] = [[1630,260,160], [1870,175,240]];
 export const CHECKPOINTS = PLATFORMS.flatMap((p,index) => p[3] === "checkpoint" ? [index] : []);
 export const ZONES = [
-  { name:"Entrada a la fonda", x:0, checkpoint:0 },
-  { name:"Islas de los volantines", x:3260, checkpoint:9 },
-  { name:"Jardín de copihues", x:6700, checkpoint:19 },
-  { name:"Camino a Crow", x:10000, checkpoint:29 },
+  { name:texts.zonas.entrada, x:0, checkpoint:0 },
+  { name:texts.zonas.volantines, x:3260, checkpoint:9 },
+  { name:texts.zonas.copihues, x:6700, checkpoint:19 },
+  { name:texts.zonas.crow, x:10000, checkpoint:29 },
 ] as const;
 export const FRIENDS = [
   { name:"Marin", image:"marin-poses", x:430, y:700, height:150 },
@@ -35,12 +36,12 @@ export const FRIENDS = [
   { name:"Crow", image:"crow-poses", x:13700, y:650, height:104 },
 ] as const;
 export const ITEMS: { id: Stamp; x: number; y: number; instruction: string }[] = [
-  { id: "empanada", x: 1750, y: 308, instruction: "Busca la empanada" },
-  { id: "completo", x: 5880, y: 308, instruction: "Busca el completo" },
-  { id: "terremoto", x: 9150, y: 193, instruction: "Busca el terremoto" },
+  { id: "empanada", x: 1750, y: 308, instruction: texts.objetivos.empanada },
+  { id: "completo", x: 5880, y: 308, instruction: texts.objetivos.completo },
+  { id: "terremoto", x: 9150, y: 193, instruction: texts.objetivos.terremoto },
 ];
 
 export function nextStop(stamps: Set<Stamp>) {
   return ITEMS.find(item => !stamps.has(item.id)) ??
-    { x: 13700, y: 650, instruction: "Llega hasta Crow" };
+    { x: 13700, y: 650, instruction: texts.objetivos.crow };
 }

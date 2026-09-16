@@ -4,6 +4,8 @@
   if (!new URLSearchParams(location.search).has("t")) throw Error("Use the arrival preview.");
   const urls = performance.getEntriesByType("resource").map(r=>r.name).filter(u=>u.includes("/src/game/game.ts"));
   const {game} = await import(urls.findLast(u=>u.includes("?t=")) ?? urls.at(-1));
+  const {default:texts} = await import("/src/game/es.json?import");
+  const {formatText} = await import("/src/game/dialogue.ts");
   const {PLATFORMS,FRIENDS,ITEMS,CHECKPOINTS} = await import("/src/game/level.ts");
   const scene=game.scene.scenes[0], player=scene.player, body=player.body, world=scene.physics.world;
   const check=(ok,message)=>{if(!ok)throw Error(message)};
@@ -43,8 +45,10 @@
     else delete window.devicePixelRatio;
     window.dispatchEvent(new Event("resize"));
   }
+  check(document.querySelector("#letter > p").textContent===texts.carta.texto,"Letter did not use editable copy");
+  check(document.querySelector("#letter-title").textContent===texts.carta.titulo,"Letter title did not use editable copy");
   const sound=document.querySelector("#sound");
-  for(let i=0;i<2;i++) { sound.focus(); sound.click(); check(document.activeElement===game.canvas,"Sound kept keyboard focus"); }
+  for(let i=0;i<2;i++) { sound.focus(); sound.click(); check(sound.textContent===(i===0?texts.interfaz.sonido.activado:texts.interfaz.sonido.desactivado),"Sound label ignored JSON"); check(document.activeElement===game.canvas,"Sound kept keyboard focus"); }
   sound.focus();
   try {
     sound.dispatchEvent(new KeyboardEvent("keydown",{code:"ArrowRight",keyCode:39,bubbles:true}));
@@ -87,7 +91,7 @@
     check(!localStorage.getItem("chofis-platformer-preview"),"Use a fresh browser session");
     body.reset(120,1200);scene.update(time);
     const speech=document.querySelector("#speech");
-    check(speech.textContent==="Fonda: Volviste al checkpoint.","First fall claims food before collecting any");
+    check(speech.textContent===formatText(texts.interfaz.subtitulo,{personaje:texts.personajes.Fonda,texto:texts.caidas.primeraSinComida}),"First fall claims food before collecting any");
     const firstReminder=scene.speechUntil;
     body.reset(120,1200);time+=100;scene.update(time);
     check(scene.speechUntil===firstReminder,"Repeated falls repeat the tutorial");
@@ -142,11 +146,19 @@
       check(scene.tweens.getTweensOf(scene.portraits.get(friend.name)).length===0,"NPC animated from proximity");
     }
     reset(350,700);press("E");frame();release("E");
-    check(document.querySelector("#conversation").open && document.querySelector("#speaker").textContent==="Marin","E did not open the nearby conversation");
+    check(document.querySelector("#conversation").open && document.querySelector("#speaker").textContent===texts.personajes.Marin,"E did not open the nearby conversation");
     check(world.isPaused && !scene.input.keyboard.enabled,"Conversation did not pause gameplay");
     check(scene.portraits.get("Marin").frame.name===1,"Marin did not greet on interaction");
     await close();
-    scene.portraits.get("Marin").emit("pointerup");check(document.querySelector("#conversation").open,"Nearby NPC tap failed");await close();
+    const originalName=texts.personajes.Marin;
+    try {
+      texts.personajes.Marin='Marin <3 "Chofis"';
+      scene.portraits.get("Marin").emit("pointerup");
+      check(document.querySelector("#conversation").open,"Nearby NPC tap failed");
+      const speaker=document.querySelector("#speaker");
+      check(speaker.textContent===texts.personajes.Marin && speaker.childElementCount===0,"Edited name was treated as HTML or broke character identity");
+      await close();
+    } finally { texts.personajes.Marin=originalName; }
     reset(120,700);scene.portraits.get("Marin").emit("pointerup");
     check(!scene.focusedFriend,"An out-of-range NPC tap worked");
     const gallery=FRIENDS.find(f=>f.name==="Tus dibujos");reset(gallery.x,gallery.y);scene.talk(gallery);
@@ -209,7 +221,7 @@
     check(JSON.parse(localStorage.getItem("chofis-platformer-preview")).length===3,"Not all food was collected");
     scene.foodRecoveryExplained=false;
     body.reset(player.x,1200);scene.update(time);
-    check(speech.textContent==="Fonda: No perdiste nada:)","Food recovery reminder is missing");
+    check(speech.textContent===formatText(texts.interfaz.subtitulo,{personaje:texts.personajes.Fonda,texto:texts.caidas.conComida}),"Food recovery reminder is missing");
     const foodReminder=scene.speechUntil;
     body.reset(player.x,1200);time+=100;scene.update(time);
     check(scene.speechUntil===foodReminder,"Food recovery reminder repeats");
@@ -219,7 +231,7 @@
     check(player.x===spawn.x && player.y===spawn.y,"Fall lost the checkpoint");
     const crow=FRIENDS.find(f=>f.name==="Crow");reset(crow.x-50,crow.y);scene.talk(crow);
     check(document.querySelector("#letter").open && scene.won,"Reunion did not open");await close();frame();
-    check(document.querySelector("#objective").textContent.includes("La fonda es nuestra"),"Completed game still asks for food");
+    check(document.querySelector("#objective").textContent===texts.interfaz.objetivoFinal,"Completed game still asks for food");
     return {passed:true,connections,quickTurns:true,movingPlatforms:true,fragilePlatforms:true,manualDialogue:true,gallery:true,checkpoints:true,reunion:true,shortJump:Math.round(short),heldJump:Math.round(tall)};
   } finally {
     document.querySelector("#fonda dialog[open]")?.close();await wait(20);

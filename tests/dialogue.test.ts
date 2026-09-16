@@ -1,37 +1,44 @@
 import { expect, it } from "vitest";
-import authoredDialogue from "../docs/dialogues.md?raw";
-import { replyFor } from "../src/game/dialogue";
-import { nextStop } from "../src/game/level";
+import texts from "../src/game/es.json";
+import { replyFor, formatText } from "../src/game/dialogue";
 import type { Stamp } from "../src/game/progress";
 
-it("keeps Crow's authored dialogue exactly as written in the review document", () => {
-  const rows = authoredDialogue
-    .split("## Objetivos del HUD")[0].split("\n").filter(line => line.startsWith("|"))
-    .map(line => line.slice(1, line.lastIndexOf("|")).split("|").map(cell => cell.trim()));
-  const foods: Stamp[] = ["empanada", "completo", "terremoto"];
-  let checked = 0;
-  for (const [name, state, text] of rows) {
-    if (["Marin", "Pibble", "Supergirl", "Krypto"].includes(name)) {
-      const collected = state.startsWith("Con ") ? foods.filter(food => state.includes(food)) : [];
-      expect(replyFor(name as "Marin" | "Pibble" | "Supergirl" | "Krypto", new Set(collected))).toBe(text);
-      checked++;
-    } else if (text === undefined && (name === "Ninguna" || name === "Toda" || foods.some(food => name.toLowerCase().includes(food)))) {
-      const collected = name === "Toda" ? foods : foods.filter(food => name.toLowerCase().includes(food));
-      expect(replyFor("Crow", new Set(collected))).toBe(state);
-      checked++;
-    }
+it("uses edited JSON values without changing character identity", () => {
+  const original = texts.dialogos.Marin.sinEmpanada;
+  try {
+    texts.dialogos.Marin.sinEmpanada = 'Omg "Chofis" <3\nLlegaste';
+    expect(replyFor("Marin", new Set())).toBe(texts.dialogos.Marin.sinEmpanada);
+  } finally { texts.dialogos.Marin.sinEmpanada = original; }
+});
+
+it("formats values literally and reports missing placeholders", () => {
+  expect(formatText('{personaje}: {texto} ({cantidad})', {
+    personaje: 'Crow <3', texto: '"Chofis"\n$& {comida}', cantidad: 0,
+  })).toBe('Crow <3: "Chofis"\n$& {comida} (0)');
+  expect(() => formatText("Hola {nombre}", {})).toThrow("Missing text value: nombre");
+});
+
+it("keeps the documented placeholders valid in the editable templates", () => {
+  for (const [template, keys] of [
+    [texts.dialogos.Crow.faltaUno, ["comida"]],
+    [texts.dialogos.Crow.faltanVarios, ["comida"]],
+    [texts.interfaz.objetivo, ["cantidad", "instruccion", "direccion"]],
+    [texts.interfaz.subtitulo, ["personaje", "texto"]],
+    [texts.interfaz.interaccion.conPersonaje, ["personaje"]],
+  ] as const) {
+    expect([...template.matchAll(/\{([^{}]+)\}/g)].map(match => match[1]).sort()).toEqual([...keys].sort());
   }
-  expect(checked).toBe(15);
 });
 
 it("omits decorative separators and arrow characters from the interface", () => {
+  const excluded = /[\u2013\u2014\u00b7\u2022\u2190-\u21ff\u2794\u279c]|&(?:bull|middot|[lr]arr);/i;
   const sources = import.meta.glob<string>(["../index.html", "../src/game/game.ts", "../src/game/game.css",
-    "../src/game/dialogue.ts", "../src/game/level.ts", "../src/countdown/target.ts", "../src/ui/countdown.ts"],
+    "../src/game/dialogue.ts", "../src/game/es.json", "../src/game/level.ts", "../src/countdown/target.ts", "../src/ui/countdown.ts"],
   { query: "?raw", import: "default", eager: true });
-  expect(Object.keys(sources)).toHaveLength(7);
+  expect(Object.keys(sources)).toHaveLength(8);
+  expect(JSON.stringify(texts)).not.toMatch(excluded);
   for (const [path, source] of Object.entries(sources)) {
-    expect(source, path)
-      .not.toMatch(/[\u2013\u2014\u00b7\u2022\u2190-\u21ff\u2794\u279c]|&(?:bull|middot|[lr]arr);/i);
+    expect(source, path).not.toMatch(excluded);
   }
 });
 
@@ -48,24 +55,22 @@ it.each<{ collected: Stamp[]; missing: Stamp[] }>([
   const stamps = new Set(collected);
   const reply = replyFor("Crow", stamps);
   expect(reply.length).toBeGreaterThan(0);
-  expect(reply.match(/empanada|completo|terremoto/g) ?? []).toEqual(missing);
-  if (!missing.length) expect(reply).not.toMatch(/falta/i);
+  if (missing.length) {
+    for (const food of ["empanada", "completo", "terremoto"] as const) {
+      expect(reply.includes(texts.comida[food])).toBe(missing.includes(food));
+    }
+  } else expect(reply).toBe(texts.dialogos.Crow.completo);
   expect([...stamps]).toEqual(collected);
 });
 
 it.each([
-  { name: "Marin", food: "empanada", other: "completo" },
-  { name: "Pibble", food: "completo", other: "terremoto" },
-  { name: "Supergirl", food: "terremoto", other: "empanada" },
-] as const)("$name responds to their own food without reciting the next objective", ({ name, food, other }) => {
-  const before = replyFor(name, new Set());
+  { name: "Marin", food: "empanada", other: "completo", before: texts.dialogos.Marin.sinEmpanada, after: texts.dialogos.Marin.conEmpanada },
+  { name: "Pibble", food: "completo", other: "terremoto", before: texts.dialogos.Pibble.sinCompleto, after: texts.dialogos.Pibble.conCompleto },
+  { name: "Supergirl", food: "terremoto", other: "empanada", before: texts.dialogos.Supergirl.sinTerremoto, after: texts.dialogos.Supergirl.conTerremoto },
+] as const)("$name selects the JSON variant for their own food", ({ name, food, other, before, after }) => {
+  expect(replyFor(name, new Set())).toBe(before);
   expect(replyFor(name, new Set([other]))).toBe(before);
-  const after = replyFor(name, new Set([food]));
-  expect(after).not.toBe(before);
-  expect(after.toLowerCase()).toContain(food);
-  expect(after).not.toMatch(/recoge|recógelo|llega a la fonda/i);
-  expect(after).not.toContain(nextStop(new Set([food])).instruction);
+  expect(replyFor(name, new Set([food]))).toBe(after);
   const complete = new Set<Stamp>(["empanada", "completo", "terremoto"]);
   expect(replyFor(name, complete)).toBe(after);
-  expect(after).not.toContain(nextStop(complete).instruction);
 });

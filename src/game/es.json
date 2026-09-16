@@ -1,0 +1,119 @@
+{
+  "personajes": {
+    "Chofis": "Chofis",
+    "Fonda": "Fonda",
+    "Marin": "Marin",
+    "Pibble": "Pibble",
+    "Supergirl": "Supergirl",
+    "Krypto": "Krypto",
+    "Crow": "Crow",
+    "Tus dibujos": "Tus dibujos"
+  },
+  "comida": {
+    "empanada": "empanada",
+    "completo": "completo",
+    "terremoto": "terremoto"
+  },
+  "dialogos": {
+    "Marin": {
+      "sinEmpanada": "¡Omg! Hola Chofis, la empanada está más adelante, ve por ella 🫪",
+      "conEmpanada": "¡Encontraste la empanada! ¡Yei!"
+    },
+    "Pibble": {
+      "sinCompleto": "Dicen que más adelante está iTownGamePlays, y te va a tocar. ¡Ten cuidado buscando el completo!",
+      "conCompleto": "Ya tienes el completo, Pibble Martillo estaría orgulloso."
+    },
+    "Supergirl": {
+      "sinTerremoto": "Solo te falta el terremoto, eh? Cuidado con las siguientes grietas, se caen después de un ratito.",
+      "conTerremoto": "¡Conseguiste el terremoto! No te vayas a marear, cuidado con las réplica AJSD"
+    },
+    "Krypto": "Woof woof woof woof (las banderas son un checkpoint 🥳)",
+    "Crow": {
+      "faltaUno": "Mi princesa, nos falta {comida} :(",
+      "faltanVarios": "Mi princesa, nos faltan {comida} :(",
+      "completo": "Ya está toda la comida, mi princesa te amooooo ❤️"
+    }
+  },
+  "interfaz": {
+    "titulo": "La fonda entre estrellas",
+    "misionInicial": "Lleva la comida a Crow",
+    "cargando": "Cargando la fonda...",
+    "objetivo": "Comida para Crow: {cantidad}/3. {instruccion}{direccion}",
+    "direccionIzquierda": ", a tu izquierda",
+    "zonaFinal": "De México a Chile, juntos al fin",
+    "objetivoFinal": "La fonda es nuestra, amorcito",
+    "subtitulo": "{personaje}: {texto}",
+    "sonido": {
+      "activado": "Sonido: sí",
+      "desactivado": "Sonido: no",
+      "activar": "Activar música y efectos",
+      "silenciar": "Silenciar música y efectos"
+    },
+    "reiniciar": "Reiniciar prueba",
+    "atajoReiniciar": "Shift + R",
+    "interaccion": {
+      "hablar": "Hablar",
+      "conPersonaje": "Hablar con {personaje}",
+      "verDibujos": "Ver dibujos",
+      "abrazar": "Abrazar a Crow",
+      "seguir": "Seguir",
+      "prefijoTecla": "E: "
+    },
+    "controles": {
+      "ayudaTeclado": "A y D para moverse   Espacio saltar   E hablar",
+      "izquierda": "Izq",
+      "derecha": "Der",
+      "saltar": "Saltar",
+      "descripcion": "Controles del juego",
+      "moverIzquierda": "Moverse a la izquierda",
+      "moverDerecha": "Moverse a la derecha",
+      "descripcionJuego": "Plataformas: flechas para moverte, Espacio para saltar. Recoge la comida y llega hasta Crow."
+    }
+  },
+  "objetivos": {
+    "empanada": "Busca la empanada",
+    "completo": "Busca el completo",
+    "terremoto": "Busca el terremoto",
+    "crow": "Llega hasta Crow"
+  },
+  "zonas": {
+    "entrada": "Entrada a la fonda",
+    "volantines": "Islas de los volantines",
+    "copihues": "Jardín de copihues",
+    "crow": "Camino a Crow"
+  },
+  "recogida": {
+    "empanada": "Empanada lista, yei",
+    "completo": "Ya tengo el completo omgg",
+    "terremoto": "Ya tengo el terremoto carnal"
+  },
+  "caidas": {
+    "primeraSinComida": "Volviste al checkpoint.",
+    "primeraConComida": "Volviste al checkpoint, no perdiste nada:)",
+    "conComida": "No perdiste nada:)"
+  },
+  "carteles": {
+    "entrada": "Salta",
+    "islasMoviles": "Espera y\nsalta",
+    "grietas": "Pisa y\nsalta",
+    "luces": "Sigue las\nluces",
+    "dibujos": "Tus dibujos arriba",
+    "fonda": "la fonda de los dos"
+  },
+  "galeria": {
+    "titulo": "Un rincón para tus dibujos",
+    "volver": "Volver al camino",
+    "marinDiablita": "Marin diablita dibujada por Chofis",
+    "marinConejita": "Marin conejita dibujada por Chofis"
+  },
+  "carta": {
+    "titulo": "Ven acá, mi princesa ❤️",
+    "texto": "Chofis, qué ganas tenía de abrazarte. Ya estás aquí. Quiero pasear contigo, probar cosas ricas y tener tus dibujos por toda la casa. Te amo, amorcito. Tu Crow.",
+    "volver": "Volver a la fonda",
+    "corazon": "♥"
+  },
+  "carga": {
+    "error": "Tu sorpresa está lista.",
+    "reintentar": "Abrir mi sorpresa"
+  }
+}

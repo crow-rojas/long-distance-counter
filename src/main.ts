@@ -1,4 +1,5 @@
 import "./style.css";
+import texts from "./game/es.json";
 import { compute } from "./countdown/compute";
 import { TARGET_LABEL } from "./countdown/target";
 import { createCountdownView } from "./ui/countdown";
@@ -78,9 +79,9 @@ async function revealGame() {
     gameStarted = false;
     // A failed chunk request must leave a way to recover on an intermittent connection.
     const message = document.getElementById("arrival")!;
-    message.textContent = "Tu sorpresa está lista.";
+    message.textContent = texts.carga.error;
     const retry = document.createElement("button");
-    retry.textContent = "Abrir mi sorpresa";
+    retry.textContent = texts.carga.reintentar;
     retry.style.cssText = "display:block;margin:1rem auto;padding:1rem;pointer-events:auto;font:1rem system-ui;cursor:pointer";
     retry.addEventListener("click", () => location.reload());
     message.append(retry);

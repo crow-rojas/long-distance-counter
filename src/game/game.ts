@@ -1,12 +1,10 @@
 import Phaser from "phaser";
 import "./game.css";
 import { isPreview } from "../countdown/compute";
-import { replyFor } from "./dialogue";
+import { replyFor, formatText } from "./dialogue";
+import texts from "./es.json";
 import { readStamps, readyForCrow } from "./progress";
 import { CHECKPOINTS, FRIENDS, ITEMS, nextStop, PLATFORMS, SIDE_PLATFORMS, WORLD_WIDTH, ZONES, type Platform } from "./level";
-
-// Provisional. Replace with Crow's own message before publishing.
-const LETTER = "Chofis, qué ganas tenía de abrazarte. Ya estás aquí. Quiero pasear contigo, probar cosas ricas y tener tus dibujos por toda la casa. Te amo, amorcito. Tu Crow.";
 
 // Exported for browser integration checks; Phaser remains the only game runtime.
 export let game: Phaser.Game;
@@ -15,16 +13,49 @@ export async function startGame(): Promise<void> {
   const root = document.createElement("main");
   root.id = "fonda";
   root.innerHTML = `<div id="platformer"></div>
-    <header class="game-hud"><span>Lleva la comida a Crow</span><p id="objective" aria-live="polite">Cargando la fonda...</p></header>
-    <button id="sound" aria-pressed="false" aria-label="Activar música y efectos">Sonido: no</button>
-    <button id="reset-preview" hidden title="Shift + R">Reiniciar prueba</button>
+    <header class="game-hud"><span></span><p id="objective" aria-live="polite"></p></header>
+    <button id="sound" aria-pressed="false"></button>
+    <button id="reset-preview" hidden></button>
     <p id="speech" role="status" hidden></p>
-    <button id="interact" hidden>Hablar</button>
-    <dialog id="conversation" aria-labelledby="speaker"><p id="speaker"></p><p id="dialogue-text"></p><button id="close-conversation">Seguir</button></dialog>
-    <dialog id="gallery" aria-labelledby="gallery-title"><h1 id="gallery-title" tabindex="-1">Un rincón para tus dibujos</h1><div class="drawings"><img src="/game/marin-devil.png" alt="Marin diablita dibujada por Chofis"><img src="/game/marin-bunny.png" alt="Marin conejita dibujada por Chofis"></div><button id="close-gallery">Volver al camino</button></dialog>
-    <p class="keyboard-help">A y D para moverse &nbsp; Espacio saltar &nbsp; E hablar</p>
-    <nav class="touch-controls" aria-label="Controles del juego"><div><button data-control="left" aria-label="Moverse a la izquierda">Izq</button><button data-control="right" aria-label="Moverse a la derecha">Der</button></div><button data-control="jump" aria-label="Saltar">Saltar</button></nav>
-    <dialog id="letter" aria-labelledby="letter-title"><h1 id="letter-title" tabindex="-1">Ven acá, mi princesa ❤️</h1><div class="reunion"><img src="/game/chofis-happy.png" alt="Chofis"><span aria-hidden="true">♥</span><img src="/game/crow-happy.png" alt="Crow"></div><p>${LETTER}</p><button id="close-letter">Volver a la fonda</button></dialog>`;
+    <button id="interact" hidden></button>
+    <dialog id="conversation" aria-labelledby="speaker"><p id="speaker"></p><p id="dialogue-text"></p><button id="close-conversation"></button></dialog>
+    <dialog id="gallery" aria-labelledby="gallery-title"><h1 id="gallery-title" tabindex="-1"></h1><div class="drawings"><img src="/game/marin-devil.png"><img src="/game/marin-bunny.png"></div><button id="close-gallery"></button></dialog>
+    <p class="keyboard-help"></p>
+    <nav class="touch-controls"><div><button data-control="left"></button><button data-control="right"></button></div><button data-control="jump"></button></nav>
+    <dialog id="letter" aria-labelledby="letter-title"><h1 id="letter-title" tabindex="-1"></h1><div class="reunion"><img src="/game/chofis-happy.png"><span aria-hidden="true"></span><img src="/game/crow-happy.png"></div><p></p><button id="close-letter"></button></dialog>`;
+  // Editable copy is plain text, including quotes, angle brackets and line breaks.
+  for (const [selector, text] of Object.entries({
+    ".game-hud span": texts.interfaz.misionInicial,
+    "#objective": texts.interfaz.cargando,
+    "#sound": texts.interfaz.sonido.desactivado,
+    "#reset-preview": texts.interfaz.reiniciar,
+    "#interact": texts.interfaz.interaccion.hablar,
+    "#close-conversation": texts.interfaz.interaccion.seguir,
+    "#gallery-title": texts.galeria.titulo,
+    "#close-gallery": texts.galeria.volver,
+    ".keyboard-help": texts.interfaz.controles.ayudaTeclado,
+    "[data-control=left]": texts.interfaz.controles.izquierda,
+    "[data-control=right]": texts.interfaz.controles.derecha,
+    "[data-control=jump]": texts.interfaz.controles.saltar,
+    "#letter-title": texts.carta.titulo,
+    ".reunion span": texts.carta.corazon,
+    "#letter > p": texts.carta.texto,
+    "#close-letter": texts.carta.volver,
+  })) root.querySelector(selector)!.textContent = text;
+  for (const [selector, attribute, text] of [
+    ["#sound", "aria-label", texts.interfaz.sonido.activar],
+    ["#reset-preview", "title", texts.interfaz.atajoReiniciar],
+    ["#interact", "data-prefix", texts.interfaz.interaccion.prefijoTecla],
+    ["#close-conversation", "data-prefix", texts.interfaz.interaccion.prefijoTecla],
+    [".touch-controls", "aria-label", texts.interfaz.controles.descripcion],
+    ["[data-control=left]", "aria-label", texts.interfaz.controles.moverIzquierda],
+    ["[data-control=right]", "aria-label", texts.interfaz.controles.moverDerecha],
+    ["[data-control=jump]", "aria-label", texts.interfaz.controles.saltar],
+    [".drawings img:first-child", "alt", texts.galeria.marinDiablita],
+    [".drawings img:last-child", "alt", texts.galeria.marinConejita],
+    [".reunion img:first-child", "alt", texts.personajes.Chofis],
+    [".reunion img:last-child", "alt", texts.personajes.Crow],
+  ]) root.querySelector(selector)!.setAttribute(attribute,text);
   document.body.append(root);
   const objective = root.querySelector<HTMLElement>("#objective")!;
   const speech = root.querySelector<HTMLElement>("#speech")!;
@@ -99,9 +130,9 @@ export async function startGame(): Promise<void> {
         soundButton.addEventListener("click",() => {
           this.soundEnabled = !this.soundEnabled;
           this.sound.setMute(!this.soundEnabled);
-          soundButton.textContent = `Sonido: ${this.soundEnabled ? "sí" : "no"}`;
+          soundButton.textContent = this.soundEnabled ? texts.interfaz.sonido.activado : texts.interfaz.sonido.desactivado;
           soundButton.setAttribute("aria-pressed",String(this.soundEnabled));
-          soundButton.setAttribute("aria-label",`${this.soundEnabled ? "Silenciar" : "Activar"} música y efectos`);
+          soundButton.setAttribute("aria-label",this.soundEnabled ? texts.interfaz.sonido.silenciar : texts.interfaz.sonido.activar);
           playMusic();
           this.game.canvas.focus({preventScroll:true});
         },{signal:events.signal});
@@ -186,7 +217,7 @@ export async function startGame(): Promise<void> {
           food.setScale(65/Math.max(food.width,food.height)).refreshBody();
           // Keep pickup reach consistent even when the drawing is tall or narrow.
           food.body!.setSize(72,72);
-          const label = this.add.text(item.x,item.y-62,item.id,{fontFamily:"Georgia",fontSize:"16px",color:"#ffe5ef",resolution:pixelRatio}).setOrigin(.5);
+          const label = this.add.text(item.x,item.y-62,texts.comida[item.id],{fontFamily:"Georgia",fontSize:"16px",color:"#ffe5ef",resolution:pixelRatio}).setOrigin(.5);
           this.physics.add.overlap(this.player,food,() => {
             food.destroy(); halo.destroy(); label.destroy();
             this.effect("coin",.3);
@@ -196,7 +227,7 @@ export async function startGame(): Promise<void> {
             }
             stamps.add(item.id);
             try { localStorage.setItem(key,JSON.stringify([...stamps])); } catch { /* Keep this session playable. */ }
-            this.say("Chofis",item.id === "empanada" ? "Empanada lista, yei" : item.id === "completo" ? "Ya tengo el completo omgg" : "Ya tengo el terremoto carnal",2500);
+            this.say(texts.personajes.Chofis,texts.recogida[item.id],2500);
           });
         }
         this.restoreCamera();
@@ -233,12 +264,12 @@ export async function startGame(): Promise<void> {
           },{signal:events.signal});
         }
         this.game.canvas.setAttribute("tabindex","0");
-        this.game.canvas.setAttribute("aria-label","Plataformas: flechas para moverte, Espacio para saltar. Recoge la comida y llega hasta Crow.");
+        this.game.canvas.setAttribute("aria-label",texts.interfaz.controles.descripcionJuego);
         this.game.canvas.focus({preventScroll:true});
         document.body.classList.add("playing");
         document.getElementById("hero")!.setAttribute("aria-hidden","true");
         document.documentElement.lang = "es";
-        document.title = "La fonda entre estrellas";
+        document.title = texts.interfaz.titulo;
         resolve();
       }
 
@@ -303,12 +334,12 @@ export async function startGame(): Promise<void> {
           this.add.image(x,y,"sign").setOrigin(.5,1).setDisplaySize(175,135).setDepth(-1);
           this.add.text(x,y-81,text,{fontFamily:"Georgia",fontSize:"20px",color:"#382938",align:"center",lineSpacing:3,resolution:pixelRatio}).setOrigin(.5).setDepth(-1);
         };
-        sign(550,700,"Salta");
-        this.add.text(1740,224,"Tus dibujos arriba",{fontFamily:"Georgia",fontSize:"18px",color:"#eadbc5",shadow:{color:"#182139",blur:5,fill:true},resolution:pixelRatio}).setOrigin(.5);
-        sign(3720,650,"Espera y\nsalta");
-        sign(6800,630,"Pisa y\nsalta");
-        sign(10160,560,"Sigue las\nluces");
-        this.add.text(13700,294,"la fonda de los dos",{fontFamily:"Georgia",fontSize:"27px",color:"#f1d7ae",resolution:pixelRatio}).setOrigin(.5);
+        sign(550,700,texts.carteles.entrada);
+        this.add.text(1740,224,texts.carteles.dibujos,{fontFamily:"Georgia",fontSize:"18px",color:"#eadbc5",shadow:{color:"#182139",blur:5,fill:true},resolution:pixelRatio}).setOrigin(.5);
+        sign(3720,650,texts.carteles.islasMoviles);
+        sign(6800,630,texts.carteles.grietas);
+        sign(10160,560,texts.carteles.luces);
+        this.add.text(13700,294,texts.carteles.fonda,{fontFamily:"Georgia",fontSize:"27px",color:"#f1d7ae",resolution:pixelRatio}).setOrigin(.5);
       }
 
       restoreCamera(animate=false) {
@@ -401,7 +432,7 @@ export async function startGame(): Promise<void> {
       }
 
       say(name: string, text: string, duration=6500) {
-        speech.textContent = `${name}: ${text}`;
+        speech.textContent = formatText(texts.interfaz.subtitulo,{personaje:name,texto:text});
         speech.hidden = false;
         this.speechUntil = this.time.now+duration;
       }
@@ -425,8 +456,8 @@ export async function startGame(): Promise<void> {
           this.effect("power_up",.3);
           portrait.setFrame(2).setData("poseUntil",Infinity);
           this.won = true;
-          root.querySelector(".game-hud span")!.textContent = "De México a Chile, juntos al fin";
-          objective.textContent = this.lastObjective = "La fonda es nuestra, amorcito";
+          root.querySelector(".game-hud span")!.textContent = texts.interfaz.zonaFinal;
+          objective.textContent = this.lastObjective = texts.interfaz.objetivoFinal;
           this.player.setVelocity(0);
           this.avatar.setTexture("chofis-happy").setFlipX(false).setAngle(0);
           letter.showModal();
@@ -434,7 +465,7 @@ export async function startGame(): Promise<void> {
           return;
         }
         this.effect("tap",.5);
-        root.querySelector("#speaker")!.textContent = friend.name;
+        root.querySelector("#speaker")!.textContent = texts.personajes[friend.name];
         root.querySelector("#dialogue-text")!.textContent = replyFor(friend.name,stamps);
         conversation.showModal();
       }
@@ -489,25 +520,25 @@ export async function startGame(): Promise<void> {
           this.player.setVelocity(0);
           this.lastGrounded = -1000;
           this.bufferedUntil = 0;
-          let reminder = this.fallExplained ? "" : "Volviste al checkpoint.";
+          let reminder = this.fallExplained ? "" : texts.caidas.primeraSinComida;
           if (stamps.size && !this.foodRecoveryExplained) {
-            reminder = this.fallExplained ? "No perdiste nada:)" : "Volviste al checkpoint, no perdiste nada:)";
+            reminder = this.fallExplained ? texts.caidas.conComida : texts.caidas.primeraConComida;
             this.foodRecoveryExplained = true;
           }
           this.fallExplained = true;
-          if (reminder) this.say("Fonda",reminder,3000);
+          if (reminder) this.say(texts.personajes.Fonda,reminder,3000);
         }
         const next = nextStop(stamps);
         let zone: typeof ZONES[number] = ZONES[0];
         for (const candidate of ZONES) if (this.player.x >= candidate.x) zone = candidate;
         const zoneLabel = root.querySelector(".game-hud span")!;
         if (!this.won && zoneLabel.textContent !== zone.name) zoneLabel.textContent = zone.name;
-        const text = this.won ? "La fonda es nuestra, amorcito" : `Comida para Crow: ${stamps.size}/3. ${next.instruction}${next.x < this.player.x-60 ? ", a tu izquierda" : ""}`;
+        const text = this.won ? texts.interfaz.objetivoFinal : formatText(texts.interfaz.objetivo,{cantidad:stamps.size,instruccion:next.instruction,direccion:next.x < this.player.x-60 ? texts.interfaz.direccionIzquierda : ""});
         if (text !== this.lastObjective) { objective.textContent=text; this.lastObjective=text; }
         this.nearby = FRIENDS.find(friend => Math.abs(friend.x-this.player.x)<100 && Math.abs(friend.y-body.bottom)<85);
         interact.hidden = !this.nearby;
         if (this.nearby) {
-          interact.textContent = this.nearby.name === "Crow" && readyForCrow(stamps) ? "Abrazar a Crow" : this.nearby.name === "Tus dibujos" ? "Ver dibujos" : `Hablar con ${this.nearby.name}`;
+          interact.textContent = this.nearby.name === "Crow" && readyForCrow(stamps) ? texts.interfaz.interaccion.abrazar : this.nearby.name === "Tus dibujos" ? texts.interfaz.interaccion.verDibujos : formatText(texts.interfaz.interaccion.conPersonaje,{personaje:texts.personajes[this.nearby.name]});
         }
         if (Phaser.Input.Keyboard.JustDown(this.keys.E)) this.talk();
         if (time > this.speechUntil) speech.hidden=true;
