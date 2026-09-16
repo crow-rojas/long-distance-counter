@@ -61,4 +61,6 @@ Responsable: principal. Archivos: `src/game/game.ts`, `tests/platformer.browser.
 - [x] Ejecutar pruebas y build; revisar diffs de trabajadores.
 - [x] Comprobar escritorio 1×/2×, móvil 3×, cambio de densidad y conversación durante redimensionamiento.
 - [x] Verificar runner con éxito, error y timeout; cerrar las sesiones propias.
-- [ ] Registrar resultados y limitaciones en el spec; publicar el checkpoint por el flujo directo del repo.
+- [x] Registrar resultados y limitaciones en el spec; publicar el checkpoint por el flujo directo del repo.
+
+Implementación: `b36449c`. [Build y deploy correctos](https://github.com/crow-rojas/long-distance-counter/actions/runs/35135685892).
