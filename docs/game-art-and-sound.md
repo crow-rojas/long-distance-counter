@@ -21,7 +21,7 @@ Los prompts se mantienen en ese Markdown, sin otra copia editable en el reposito
 
 ## Recursos utilizados
 
-- Música local: Piano 3, recortado desde 3,38 s, entrada de 50 ms, salida de un segundo y volumen ajustado. Se midieron unos 49 ms iniciales bajo −50 dB después del recorte. Se activa desde «Sonido» y continúa al silenciar/reactivar.
+- Música: Piano 3 de AlkaKrab, incluida también en producción, recortada desde 3,38 s, entrada de 50 ms, salida de un segundo y volumen ajustado. Se midieron unos 49 ms iniciales bajo −50 dB después del recorte. Se activa desde «Sonido» y continúa al silenciar/reactivar.
 - Efectos de Brackeys: `jump` al saltar, `tap` al aterrizar/hablar, `coin` al recoger comida y `power_up` al encontrar a Crow.
 - La ramada, el volantín y el copihue generados ya están integrados. La comida sigue usando los stickers originales.
 - Supergirl, Krypto y Pibble conservan sus dibujos. El desvío opcional muestra los dibujos originales de Marin diablita y conejita; sus hojas nuevas de poses siguen como reserva.
@@ -37,6 +37,6 @@ Los cuatro resultados ya están procesados e integrados: cielo, islas lejanas, p
 
 Brackeys y Multi Platformer incluyen CC0. Los cuatro WAV de Brackeys se incorporaron con su `LICENSE-Brackeys.txt` en `public/game/audio/`.
 
-La licencia de Game Piano Music pide permiso específico para juegos de código abierto y el repositorio es público. Por eso `public/game/audio/piano.mp3` y `.env.local` están ignorados por Git. `VITE_GAME_MUSIC` habilita la pista en la copia local; sin esa variable el juego solo carga efectos y no pide un archivo ausente. No publicar un build local con esa música hasta resolver el permiso del autor. HALFTONE ofrece su PDF de licencia por separado y sigue sin utilizarse.
+Piano 3 se publica por indicación de Crow basándose en la ficha y la respuesta pública del autor en itch.io. Se conservan [las fuentes, capturas y el PDF del pack](licenses/alkakrab-piano.md), incluida la condición específica del PDF sobre juegos de código abierto. No se presenta como CC0 ni como permiso individual del autor. HALFTONE sigue sin utilizarse.
 
 La procedencia y limitaciones de los dibujos están en [assets.md](assets.md).

@@ -25,7 +25,7 @@ Estas ideas quedan pendientes; no forman parte de esta entrega. El orden es una 
 
 - [ ] Probar una partida completa en el celular de Crow: saltos, dificultad, lectura, sonido y duración.
 - [ ] Reemplazar la carta provisional y revisar las frases de la pareja.
-- [ ] Resolver el permiso de Piano 3 para este repositorio público o elegir una pista con licencia compatible. El deploy actual usa los efectos CC0; la música permanece local.
+- [x] Incluir Piano 3 en el deploy por indicación de Crow y conservar [el respaldo de itch.io y la licencia del pack](licenses/alkakrab-piano.md).
 - [ ] Comprobar la transición a las 06:55 con la vista de prueba y confirmar que la URL normal siga usando la hora real.
 
 Prueba publicada: [abrir el juego anticipadamente](https://dawn.crowrojas.dev/?t=2026-09-18T09:55:00Z). Usa un guardado separado de la sorpresa con hora real.

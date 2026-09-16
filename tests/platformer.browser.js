@@ -8,7 +8,24 @@
   const {PLATFORMS,FRIENDS,ITEMS,CHECKPOINTS} = await import("/src/game/level.ts");
   const scene=game.scene.scenes[0], player=scene.player, body=player.body, world=scene.physics.world;
   const check=(ok,message)=>{if(!ok)throw Error(message)};
+  const canvasBounds=game.canvas.getBoundingClientRect();
+  const density=Math.min(devicePixelRatio || 1,3);
+  check(Math.abs(game.canvas.width/canvasBounds.width-density)<.02 &&
+    Math.abs(game.canvas.height/canvasBounds.height-density)<.02,
+    "Canvas stretches low-resolution pixels on a high-density screen");
+  check(scene.music && scene.cache.audio.exists("music"),"Background music was not loaded");
   const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  const root=document.querySelector("#fonda"),originalStyle=root.style.cssText;
+  try {
+    root.style.width="600px";root.style.height="360px";
+    window.dispatchEvent(new Event("resize"));
+    check(Math.abs(game.canvas.width-600*density)<1 && Math.abs(game.canvas.height-360*density)<1,
+      "Canvas density was lost when resizing");
+    check(Math.abs(scene.cameras.main.width/scene.cameras.main.zoom-600/.65)<1,
+      "Resize changed the visible world scale");
+  } finally {
+    root.style.cssText=originalStyle;window.dispatchEvent(new Event("resize"));
+  }
   const sound=document.querySelector("#sound");
   for(let i=0;i<2;i++) { sound.focus(); sound.click(); check(document.activeElement===game.canvas,"Sound kept keyboard focus"); }
   sound.focus();

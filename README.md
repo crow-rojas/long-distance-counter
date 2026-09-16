@@ -30,7 +30,8 @@ Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas
 - Hablar: E o un tap en el personaje/botón situado sobre él, cuando Chofis está cerca. Los NPC solo hablan y reaccionan al interactuar.
 - La cámara se acerca durante la conversación y el texto aparece arriba. E, Escape o Seguir cierran el diálogo. La física y los desafíos se pausan durante las conversaciones, la galería y la carta.
 - En móvil aparecen botones de dirección y salto. Con movimiento reducido, se omiten las transiciones de cámara y los efectos decorativos de movimiento.
-- Sonido opcional con un botón: efectos CC0 de Brackeys y Piano 3 configurado para la copia local. Empieza en silencio.
+- Sonido opcional con un botón: efectos CC0 de Brackeys y Piano 3 de AlkaKrab. Empieza en silencio.
+- El canvas y sus textos se dibujan según la densidad de pantalla, hasta 3×. El tamaño visible del mapa y las colisiones no cambian; el giro del celular reajusta el canvas y la cámara.
 - Chofis tiene tres frames de carrera y dos de salto. Marin saluda y señala al hablar; Crow cambia de expresión. Supergirl, Krypto y Pibble conservan sus dibujos.
 - La carta final sigue provisional: editar `LETTER` en [game.ts](src/game/game.ts).
 
@@ -65,7 +66,7 @@ El tercer script quita el damero pintado de los primeros nueve JPEG en `Chofis/r
 
 `prepare-world.py` separa las cuatro imágenes v3: cielo, cuatro siluetas lejanas, seis plataformas y cuatro decoraciones. Deja los recursos preparados en `Chofis/assets/generados/mundo/`; sus copias en `public/game/` ya están integradas. Conserva los JPEG originales.
 
-La música se carga solo si `.env.local` define `VITE_GAME_MUSIC=/game/audio/piano.mp3`. Tanto ese archivo de configuración como la pista están ignorados por Git. Piano 3 usa 128 kbps y +6 dB; se recortaron 3,38 segundos iniciales, con entrada de 50 ms y salida de un segundo. La licencia permite esos ajustes, pero exige permiso del autor para distribuirla en un juego de código abierto. Los efectos funcionan también sin música.
+Piano 3 se incluye en el deploy y se carga desde `/game/audio/piano.mp3`, sin depender de variables locales. Usa 128 kbps y +6 dB; se recortaron 3,38 segundos iniciales, con entrada de 50 ms y salida de un segundo. [Fuentes, capturas de itch.io, licencia y decisión de uso](docs/licenses/alkakrab-piano.md).
 
 ## Verificación y publicación
 
@@ -82,6 +83,6 @@ agent-browser --session chofis-v3 eval --stdin < tests/platformer.browser.js
 
 Comprueba el foco y las teclas tras cambiar el sonido, giros rápidos, salto variable, coyote time, salto anticipado, ausencia de doble salto, transporte sobre islas móviles, caída y recuperación de islas frágiles, pausa durante conversaciones, 82 conexiones, desvío de dibujos, recogida, checkpoints y carta final. Recargar después. La prueba busca un momento de salto viable en las conexiones móviles; no presupone que cualquier momento funcione. Esta comprobación de navegador es local; no forma parte de CI.
 
-GitHub Pages publica al hacer push a `main`. Los recursos con licencias pendientes permanecen fuera del repositorio.
+GitHub Pages publica al hacer push a `main`. La procedencia de música e imágenes queda documentada en `docs/`.
 
 Diseño inicial: [dawn](docs/superpowers/specs/2026-05-14-dawn-design.md). Referencias de la aventura: [A Short Hike](https://ashorthike.com/), [Unpacking](https://www.unpackinggame.com/) y [Hidden Folks](https://hiddenfolks.com/). Los cuatro prompts de escenario están en el documento principal de `Chofis/nano-banana/`; sus resultados ya están integrados.

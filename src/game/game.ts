@@ -38,6 +38,7 @@ export async function startGame(): Promise<void> {
   try { saved = localStorage.getItem(key); savedCheckpoint = localStorage.getItem(`${key}:checkpoint`); } catch { /* Storage is optional. */ }
   const stamps = readStamps(saved);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const pixelRatio = Math.min(window.devicePixelRatio || 1,3);
   const held = new Map<number, string>();
   const events = new AbortController();
   let loadFailed = false;
@@ -80,8 +81,7 @@ export async function startGame(): Promise<void> {
           this.load.spritesheet(sheet, `/game/${sheet}.png`, {frameWidth:320,frameHeight:320});
         }
         for (const name of ["jump", "tap", "coin", "power_up"]) this.load.audio(name, `/game/audio/${name}.wav`);
-        // Music is optional; the downloaded piano track currently has local-only permission.
-        if (import.meta.env.VITE_GAME_MUSIC) this.load.audio("music",import.meta.env.VITE_GAME_MUSIC);
+        this.load.audio("music","/game/audio/piano.mp3");
         this.load.on("loaderror", (file: Phaser.Loader.File) => { if (file.type === "image" || file.type === "spritesheet") loadFailed = true; });
       }
 
@@ -143,7 +143,7 @@ export async function startGame(): Promise<void> {
             markings.fillStyle(0xe8d9ba).fillTriangle(65,-48,90,-37,65,-26);
           } else if (kind?.startsWith("moving")) {
             markings.lineStyle(3,0xade2d1,.85).lineBetween(10,7,w-10,7);
-            art.add(this.add.text(w/2,35,kind === "moving-x" ? "↔" : "↕",{fontSize:"22px",color:"#bce1d6"}).setOrigin(.5).setAlpha(.7));
+            art.add(this.add.text(w/2,35,kind === "moving-x" ? "↔" : "↕",{fontSize:"22px",color:"#bce1d6",resolution:pixelRatio}).setOrigin(.5).setAlpha(.7));
             sprite.setVelocity(kind === "moving-x" ? 65 : 0,kind === "moving-y" ? 40 : 0);
           }
           sprite.setData("index",index);
@@ -183,7 +183,7 @@ export async function startGame(): Promise<void> {
           food.setScale(65/Math.max(food.width,food.height)).refreshBody();
           // Keep pickup reach consistent even when the drawing is tall or narrow.
           food.body!.setSize(72,72);
-          const label = this.add.text(item.x,item.y-62,item.id,{fontFamily:"Georgia",fontSize:"16px",color:"#ffe5ef"}).setOrigin(.5);
+          const label = this.add.text(item.x,item.y-62,item.id,{fontFamily:"Georgia",fontSize:"16px",color:"#ffe5ef",resolution:pixelRatio}).setOrigin(.5);
           this.physics.add.overlap(this.player,food,() => {
             food.destroy(); halo.destroy(); label.destroy();
             this.effect("coin",.3);
@@ -201,6 +201,9 @@ export async function startGame(): Promise<void> {
           if (this.focusedFriend) this.focusCamera(this.focusedFriend,true);
           else this.restoreCamera();
         });
+        window.addEventListener("resize",() => {
+          this.scale.resize(Math.round(root.clientWidth*pixelRatio),Math.round(root.clientHeight*pixelRatio));
+        },{signal:events.signal});
         this.game.events.on(Phaser.Core.Events.BLUR,() => { held.clear(); this.keys && this.input.keyboard!.resetKeys(); this.bufferedUntil = 0; });
         interact.addEventListener("click",() => this.talk(),{signal:events.signal});
         for (const dialog of [conversation,gallery,letter]) {
@@ -275,20 +278,20 @@ export async function startGame(): Promise<void> {
         }
         const sign = (x:number,y:number,text:string) => {
           this.add.image(x,y,"sign").setOrigin(.5,1).setDisplaySize(175,135).setDepth(-1);
-          this.add.text(x,y-81,text,{fontFamily:"Georgia",fontSize:"14px",color:"#382938",align:"center",lineSpacing:3}).setOrigin(.5).setDepth(-1);
+          this.add.text(x,y-81,text,{fontFamily:"Georgia",fontSize:"14px",color:"#382938",align:"center",lineSpacing:3,resolution:pixelRatio}).setOrigin(.5).setDepth(-1);
         };
         sign(550,700,"Salta →");
-        this.add.text(1740,224,"Tus dibujos ↑",{fontFamily:"Georgia",fontSize:"18px",color:"#eadbc5",shadow:{color:"#182139",blur:5,fill:true}}).setOrigin(.5);
+        this.add.text(1740,224,"Tus dibujos ↑",{fontFamily:"Georgia",fontSize:"18px",color:"#eadbc5",shadow:{color:"#182139",blur:5,fill:true},resolution:pixelRatio}).setOrigin(.5);
         sign(3720,650,"Espera a que\nla isla se acerque →");
         sign(6800,630,"Las grietas avisan:\npisa y salta →");
         sign(10160,560,"Ya falta poco.\nSigue las luces →");
-        this.add.text(13700,294,"la fonda de los dos",{fontFamily:"Georgia",fontSize:"27px",color:"#f1d7ae"}).setOrigin(.5);
+        this.add.text(13700,294,"la fonda de los dos",{fontFamily:"Georgia",fontSize:"27px",color:"#f1d7ae",resolution:pixelRatio}).setOrigin(.5);
       }
 
       restoreCamera(animate=false) {
         const camera = this.cameras.main;
         camera.panEffect.reset(); camera.zoomEffect.reset();
-        this.baseZoom = Math.min(1.1,Math.max(.65,Math.min(this.scale.height/850,this.scale.width/580)));
+        this.baseZoom = pixelRatio*Math.min(1.1,Math.max(.65,Math.min(root.clientHeight/850,root.clientWidth/580)));
         camera.setBounds(0,-350,WORLD_WIDTH,1500);
         if (animate && !reduced) camera.zoomTo(this.baseZoom,250,"Sine.easeInOut");
         else camera.setZoom(this.baseZoom);
@@ -300,7 +303,7 @@ export async function startGame(): Promise<void> {
         camera.stopFollow();
         camera.removeBounds();
         camera.panEffect.reset(); camera.zoomEffect.reset();
-        this.baseZoom = Math.min(1.1,Math.max(.65,Math.min(this.scale.height/850,this.scale.width/580)));
+        this.baseZoom = pixelRatio*Math.min(1.1,Math.max(.65,Math.min(root.clientHeight/850,root.clientWidth/580)));
         const zoom = this.baseZoom*(reduced ? 1 : 1.2);
         const x = (this.player.x+friend.x)/2, y=friend.y-70-this.scale.height*.12/zoom;
         if (immediate || reduced) camera.setZoom(zoom).centerOn(x,y);
@@ -336,8 +339,8 @@ export async function startGame(): Promise<void> {
         if (!this.nearby || this.focusedFriend) { interact.hidden = true; return; }
         const camera = this.cameras.main;
         const half = interact.offsetWidth/2+12;
-        interact.style.left = `${Phaser.Math.Clamp((this.nearby.x-camera.worldView.x)*camera.zoom,half,this.scale.width-half)}px`;
-        interact.style.top = `${Math.max(145,(this.nearby.y-this.nearby.height-camera.worldView.y)*camera.zoom-55)}px`;
+        interact.style.left = `${Phaser.Math.Clamp((this.nearby.x-camera.worldView.x)*camera.zoom/pixelRatio,half,root.clientWidth-half)}px`;
+        interact.style.top = `${Math.max(145,(this.nearby.y-this.nearby.height-camera.worldView.y)*camera.zoom/pixelRatio-55)}px`;
       }
 
       updatePlatforms(delta: number) {
@@ -481,7 +484,8 @@ export async function startGame(): Promise<void> {
     }
     game = new Phaser.Game({
       type: Phaser.AUTO, parent: "platformer", transparent: true,
-      scale: { mode: Phaser.Scale.RESIZE, width: root.clientWidth, height: root.clientHeight },
+      // Phaser 3 RESIZE renders at CSS density; use physical pixels and scale the canvas back down.
+      scale: { mode: Phaser.Scale.NONE, width: Math.round(root.clientWidth*pixelRatio), height: Math.round(root.clientHeight*pixelRatio), zoom:1/pixelRatio },
       render: { antialias: true, pixelArt: false },
       physics: { default: "arcade", arcade: { gravity: {x:0,y:1900}, fixedStep:true, fps:120 } },
       scene: Fonda,
