@@ -1,4 +1,4 @@
-#fonda { position: fixed; inset: 0; z-index: 2; opacity: 0; pointer-events: none; transition: opacity 1.8s ease; color: #ffe4ef; background: linear-gradient(#10132126,#10132155),url("/game/cielo-fonda.webp") center/cover; }
+#fonda { position: fixed; inset: 0; z-index: 2; opacity: 0; pointer-events: none; transition: opacity 1.5s ease; color: #ffe4ef; background: linear-gradient(#10132126,#10132155),url("/game/cielo-fonda.webp") center/cover; }
 body.playing #fonda { opacity: 1; pointer-events: auto; }
 body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s; }
 #platformer { position: absolute; inset: 0; }
@@ -35,6 +35,9 @@ body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s
 #fonda #conversation::backdrop { background: linear-gradient(#101321d9, #10132122 50%,transparent); }
 #close-conversation::before { content: attr(data-prefix); }
 .conversing .game-hud, .conversing .keyboard-help, .conversing .touch-controls, .conversing #sound, .conversing #reset-preview { visibility: hidden; }
+.introducing .game-hud, .introducing .keyboard-help, .introducing .touch-controls, .introducing #interact, .introducing #reset-preview { visibility: hidden; }
+#intro-text { position: absolute; top: calc(var(--letterbox) + 12%); left: 50%; transform: translateX(-50%); width: min(520px,calc(100% - 48px)); margin: 0; text-align: center; text-wrap: balance; font: 400 clamp(22px,3vw,32px)/1.5 "Fraunces Variable",Georgia,serif; text-shadow: 0 2px 5px #10051d,0 0 20px #10051d; white-space: pre-wrap; pointer-events: none; }
+#fonda #skip-intro { position: absolute; right: max(24px,env(safe-area-inset-right)); bottom: calc(var(--letterbox) + 20px); min-height: 44px; }
 @media (pointer: coarse), (max-width: 700px) {
   #fonda #sound, #fonda #interact, #fonda dialog button { min-height: 44px; }
   .touch-controls { display: flex; }
@@ -49,5 +52,8 @@ body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s
   #fonda #conversation #dialogue-text { font-size: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { #fonda, body.playing #hero, body.playing > footer { transition: none; } }
+@media (max-height: 500px) and (orientation: landscape) {
+  #intro-text { top: calc(var(--letterbox) + 14px); width: min(480px,calc(100% - 280px)); font-size: 20px; line-height: 1.4; }
+}
 
 #dialogue-text, #letter > p, #speech, #objective, .keyboard-help { white-space: pre-wrap; }

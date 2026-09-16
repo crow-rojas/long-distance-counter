@@ -10,6 +10,7 @@
   const {formatText} = await import(loaded("/src/game/dialogue.ts"));
   const {BENCHES,PLATFORMS,FRIENDS,ITEMS,CHECKPOINTS} = await import(loaded("/src/game/level.ts"));
   const scene=game.scene.scenes[0], player=scene.player, body=player.body, world=scene.physics.world;
+  if (scene.introActive) document.querySelector("#skip-intro").click();
   const check=(ok,message)=>{if(!ok)throw Error(message)};
   const canvasBounds=game.canvas.getBoundingClientRect();
   const density=Math.min(devicePixelRatio || 1,3);

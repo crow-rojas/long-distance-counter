@@ -18,9 +18,11 @@ corepack pnpm@9 dev
 Para probar los últimos cinco segundos del contador, usa `?t=2026-09-18T09:54:55Z`.
 Sin `?t`, o con un valor vacío/inválido, se usa la hora real. Este parámetro es una comodidad de prueba, no control de acceso.
 
-En desarrollo y dentro de esa vista previa, **Reiniciar prueba** o **Shift + R** borran la comida y el checkpoint de prueba y recargan el juego. No borran el progreso del reloj real.
+En desarrollo y dentro de esa vista previa, **Reiniciar prueba** o **Shift + R** borran la comida, el checkpoint y la marca de intro vista, y recargan el juego. No borran el progreso del reloj real.
 
 ## Juego
+
+La primera llegada presenta una intro de unos ocho segundos después de cargar: fundido, descenso de cámara hasta Chofis, texto y controles. **Saltar intro** o Escape permiten empezar antes. Con movimiento reducido, o al volver de otra pestaña durante la intro, aparece el texto estático y **Jugar**. La música sigue siendo opcional. Las partidas guardadas entran directamente.
 
 Chofis recorre cuatro zonas a lo largo de 14.000 píxeles: entrada, islas de los volantines, jardín de copihues y camino a Crow. Hay 40 plataformas principales, dos del desvío de dibujos y nueve checkpoints. La meta sigue siendo llevar empanada, completo y terremoto hasta Crow.
 
@@ -37,7 +39,7 @@ Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas
 - Para escribir más diálogos, leer primero los [criterios y ejemplos de Crow](docs/dialogues.md#criterios-para-los-próximos-textos) y aplicar humanizer respetando sus expresiones.
 - Los textos se editan en [es.json](src/game/es.json). La carta final sigue provisional en `carta.texto`; [guía de edición](docs/dialogues.md).
 
-El guardado usa `chofis-platformer-preview` en pruebas y `chofis-platformer` con el reloj real. Cada uno guarda el último checkpoint en la clave correspondiente terminada en `:checkpoint`. Recargar retoma allí; los guardados anteriores sin checkpoint empiezan en la zona del siguiente objeto pendiente. Los índices ajenos a los checkpoints del mapa se descartan. Si el navegador bloquea el almacenamiento, la sesión sigue siendo jugable.
+El guardado usa `chofis-platformer-preview` en pruebas y `chofis-platformer` con el reloj real. Cada uno guarda el último checkpoint en la clave correspondiente terminada en `:checkpoint` y la intro completada o saltada en `:intro-seen`. Recargar retoma allí; los guardados anteriores sin checkpoint empiezan en la zona del siguiente objeto pendiente. Los índices ajenos a los checkpoints del mapa se descartan. Si el navegador bloquea el almacenamiento, la sesión sigue siendo jugable.
 
 ## Dónde está cada cosa
 
@@ -87,10 +89,13 @@ Con Vite corriendo y el CLI `agent-browser` instalado:
 
 ```sh
 corepack pnpm@9 test:browser
+node scripts/test-browser.mjs http://127.0.0.1:5173 tests/intro.browser.js
 # Otro puerto: corepack pnpm@9 test:browser http://127.0.0.1:5174/
 ```
 
 El runner abre una sesión nueva silenciada, espera a que termine la carga y la cierra al terminar, también ante error o interrupción. No utiliza tus guardados ni pestañas.
+
+La prueba de intro comprueba bloqueo de controles, salto y final natural, continuidad del encuadre, guardados anteriores, rotación, vuelta de segundo plano y movimiento reducido. La prueba del mapa salta la intro mediante su botón antes de recorrer el mundo.
 
 Comprueba densidad del canvas y textos, cambios de tamaño, recordatorios de caída, el foco y las teclas tras cambiar el sonido, giros rápidos, salto variable, coyote time, salto anticipado, ausencia de doble salto, transporte sobre islas móviles, caída y recuperación de islas frágiles, pausa durante conversaciones, 82 conexiones, las dos bancas, desvío de dibujos, recogida, checkpoints y carta final. La prueba busca un momento de salto viable en las conexiones móviles; no presupone que cualquier momento funcione. Esta comprobación de navegador es local; no forma parte de CI.
 

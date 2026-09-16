@@ -92,6 +92,12 @@
     "primeraConComida": "Volviste al checkpoint, no perdiste nada:)",
     "conComida": "No perdiste nada:)"
   },
+  "intro": {
+    "texto": "Llegaste a Chile, pero este cuervo dónde se metió",
+    "saltar": "Saltar intro",
+    "jugar": "Jugar",
+    "ayuda": "Marin está más adelante. Acércate y habla con ella."
+  },
   "bancas": {
     "sentarse": "Sentarse",
     "levantarse": "Levantarse",

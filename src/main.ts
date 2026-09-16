@@ -72,7 +72,7 @@ async function revealGame() {
         if (event.target === root && event.propertyName === "opacity") finish();
       };
       root.addEventListener("transitionend", onFade);
-      // game.css fades opacity for 1.8s; also finish if the browser drops the event.
+      // game.css fades opacity for 1.5s; also finish if the browser drops the event.
       const timeout = setTimeout(finish, 2000);
     }
   } catch {
@@ -105,7 +105,7 @@ function tick() {
 
   if (state.arrived && !revealingGame) {
     revealingGame = true;
-    setTimeout(revealGame, reducedMotion ? 0 : 2200);
+    void revealGame();
   }
 
   rafId = requestAnimationFrame(tick);

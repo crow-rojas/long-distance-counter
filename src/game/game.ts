@@ -15,6 +15,8 @@ export async function startGame(): Promise<void> {
   root.innerHTML = `<div id="platformer"></div>
     <header class="game-hud"><span></span><p id="objective" aria-live="polite"></p></header>
     <button id="sound" aria-pressed="false"></button>
+    <p id="intro-text" role="status" hidden></p>
+    <button id="skip-intro" hidden></button>
     <button id="reset-preview" hidden></button>
     <p id="speech" role="status" hidden></p>
     <button id="interact" hidden></button>
@@ -28,6 +30,8 @@ export async function startGame(): Promise<void> {
     ".game-hud span": texts.interfaz.misionInicial,
     "#objective": texts.interfaz.cargando,
     "#sound": texts.interfaz.sonido.desactivado,
+    "#intro-text": texts.intro.texto,
+    "#skip-intro": texts.intro.saltar,
     "#reset-preview": texts.interfaz.reiniciar,
     "#interact": texts.interfaz.interaccion.hablar,
     "#close-conversation": texts.interfaz.interaccion.seguir,
@@ -57,6 +61,12 @@ export async function startGame(): Promise<void> {
     [".reunion img:last-child", "alt", texts.personajes.Crow],
   ]) root.querySelector(selector)!.setAttribute(attribute,text);
   document.body.append(root);
+  root.inert = true;
+  const sky = new Image();
+  sky.src = "/game/cielo-fonda.webp";
+  const skyReady = sky.decode().catch(() => {
+    root.style.backgroundImage = "linear-gradient(#353444,#62575e)";
+  });
   const objective = root.querySelector<HTMLElement>("#objective")!;
   const speech = root.querySelector<HTMLElement>("#speech")!;
   const interact = root.querySelector<HTMLButtonElement>("#interact")!;
@@ -64,13 +74,22 @@ export async function startGame(): Promise<void> {
   const conversation = root.querySelector<HTMLDialogElement>("#conversation")!;
   const gallery = root.querySelector<HTMLDialogElement>("#gallery")!;
   const soundButton = root.querySelector<HTMLButtonElement>("#sound")!;
+  const introText = root.querySelector<HTMLElement>("#intro-text")!;
+  const skipIntro = root.querySelector<HTMLButtonElement>("#skip-intro")!;
   const preview = isPreview;
   const key = preview ? "chofis-platformer-preview" : "chofis-platformer";
   let saved: string | null = null;
   let savedCheckpoint: string | null = null;
-  try { saved = localStorage.getItem(key); savedCheckpoint = localStorage.getItem(`${key}:checkpoint`); } catch { /* Storage is optional. */ }
+  let introSeen = false;
+  try {
+    saved = localStorage.getItem(key);
+    savedCheckpoint = localStorage.getItem(`${key}:checkpoint`);
+    introSeen = localStorage.getItem(`${key}:intro-seen`) === "1";
+  } catch { /* Storage is optional. */ }
   const stamps = readStamps(saved);
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const hasCheckpoint = savedCheckpoint !== null && savedCheckpoint.trim() !== "" && CHECKPOINTS.includes(Number(savedCheckpoint));
+  const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  const reduced = motion.matches;
   let pixelRatio = Math.min(window.devicePixelRatio || 1,3);
   const held = new Map<number, string>();
   const events = new AbortController();
@@ -106,6 +125,12 @@ export async function startGame(): Promise<void> {
       baseZoom = 1;
       soundEnabled = false;
       music?: Phaser.Sound.BaseSound;
+      presented = false;
+      introActive = false;
+      introElapsed = 0;
+      introStatic = reduced;
+      introEnd = { x:0, y:0 };
+      introTravel = 0;
 
       preload() {
         const images = ["chofis-front", "chofis-happy", "ramada", "volantin", "copihue", ...FRIENDS.filter(f => !f.image.endsWith("-poses")).map(f => f.image), ...ITEMS.map(i => `sticker-${i.id}`)];
@@ -146,6 +171,7 @@ export async function startGame(): Promise<void> {
             try {
               localStorage.removeItem(key);
               localStorage.removeItem(`${key}:checkpoint`);
+              localStorage.removeItem(`${key}:intro-seen`);
             } catch { /* Reload also clears in-memory progress. */ }
             location.reload();
           };
@@ -186,7 +212,7 @@ export async function startGame(): Promise<void> {
         });
         this.decorations();
         const next = ITEMS.findIndex(item => !stamps.has(item.id));
-        this.lastCheckpoint = savedCheckpoint !== null && CHECKPOINTS.includes(Number(savedCheckpoint))
+        this.lastCheckpoint = hasCheckpoint
           ? Number(savedCheckpoint) : ZONES[next < 0 ? 3 : next].checkpoint;
         const checkpoint = PLATFORMS[this.lastCheckpoint];
         this.spawn = { x: checkpoint[0]+120, y: checkpoint[1]-25 };
@@ -195,7 +221,7 @@ export async function startGame(): Promise<void> {
         this.avatar = this.add.image(this.spawn.x,this.spawn.y,"chofis-front").setOrigin(.5,.9625).setDisplaySize(100,100).setDepth(5);
         this.events.on(Phaser.Scenes.Events.POST_UPDATE,(_time: number, delta: number) => {
           this.avatar.setPosition(this.player.x,this.player.y-(this.seatedBench ? 28 : 0));
-          if (!this.focusedFriend) this.updatePlatforms(delta);
+          if (this.presented && !this.introActive && !this.focusedFriend) this.updatePlatforms(delta);
         });
         this.events.on(Phaser.Scenes.Events.RENDER,() => this.positionInteraction());
         this.physics.add.collider(this.player,ground,(_player,platform) => {
@@ -234,7 +260,8 @@ export async function startGame(): Promise<void> {
         }
         this.restoreCamera();
         this.scale.on("resize",() => {
-          if (this.focusedFriend) this.focusCamera(this.focusedFriend,true);
+          if (this.introActive) this.layoutIntro();
+          else if (this.focusedFriend) this.focusCamera(this.focusedFriend,true);
           else this.restoreCamera();
         });
         const resize = () => {
@@ -267,12 +294,78 @@ export async function startGame(): Promise<void> {
         }
         this.game.canvas.setAttribute("tabindex","0");
         this.game.canvas.setAttribute("aria-label",texts.interfaz.controles.descripcionJuego);
-        this.game.canvas.focus({preventScroll:true});
-        document.body.classList.add("playing");
-        document.getElementById("hero")!.setAttribute("aria-hidden","true");
-        document.documentElement.lang = "es";
-        document.title = texts.interfaz.titulo;
-        resolve();
+        this.physics.pause();
+        this.input.keyboard!.enabled = false;
+        this.input.keyboard!.disableGlobalCapture();
+        skipIntro.addEventListener("click",() => this.finishIntro(),{signal:events.signal});
+        for (const event of ["keydown","keyup"] as const) skipIntro.addEventListener(event,e => {
+          if (e.code === "Space" || e.code === "Enter") e.stopPropagation();
+        },{signal:events.signal});
+        window.addEventListener("keydown",e => {
+          if (e.code === "Escape" && this.introActive) { e.preventDefault(); this.finishIntro(); }
+        },{signal:events.signal});
+        const staticIntro = () => {
+          if (!this.introActive) return;
+          this.introStatic = true;
+          this.drawIntro();
+        };
+        document.addEventListener("visibilitychange",() => {
+          if (!document.hidden) staticIntro();
+        },{signal:events.signal});
+        motion.addEventListener("change",() => { if (motion.matches) staticIntro(); },{signal:events.signal});
+        const show = () => {
+          if (document.hidden || this.presented || events.signal.aborted) return;
+          this.presented = true;
+          root.inert = false;
+          if (!introSeen && !stamps.size && !hasCheckpoint) {
+            this.introActive = true;
+            this.introStatic = motion.matches;
+            this.player.body!.reset(this.spawn.x,checkpoint[1]);
+            root.classList.add("introducing");
+            skipIntro.hidden = false;
+            this.layoutIntro();
+            skipIntro.focus({preventScroll:true});
+          } else this.resumeGameplay(false);
+          // Commit opacity:0 before changing the class, including warm-cache loads.
+          void root.offsetWidth;
+          document.body.classList.add("playing");
+          document.getElementById("hero")!.setAttribute("aria-hidden","true");
+          document.documentElement.lang = "es";
+          document.title = texts.interfaz.titulo;
+          resolve();
+        };
+        void skyReady.then(() => {
+          if (events.signal.aborted) return;
+          document.addEventListener("visibilitychange",show,{signal:events.signal});
+          show();
+        });
+      }
+
+      layoutIntro() {
+        this.restoreCamera();
+        const camera = this.cameras.main;
+        camera.stopFollow();
+        this.introEnd = { x:camera.scrollX, y:camera.scrollY };
+        this.introTravel = Math.min(360,camera.height/camera.zoom*.35);
+        camera.removeBounds();
+        this.drawIntro();
+      }
+
+      drawIntro() {
+        const progress = this.introStatic ? 1 : Phaser.Math.Clamp((this.introElapsed-1500)/2500,0,1);
+        this.cameras.main.setScroll(this.introEnd.x,this.introEnd.y-this.introTravel*(1-Phaser.Math.Easing.Sine.InOut(progress)));
+        introText.hidden = !this.introStatic && this.introElapsed < 4000;
+        skipIntro.textContent = this.introStatic ? texts.intro.jugar : texts.intro.saltar;
+      }
+
+      finishIntro() {
+        if (!this.introActive) return;
+        this.introActive = false;
+        root.classList.remove("introducing");
+        introText.hidden = skipIntro.hidden = true;
+        try { localStorage.setItem(`${key}:intro-seen`,"1"); } catch { /* Playing does not require storage. */ }
+        this.resumeGameplay(false);
+        this.say(texts.personajes.Fonda,texts.intro.ayuda,5000);
       }
 
       decorations() {
@@ -381,21 +474,22 @@ export async function startGame(): Promise<void> {
         this.focusCamera(friend);
       }
 
-      resumeGameplay() {
+      resumeGameplay(animate=true) {
         this.focusedFriend = undefined;
+        held.clear();
         this.input.keyboard!.enabled = true;
         this.input.keyboard!.enableGlobalCapture();
         this.input.keyboard!.resetKeys();
         this.lastGrounded = -1000; this.bufferedUntil = 0; this.touchJump = false;
         this.physics.resume();
         root.classList.remove("conversing");
-        this.restoreCamera(true);
+        this.restoreCamera(animate);
         this.game.canvas.focus({preventScroll:true});
       }
 
       positionInteraction() {
         const target = this.seatedBench ?? this.nearby ?? this.nearbyBench;
-        if (!target || this.focusedFriend) { interact.hidden = true; return; }
+        if (!target || !this.presented || this.introActive || this.focusedFriend) { interact.hidden = true; return; }
         const camera = this.cameras.main;
         const half = interact.offsetWidth/2+12;
         // The game camera pans and zooms without rotation.
@@ -444,13 +538,13 @@ export async function startGame(): Promise<void> {
 
       canSit(bench: typeof BENCHES[number]) {
         const body = this.player.body as Phaser.Physics.Arcade.Body;
-        return !this.focusedFriend && (body.blocked.down || body.touching.down)
+        return this.presented && !this.introActive && !this.focusedFriend && (body.blocked.down || body.touching.down)
           && Math.abs(body.velocity.y)<1 && Math.abs(this.player.x-bench.x)<90
           && Math.abs(body.bottom-bench.y)<12;
       }
 
       useBench(bench: typeof BENCHES[number]) {
-        if (this.focusedFriend) return;
+        if (!this.presented || this.introActive || this.focusedFriend) return;
         if (this.seatedBench) {
           if (this.seatedBench === bench) this.stand();
           return;
@@ -482,7 +576,7 @@ export async function startGame(): Promise<void> {
       }
 
       talk(friend = this.nearby) {
-        if (!friend || this.focusedFriend || Math.abs(friend.x-this.player.x)>=100 || Math.abs(friend.y-this.player.body!.bottom)>=85) return;
+        if (!friend || !this.presented || this.introActive || this.focusedFriend || Math.abs(friend.x-this.player.x)>=100 || Math.abs(friend.y-this.player.body!.bottom)>=85) return;
         const portrait = this.portraits.get(friend.name)!;
         this.tweens.killTweensOf(portrait);
         portrait.setY(friend.y);
@@ -514,8 +608,15 @@ export async function startGame(): Promise<void> {
         conversation.showModal();
       }
 
-      update(time: number) {
-        if (!this.player) return;
+      update(time: number, delta=0) {
+        if (!this.player || !this.presented) return;
+        if (this.introActive) {
+          if (document.hidden) return;
+          if (!this.introStatic) this.introElapsed += Math.min(delta,50);
+          this.drawIntro();
+          if (this.introElapsed >= 8000) this.finishIntro();
+          return;
+        }
         for (const portrait of this.portraits.values()) {
           const until = portrait.getData("poseUntil");
           if (until && time > until) portrait.setFrame(0).setData("poseUntil",0);
@@ -607,10 +708,12 @@ export async function startGame(): Promise<void> {
       callbacks: { postBoot: () => {
         root.querySelectorAll<HTMLButtonElement>("[data-control]").forEach(button => {
           button.addEventListener("pointerdown",event => {
+            const scene = game.scene.scenes[0] as Fonda;
+            if (!scene.presented || scene.introActive) return;
             event.preventDefault();
             button.setPointerCapture(event.pointerId);
             held.set(event.pointerId,button.dataset.control!);
-            if (button.dataset.control === "jump") (game.scene.scenes[0] as Fonda).touchJump=true;
+            if (button.dataset.control === "jump") scene.touchJump=true;
           },{signal:events.signal});
           const release = (event: PointerEvent) => held.delete(event.pointerId);
           button.addEventListener("pointerup",release,{signal:events.signal});

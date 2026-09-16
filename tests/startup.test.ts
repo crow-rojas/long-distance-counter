@@ -76,7 +76,6 @@ it("keeps the countdown and game startup working when actual Three initializatio
   const callbacks = [...frames.values()];
   frames.clear();
   callbacks.forEach(callback => callback(0));
-  await vi.advanceTimersByTimeAsync(2200);
   await vi.dynamicImportSettled();
   expect(startGame).toHaveBeenCalledOnce();
 });
@@ -84,7 +83,6 @@ it("keeps the countdown and game startup working when actual Three initializatio
 it("keeps rendering through the fade, then disposes once and never resumes after visibility changes", async () => {
   const remove = vi.spyOn(win, "removeEventListener");
   await import("../src/main");
-  await vi.advanceTimersByTimeAsync(2200);
   await vi.dynamicImportSettled();
   expect(scene.enterGame).toHaveBeenCalledOnce();
   expect(scene.stop).not.toHaveBeenCalled();
@@ -114,7 +112,6 @@ it("disposes immediately for reduced motion", async () => {
 
 it("finishes teardown if the browser never sends transitionend", async () => {
   await import("../src/main");
-  await vi.advanceTimersByTimeAsync(2200);
   await vi.dynamicImportSettled();
   await vi.advanceTimersByTimeAsync(2100);
   expect(scene.stop).toHaveBeenCalledOnce();
@@ -124,7 +121,6 @@ it("finishes teardown if the browser never sends transitionend", async () => {
 it("preserves the reload retry when game startup rejects", async () => {
   startGame.mockRejectedValue(new Error("Chunk unavailable"));
   await import("../src/main");
-  await vi.advanceTimersByTimeAsync(2200);
   await vi.dynamicImportSettled();
   expect(scene.stop).not.toHaveBeenCalled();
   expect(elements.arrival.children).toHaveLength(1);
