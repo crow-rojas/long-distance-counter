@@ -1,11 +1,11 @@
 # dawn
 
-Contador CDMX → SCL y una fonda entre estrellas para Chofis.
+Contador de CDMX a SCL y una fonda entre estrellas para Chofis.
 Llegada: **18 de septiembre de 2026, 06:55 de Chile**.
 
 [dawn.crowrojas.dev](https://dawn.crowrojas.dev)
 
-[Roadmap](docs/roadmap.md) · [Auditoría y spec](docs/superpowers/specs/2026-09-16-game-quality-audit.md) · [Textos para personalizar](docs/dialogues.md).
+[Roadmap](docs/roadmap.md) / [Auditoría y spec](docs/superpowers/specs/2026-09-16-game-quality-audit.md) / [Textos para personalizar](docs/dialogues.md).
 
 ## Desarrollo
 
@@ -24,7 +24,7 @@ En desarrollo y dentro de esa vista previa, **Reiniciar prueba** o **Shift + R**
 
 Chofis recorre cuatro zonas a lo largo de 14.000 píxeles: entrada, islas de los volantines, jardín de copihues y camino a Crow. Hay 40 plataformas principales, dos del desvío de dibujos y nueve checkpoints. La meta sigue siendo llevar empanada, completo y terremoto hasta Crow.
 
-Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas avisan durante 850 ms antes de caer y reaparecen 2,5 segundos después. Caerse conserva la comida recogida; el camino funciona en ambos sentidos. El objetivo de duración sigue siendo 8–12 minutos en una primera partida, pendiente de comprobar con una persona jugando.
+Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas avisan durante 850 ms antes de caer y reaparecen 2,5 segundos después. Caerse conserva la comida recogida; el camino funciona en ambos sentidos. El objetivo de duración sigue siendo 8 a 12 minutos en una primera partida, pendiente de comprobar con una persona jugando.
 
 - Moverse: flechas o A/D. Saltar: Espacio, W o flecha arriba; mantener para saltar más alto.
 - Hablar: E o un tap en el personaje/botón situado sobre él, cuando Chofis está cerca. Los NPC solo hablan y reaccionan al interactuar.
@@ -33,6 +33,7 @@ Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas
 - Sonido opcional con un botón: efectos CC0 de Brackeys y Piano 3 de AlkaKrab. Empieza en silencio.
 - El canvas y sus textos se dibujan según la densidad de pantalla, hasta 3×. El tamaño visible del mapa y las colisiones no cambian; el giro del celular o cambio de densidad del monitor reajusta canvas, textos y cámara sin recargar.
 - Chofis tiene tres frames de carrera y dos de salto. Marin saluda y señala al hablar; Crow cambia de expresión. Supergirl, Krypto y Pibble conservan sus dibujos.
+- Para escribir más diálogos, leer primero los [criterios y ejemplos de Crow](docs/dialogues.md#criterios-para-los-próximos-textos) y aplicar humanizer respetando sus expresiones.
 - La carta final sigue provisional: editar `LETTER` en [game.ts](src/game/game.ts).
 
 El guardado usa `chofis-platformer-preview` en pruebas y `chofis-platformer` con el reloj real. Cada uno guarda el último checkpoint en la clave correspondiente terminada en `:checkpoint`. Recargar retoma allí; los guardados anteriores sin checkpoint empiezan en la zona del siguiente objeto pendiente. Los índices ajenos a los checkpoints del mapa se descartan. Si el navegador bloquea el almacenamiento, la sesión sigue siendo jugable.

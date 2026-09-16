@@ -36,8 +36,8 @@ export const FRIENDS = [
 ] as const;
 export const ITEMS: { id: Stamp; x: number; y: number; instruction: string }[] = [
   { id: "empanada", x: 1750, y: 308, instruction: "Busca la empanada" },
-  { id: "completo", x: 5880, y: 308, instruction: "Cruza hasta el completo" },
-  { id: "terremoto", x: 9150, y: 193, instruction: "Sube por el terremoto" },
+  { id: "completo", x: 5880, y: 308, instruction: "Busca el completo" },
+  { id: "terremoto", x: 9150, y: 193, instruction: "Busca el terremoto" },
 ];
 
 export function nextStop(stamps: Set<Stamp>) {

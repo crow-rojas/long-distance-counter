@@ -16,7 +16,7 @@ export function createCountdownView(refs: Refs) {
       lastSecondKey = key;
 
       refs.days.textContent = String(state.days);
-      refs.time.textContent = `${pad2(state.hours)}h · ${pad2(state.minutes)}m · ${pad2(state.seconds)}s`;
+      refs.time.textContent = `${pad2(state.hours)}h ${pad2(state.minutes)}m ${pad2(state.seconds)}s`;
     },
   };
 }

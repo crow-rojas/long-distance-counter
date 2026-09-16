@@ -10,4 +10,4 @@
 export const TARGET_UTC_ISO = "2026-09-18T09:55:00Z";
 export const TARGET_MS = Date.parse(TARGET_UTC_ISO);
 
-export const TARGET_LABEL = "CDMX → SCL · 18 · 09 · 26";
+export const TARGET_LABEL = "CDMX a SCL, 18/09/26";

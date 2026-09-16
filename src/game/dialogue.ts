@@ -5,25 +5,25 @@ export function replyFor(name: typeof FRIENDS[number]["name"], stamps: Set<Stamp
   switch (name) {
     case "Marin":
       return stamps.has("empanada")
-        ? "¡Encontraste la empanada! Los dibujos están un poco más arriba."
-        : "La empanada está arriba. Mantén apretado el salto para llegar más alto.";
+        ? "¡Encontraste la empanada! ¡Yei!"
+        : "¡Omg! Hola Chofis, la empanada está más adelante, ve por ella 🫪";
     case "Pibble":
       return stamps.has("completo")
-        ? "¡Buen cruce! Ya tienes el completo."
-        : "Espera a que la isla se acerque y salta. El completo está al otro lado.";
+        ? "Ya tienes el completo, Pibble Martillo estaría orgulloso."
+        : "Dicen que más adelante está iTownGamePlays, y te va a tocar. ¡Ten cuidado buscando el completo!";
     case "Supergirl":
       return stamps.has("terremoto")
-        ? "Terremoto en mano. Ojo con las grietas al volver."
-        : "Las islas con grietas ceden al pisarlas. Prepara el siguiente salto. El terremoto está arriba.";
+        ? "¡Conseguiste el terremoto! No te vayas a marear, cuidado con las réplica AJSD"
+        : "Solo te falta el terremoto, eh? Cuidado con las siguientes grietas, se caen después de un ratito.";
     case "Krypto":
-      return "¡Guau! Las banderitas guardan tu regreso. Si una isla se cae, espera: vuelve a aparecer.";
+      return "Woof woof woof woof (las banderas son un checkpoint 🥳)";
     case "Tus dibujos":
       return "";
     case "Crow": {
       const missing = STAMPS.filter(food => !stamps.has(food));
       return missing.length
-        ? `Amorcito, nos ${missing.length === 1 ? "falta" : "faltan"} ${new Intl.ListFormat("es").format(missing)}.`
-        : "Ya está toda la comida, amorcito.";
+        ? `Mi princesa, nos ${missing.length === 1 ? "falta" : "faltan"} ${new Intl.ListFormat("es").format(missing)} :(`
+        : "Ya está toda la comida, mi princesa te amooooo ❤️";
     }
   }
 }

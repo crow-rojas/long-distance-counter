@@ -87,7 +87,7 @@
     check(!localStorage.getItem("chofis-platformer-preview"),"Use a fresh browser session");
     body.reset(120,1200);scene.update(time);
     const speech=document.querySelector("#speech");
-    check(speech.textContent==="Fonda: Volviste a la bandera.","First fall claims food before collecting any");
+    check(speech.textContent==="Fonda: Volviste al checkpoint.","First fall claims food before collecting any");
     const firstReminder=scene.speechUntil;
     body.reset(120,1200);time+=100;scene.update(time);
     check(scene.speechUntil===firstReminder,"Repeated falls repeat the tutorial");
@@ -209,7 +209,7 @@
     check(JSON.parse(localStorage.getItem("chofis-platformer-preview")).length===3,"Not all food was collected");
     scene.foodRecoveryExplained=false;
     body.reset(player.x,1200);scene.update(time);
-    check(speech.textContent==="Fonda: La comida sigue contigo.","Food recovery reminder is missing");
+    check(speech.textContent==="Fonda: No perdiste nada:)","Food recovery reminder is missing");
     const foodReminder=scene.speechUntil;
     body.reset(player.x,1200);time+=100;scene.update(time);
     check(scene.speechUntil===foodReminder,"Food recovery reminder repeats");

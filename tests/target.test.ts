@@ -22,6 +22,6 @@ describe("target", () => {
   });
 
   it("TARGET_LABEL is the display string", () => {
-    expect(TARGET_LABEL).toBe("CDMX → SCL · 18 · 09 · 26");
+    expect(TARGET_LABEL).toBe("CDMX a SCL, 18/09/26");
   });
 });

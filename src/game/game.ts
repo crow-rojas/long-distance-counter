@@ -22,9 +22,9 @@ export async function startGame(): Promise<void> {
     <button id="interact" hidden>Hablar</button>
     <dialog id="conversation" aria-labelledby="speaker"><p id="speaker"></p><p id="dialogue-text"></p><button id="close-conversation">Seguir</button></dialog>
     <dialog id="gallery" aria-labelledby="gallery-title"><h1 id="gallery-title" tabindex="-1">Un rincón para tus dibujos</h1><div class="drawings"><img src="/game/marin-devil.png" alt="Marin diablita dibujada por Chofis"><img src="/game/marin-bunny.png" alt="Marin conejita dibujada por Chofis"></div><button id="close-gallery">Volver al camino</button></dialog>
-    <p class="keyboard-help">← → moverse &nbsp; Espacio saltar &nbsp; E hablar</p>
-    <nav class="touch-controls" aria-label="Controles del juego"><div><button data-control="left" aria-label="Moverse a la izquierda">←</button><button data-control="right" aria-label="Moverse a la derecha">→</button></div><button data-control="jump" aria-label="Saltar">Saltar</button></nav>
-    <dialog id="letter" aria-labelledby="letter-title"><h1 id="letter-title" tabindex="-1">Ven acá, amorcito.</h1><div class="reunion"><img src="/game/chofis-happy.png" alt="Chofis"><span aria-hidden="true">♥</span><img src="/game/crow-happy.png" alt="Crow"></div><p>${LETTER}</p><button id="close-letter">Volver a la fonda</button></dialog>`;
+    <p class="keyboard-help">A y D para moverse &nbsp; Espacio saltar &nbsp; E hablar</p>
+    <nav class="touch-controls" aria-label="Controles del juego"><div><button data-control="left" aria-label="Moverse a la izquierda">Izq</button><button data-control="right" aria-label="Moverse a la derecha">Der</button></div><button data-control="jump" aria-label="Saltar">Saltar</button></nav>
+    <dialog id="letter" aria-labelledby="letter-title"><h1 id="letter-title" tabindex="-1">Ven acá, mi princesa ❤️</h1><div class="reunion"><img src="/game/chofis-happy.png" alt="Chofis"><span aria-hidden="true">♥</span><img src="/game/crow-happy.png" alt="Crow"></div><p>${LETTER}</p><button id="close-letter">Volver a la fonda</button></dialog>`;
   document.body.append(root);
   const objective = root.querySelector<HTMLElement>("#objective")!;
   const speech = root.querySelector<HTMLElement>("#speech")!;
@@ -146,7 +146,6 @@ export async function startGame(): Promise<void> {
             markings.fillStyle(0xe8d9ba).fillTriangle(65,-48,90,-37,65,-26);
           } else if (kind?.startsWith("moving")) {
             markings.lineStyle(3,0xade2d1,.85).lineBetween(10,7,w-10,7);
-            art.add(this.add.text(w/2,35,kind === "moving-x" ? "↔" : "↕",{fontSize:"22px",color:"#bce1d6",resolution:pixelRatio}).setOrigin(.5).setAlpha(.7));
             sprite.setVelocity(kind === "moving-x" ? 65 : 0,kind === "moving-y" ? 40 : 0);
           }
           sprite.setData("index",index);
@@ -197,7 +196,7 @@ export async function startGame(): Promise<void> {
             }
             stamps.add(item.id);
             try { localStorage.setItem(key,JSON.stringify([...stamps])); } catch { /* Keep this session playable. */ }
-            this.say("Chofis",`${item.id === "empanada" ? "Empanada lista" : item.id === "completo" ? "Ya tengo el completo" : "Ya tengo el terremoto"}.`,2500);
+            this.say("Chofis",item.id === "empanada" ? "Empanada lista, yei" : item.id === "completo" ? "Ya tengo el completo omgg" : "Ya tengo el terremoto carnal",2500);
           });
         }
         this.restoreCamera();
@@ -304,11 +303,11 @@ export async function startGame(): Promise<void> {
           this.add.image(x,y,"sign").setOrigin(.5,1).setDisplaySize(175,135).setDepth(-1);
           this.add.text(x,y-81,text,{fontFamily:"Georgia",fontSize:"20px",color:"#382938",align:"center",lineSpacing:3,resolution:pixelRatio}).setOrigin(.5).setDepth(-1);
         };
-        sign(550,700,"Salta →");
-        this.add.text(1740,224,"Tus dibujos ↑",{fontFamily:"Georgia",fontSize:"18px",color:"#eadbc5",shadow:{color:"#182139",blur:5,fill:true},resolution:pixelRatio}).setOrigin(.5);
-        sign(3720,650,"Espera y\nsalta →");
-        sign(6800,630,"Pisa y\nsalta →");
-        sign(10160,560,"Sigue las\nluces →");
+        sign(550,700,"Salta");
+        this.add.text(1740,224,"Tus dibujos arriba",{fontFamily:"Georgia",fontSize:"18px",color:"#eadbc5",shadow:{color:"#182139",blur:5,fill:true},resolution:pixelRatio}).setOrigin(.5);
+        sign(3720,650,"Espera y\nsalta");
+        sign(6800,630,"Pisa y\nsalta");
+        sign(10160,560,"Sigue las\nluces");
         this.add.text(13700,294,"la fonda de los dos",{fontFamily:"Georgia",fontSize:"27px",color:"#f1d7ae",resolution:pixelRatio}).setOrigin(.5);
       }
 
@@ -426,8 +425,8 @@ export async function startGame(): Promise<void> {
           this.effect("power_up",.3);
           portrait.setFrame(2).setData("poseUntil",Infinity);
           this.won = true;
-          root.querySelector(".game-hud span")!.textContent = "México → Chile · juntos al fin";
-          objective.textContent = this.lastObjective = "La fonda es nuestra, amorcito ♥";
+          root.querySelector(".game-hud span")!.textContent = "De México a Chile, juntos al fin";
+          objective.textContent = this.lastObjective = "La fonda es nuestra, amorcito";
           this.player.setVelocity(0);
           this.avatar.setTexture("chofis-happy").setFlipX(false).setAngle(0);
           letter.showModal();
@@ -490,9 +489,9 @@ export async function startGame(): Promise<void> {
           this.player.setVelocity(0);
           this.lastGrounded = -1000;
           this.bufferedUntil = 0;
-          let reminder = this.fallExplained ? "" : "Volviste a la bandera.";
+          let reminder = this.fallExplained ? "" : "Volviste al checkpoint.";
           if (stamps.size && !this.foodRecoveryExplained) {
-            reminder += `${reminder ? " " : ""}La comida sigue contigo.`;
+            reminder = this.fallExplained ? "No perdiste nada:)" : "Volviste al checkpoint, no perdiste nada:)";
             this.foodRecoveryExplained = true;
           }
           this.fallExplained = true;
@@ -503,7 +502,7 @@ export async function startGame(): Promise<void> {
         for (const candidate of ZONES) if (this.player.x >= candidate.x) zone = candidate;
         const zoneLabel = root.querySelector(".game-hud span")!;
         if (!this.won && zoneLabel.textContent !== zone.name) zoneLabel.textContent = zone.name;
-        const text = this.won ? "La fonda es nuestra, amorcito ♥" : `Comida para Crow: ${stamps.size}/3 · ${next.instruction} ${next.x < this.player.x-60 ? "←" : "→"}`;
+        const text = this.won ? "La fonda es nuestra, amorcito" : `Comida para Crow: ${stamps.size}/3. ${next.instruction}${next.x < this.player.x-60 ? ", a tu izquierda" : ""}`;
         if (text !== this.lastObjective) { objective.textContent=text; this.lastObjective=text; }
         this.nearby = FRIENDS.find(friend => Math.abs(friend.x-this.player.x)<100 && Math.abs(friend.y-body.bottom)<85);
         interact.hidden = !this.nearby;

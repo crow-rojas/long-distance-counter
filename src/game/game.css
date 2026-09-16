@@ -13,7 +13,7 @@ body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s
 #objective { font: 400 clamp(17px,2.4vw,25px)/1.35 "Fraunces Variable",Georgia,serif; margin: 5px 0; max-width: 720px; }
 #speech { position: absolute; left: 50%; bottom: calc(var(--letterbox) + 78px); transform: translateX(-50%); margin: 0; width: min(570px,calc(100% - 36px)); color: #fff3f9; text-align: center; text-shadow: 0 2px 3px #16071f, 0 0 8px #16071f, 0 0 18px #16071f; font: 500 15px/1.6 system-ui,sans-serif; pointer-events: none; }
 #interact { position: absolute; transform: translateX(-50%); white-space: nowrap; }
-#interact::before { content: "E · "; }
+#interact::before { content: "E: "; }
 .keyboard-help { position: absolute; bottom: calc(var(--letterbox) + 7px); left: 24px; font: 12px system-ui,sans-serif; color: #e8bad3; pointer-events: none; }
 .touch-controls { display: none; position: absolute; bottom: calc(var(--letterbox) + 14px); left: max(18px,env(safe-area-inset-left)); right: max(18px,env(safe-area-inset-right)); justify-content: space-between; pointer-events: none; }
 .touch-controls div { display: flex; gap: 10px; }
@@ -33,7 +33,7 @@ body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s
 #fonda #conversation #speaker { font: 24px "Fraunces Variable",Georgia,serif; color: #f1d7ae; margin: 0 0 10px; }
 #fonda #conversation #dialogue-text { margin: 0 0 16px; line-height: 1.6; }
 #fonda #conversation::backdrop { background: linear-gradient(#101321d9, #10132122 50%,transparent); }
-#close-conversation::before { content: "E · "; }
+#close-conversation::before { content: "E: "; }
 .conversing .game-hud, .conversing .keyboard-help, .conversing .touch-controls, .conversing #sound, .conversing #reset-preview { visibility: hidden; }
 @media (pointer: coarse), (max-width: 700px) {
   #fonda #sound, #fonda #interact, #fonda dialog button { min-height: 44px; }
