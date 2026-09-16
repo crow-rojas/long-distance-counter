@@ -6,10 +6,7 @@ export type CountdownState = {
   minutes: number;
   seconds: number;
   arrived: boolean;
-  progress: number;
 };
-
-const ANCHOR_MS = Date.parse("2026-05-14T00:00:00Z");
 
 // Time travel for manual QA: ?t=ISO offsets `now`. Falls through to real time
 // when the query param is missing or invalid.
@@ -21,7 +18,9 @@ function readOverride(): number | null {
   return Number.isFinite(parsed) ? parsed - Date.now() : null;
 }
 
-const offsetMs = readOverride() ?? 0;
+const overrideMs = readOverride();
+export const isPreview = overrideMs !== null;
+const offsetMs = overrideMs ?? 0;
 
 export function compute(now: Date): CountdownState {
   const nowMs = now.getTime() + offsetMs;
@@ -34,7 +33,6 @@ export function compute(now: Date): CountdownState {
       minutes: 0,
       seconds: 0,
       arrived: true,
-      progress: 1,
     };
   }
 
@@ -44,10 +42,5 @@ export function compute(now: Date): CountdownState {
   const minutes = Math.floor((totalSeconds % 3_600) / 60);
   const seconds = totalSeconds % 60;
 
-  const elapsed = nowMs - ANCHOR_MS;
-  const span = TARGET_MS - ANCHOR_MS;
-  const rawProgress = elapsed / span;
-  const progress = Math.max(0, Math.min(1, rawProgress));
-
-  return { days, hours, minutes, seconds, arrived: false, progress };
+  return { days, hours, minutes, seconds, arrived: false };
 }

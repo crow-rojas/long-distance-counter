@@ -69,6 +69,11 @@ def main():
         ("marin-devil-interaccion", "marin-devil-poses", 3, [0, 1, 2], 300),
         ("marin-bunny-interaccion", "marin-bunny-poses", 3, [0, 1, 2], 300),
     ]
+    props = [("ramada-chilena-comida", "ramada"), ("volatin", "volantin"), ("copihue", "copihue")]
+    missing = [name for name in [s[0] for s in sheets] + [p[0] for p in props]
+               if not (args.source/f"{name}.jpeg").is_file()]
+    if missing:
+        parser.error(f"Missing source images: {', '.join(missing)}")
     files = []
     for source, name, columns, indices, height in sheets:
         image = Image.open(args.source/f"{source}.jpeg")
@@ -87,7 +92,7 @@ def main():
             sheet.alpha_composite(canvas, (index*320, 0))
         sheet.save(args.destination/f"{name}.png", optimize=True)
         files.append(args.destination/f"{name}.png")
-    for source, name in [("ramada-chilena-comida", "ramada"), ("volatin", "volantin"), ("copihue", "copihue")]:
+    for source, name in props:
         image = cutout(Image.open(args.source/f"{source}.jpeg"), ramada=name == "ramada")
         scale = min(1, 900/max(image.size))
         image = resized(image, (round(image.width*scale), round(image.height*scale)))

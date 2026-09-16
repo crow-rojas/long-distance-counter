@@ -49,12 +49,6 @@ Las hojas de Marin diablita y conejita y todos los frames individuales están pr
 - Banca, farol, macetero y letrero: se quitaron también los blancos interiores y el halo blanco exterior del farol.
 - Cielo de 2048 px de ancho: aparece con el fundido de entrada y cubre la pantalla sin depender del zoom de conversación.
 
-Los cuatro originales permanecen intactos. La lámina `mundo/contact-sheet.jpg` permite revisar los recortes sobre un fondo oscuro. La selección de columnas y el tratamiento del fondo están ajustados a estas imágenes.
+Los cuatro originales permanecen intactos. La lámina `mundo/contact-sheet.jpg`, creada para la revisión inicial y no regenerada por el script, permite revisar los recortes sobre un fondo oscuro. La selección de columnas y el tratamiento del fondo están ajustados a estas imágenes.
 
-Para regenerar, desde el repositorio:
-
-```sh
-uv run scripts/prepare-assets.py
-uv run scripts/prepare-generated.py
-uv run scripts/prepare-world.py
-```
+Para regenerar y promover copias revisadas, sigue la [receta en carpeta temporal del README](../README.md#preparar-dibujos). Los originales nunca se reemplazan.

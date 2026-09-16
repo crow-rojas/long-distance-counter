@@ -5,7 +5,7 @@ Llegada: **18 de septiembre de 2026, 06:55 de Chile**.
 
 [dawn.crowrojas.dev](https://dawn.crowrojas.dev)
 
-[Roadmap y pendientes del checkpoint](docs/roadmap.md).
+[Roadmap](docs/roadmap.md) · [Auditoría y spec](docs/superpowers/specs/2026-09-16-game-quality-audit.md) · [Textos para personalizar](docs/dialogues.md).
 
 ## Desarrollo
 
@@ -16,7 +16,7 @@ corepack pnpm@9 dev
 
 [Probar el juego](http://localhost:5173/?t=2026-09-18T09:55:00Z).
 Para probar los últimos cinco segundos del contador, usa `?t=2026-09-18T09:54:55Z`.
-Sin `?t`, se usa la hora real. Este parámetro es una comodidad de prueba, no control de acceso.
+Sin `?t`, o con un valor vacío/inválido, se usa la hora real. Este parámetro es una comodidad de prueba, no control de acceso.
 
 En desarrollo y dentro de esa vista previa, **Reiniciar prueba** o **Shift + R** borran la comida y el checkpoint de prueba y recargan el juego. No borran el progreso del reloj real.
 
@@ -31,7 +31,7 @@ Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas
 - La cámara se acerca durante la conversación y el texto aparece arriba. E, Escape o Seguir cierran el diálogo. La física y los desafíos se pausan durante las conversaciones, la galería y la carta.
 - En móvil aparecen botones de dirección y salto. Con movimiento reducido, se omiten las transiciones de cámara y los efectos decorativos de movimiento.
 - Sonido opcional con un botón: efectos CC0 de Brackeys y Piano 3 de AlkaKrab. Empieza en silencio.
-- El canvas y sus textos se dibujan según la densidad de pantalla, hasta 3×. El tamaño visible del mapa y las colisiones no cambian; el giro del celular reajusta el canvas y la cámara.
+- El canvas y sus textos se dibujan según la densidad de pantalla, hasta 3×. El tamaño visible del mapa y las colisiones no cambian; el giro del celular o cambio de densidad del monitor reajusta canvas, textos y cámara sin recargar.
 - Chofis tiene tres frames de carrera y dos de salto. Marin saluda y señala al hablar; Crow cambia de expresión. Supergirl, Krypto y Pibble conservan sus dibujos.
 - La carta final sigue provisional: editar `LETTER` en [game.ts](src/game/game.ts).
 
@@ -42,7 +42,7 @@ El guardado usa `chofis-platformer-preview` en pruebas y `chofis-platformer` con
 | Carpeta | Contenido |
 | --- | --- |
 | `src/countdown/`, `src/ui/`, `src/input/` | Contador, transición e interacción con el fondo. |
-| `src/scene/` | Cielo y flor originales en Three.js; al jugar, la flor se desvanece y el cielo pasa a tonos suaves. |
+| `src/scene/` | Cielo y flor originales en Three.js; al jugar, se libera tras el fundido y da paso al cielo CSS. |
 | `src/game/` | Juego en Phaser 3: escena, estilos, [mapa](src/game/level.ts) y guardado. |
 | `public/game/` | 32 PNG, el cielo WebP y los efectos de sonido con su licencia. |
 | `scripts/` | Extracción de dibujos y limpieza de bordes. |
@@ -53,12 +53,18 @@ Los originales, packs seleccionados, prompts y resultados de Nano Banana viven e
 
 ## Preparar dibujos
 
+Prueba primero en una carpeta temporal. Estos comandos no reemplazan los recursos publicados:
+
 ```sh
-uv run scripts/prepare-assets.py
-uv run scripts/clean-sprites.py ~/Downloads/Chofis/assets ~/Downloads/Chofis/assets/ampliados --scale 2
-uv run scripts/prepare-generated.py
-uv run scripts/prepare-world.py
+asset_scratch=$(mktemp -d "${TMPDIR:-/tmp}/chofis-assets.XXXXXX")
+uv run scripts/prepare-assets.py ~/Downloads/Chofis/originales "$asset_scratch/originales"
+uv run scripts/clean-sprites.py "$asset_scratch/originales" "$asset_scratch/limpios" --scale 1
+uv run scripts/prepare-generated.py ~/Downloads/Chofis/resultados "$asset_scratch/generados"
+uv run scripts/prepare-world.py ~/Downloads/Chofis/resultados "$asset_scratch/mundo"
+uv run --with pillow scripts/check-asset-preflight.py
 ```
+
+Revisa transparencia, contornos, alineación de pies y la fila caminable de las islas. Después copia **solo los archivos usados por el juego** desde esa carpeta a `public/game/` y revisa el diff. La limpieza 1× reproduce el tamaño publicado; 2×/4× sirven como copias ampliadas, sin inventar detalle. Los scripts de resultados generados comprueban sus archivos de entrada antes de escribir salidas.
 
 La extracción lee `Chofis/originales/` y escribe 23 PNG en `Chofis/assets/`. También acepta carpetas de origen y destino como argumentos. La limpieza conserva los originales; ampliar no reconstruye detalles perdidos.
 
@@ -75,13 +81,16 @@ corepack pnpm@9 test
 corepack pnpm@9 build
 ```
 
-Con Vite y la vista previa abiertos en la sesión `chofis-v3`:
+Con Vite corriendo y el CLI `agent-browser` instalado:
 
 ```sh
-agent-browser --session chofis-v3 eval --stdin < tests/platformer.browser.js
+corepack pnpm@9 test:browser
+# Otro puerto: corepack pnpm@9 test:browser http://127.0.0.1:5174/
 ```
 
-Comprueba el foco y las teclas tras cambiar el sonido, giros rápidos, salto variable, coyote time, salto anticipado, ausencia de doble salto, transporte sobre islas móviles, caída y recuperación de islas frágiles, pausa durante conversaciones, 82 conexiones, desvío de dibujos, recogida, checkpoints y carta final. Recargar después. La prueba busca un momento de salto viable en las conexiones móviles; no presupone que cualquier momento funcione. Esta comprobación de navegador es local; no forma parte de CI.
+El runner abre una sesión nueva silenciada, espera a que termine la carga y la cierra al terminar, también ante error o interrupción. No utiliza tus guardados ni pestañas.
+
+Comprueba densidad del canvas y textos, cambios de tamaño, recordatorios de caída, el foco y las teclas tras cambiar el sonido, giros rápidos, salto variable, coyote time, salto anticipado, ausencia de doble salto, transporte sobre islas móviles, caída y recuperación de islas frágiles, pausa durante conversaciones, 82 conexiones, desvío de dibujos, recogida, checkpoints y carta final. La prueba busca un momento de salto viable en las conexiones móviles; no presupone que cualquier momento funcione. Esta comprobación de navegador es local; no forma parte de CI.
 
 GitHub Pages publica al hacer push a `main`. La procedencia de música e imágenes queda documentada en `docs/`.
 

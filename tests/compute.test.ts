@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { compute } from "../src/countdown/compute";
 import { TARGET_MS } from "../src/countdown/target";
 
@@ -27,7 +27,7 @@ describe("compute", () => {
     expect(state.seconds).toBe(0);
   });
 
-  it("returns arrived=true 1ms before target as false", () => {
+  it("has not arrived 1 ms before target", () => {
     const state = compute(new Date(TARGET_MS - 1));
     expect(state.arrived).toBe(false);
   });
@@ -43,18 +43,46 @@ describe("compute", () => {
     expect(state.days).toBe(0);
     expect(state.seconds).toBe(0);
   });
+});
 
-  it("progress is 0 at start anchor and 1 at target", () => {
-    // Anchor is 2026-05-14 (the spec date) — chosen as the start of the journey
-    const anchor = Date.parse("2026-05-14T00:00:00Z");
-    const halfway = new Date((anchor + TARGET_MS) / 2);
-    const state = compute(halfway);
-    expect(state.progress).toBeGreaterThan(0.45);
-    expect(state.progress).toBeLessThan(0.55);
+describe("preview clock", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+    vi.resetModules();
   });
 
-  it("progress is clamped to [0, 1]", () => {
-    expect(compute(new Date(0)).progress).toBe(0);
-    expect(compute(new Date(TARGET_MS + days(365))).progress).toBe(1);
+  it.each(["", "?t=", "?t=invalid"])("uses real time for %j", async (search) => {
+    vi.stubGlobal("window", { location: { search } });
+    vi.resetModules();
+    const clock = await import("../src/countdown/compute");
+    expect(clock.isPreview).toBe(false);
+    expect(clock.compute(new Date(TARGET_MS - 5000))).toEqual({
+      days: 0, hours: 0, minutes: 0, seconds: 5, arrived: false,
+    });
+  });
+
+  it("advances a valid preview from its initial override", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-16T00:00:00Z"));
+    vi.stubGlobal("window", { location: { search: "?t=2026-09-18T09:54:55Z" } });
+    vi.resetModules();
+    const clock = await import("../src/countdown/compute");
+    expect(clock.isPreview).toBe(true);
+    expect(clock.compute(new Date()).seconds).toBe(5);
+    vi.advanceTimersByTime(2000);
+    expect(clock.compute(new Date()).seconds).toBe(3);
+    vi.advanceTimersByTime(3000);
+    expect(clock.compute(new Date()).arrived).toBe(true);
+  });
+
+  it("recognizes a valid preview even when its offset is zero", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(TARGET_MS));
+    vi.stubGlobal("window", { location: { search: "?t=2026-09-18T09:55:00Z" } });
+    vi.resetModules();
+    const clock = await import("../src/countdown/compute");
+    expect(clock.isPreview).toBe(true);
+    expect(clock.compute(new Date()).arrived).toBe(true);
   });
 });

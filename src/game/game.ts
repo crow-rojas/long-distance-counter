@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 import "./game.css";
+import { isPreview } from "../countdown/compute";
+import { replyFor } from "./dialogue";
 import { readStamps, readyForCrow } from "./progress";
 import { CHECKPOINTS, FRIENDS, ITEMS, nextStop, PLATFORMS, SIDE_PLATFORMS, WORLD_WIDTH, ZONES, type Platform } from "./level";
 
@@ -31,14 +33,14 @@ export async function startGame(): Promise<void> {
   const conversation = root.querySelector<HTMLDialogElement>("#conversation")!;
   const gallery = root.querySelector<HTMLDialogElement>("#gallery")!;
   const soundButton = root.querySelector<HTMLButtonElement>("#sound")!;
-  const preview = new URLSearchParams(location.search).has("t");
+  const preview = isPreview;
   const key = preview ? "chofis-platformer-preview" : "chofis-platformer";
   let saved: string | null = null;
   let savedCheckpoint: string | null = null;
   try { saved = localStorage.getItem(key); savedCheckpoint = localStorage.getItem(`${key}:checkpoint`); } catch { /* Storage is optional. */ }
   const stamps = readStamps(saved);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const pixelRatio = Math.min(window.devicePixelRatio || 1,3);
+  let pixelRatio = Math.min(window.devicePixelRatio || 1,3);
   const held = new Map<number, string>();
   const events = new AbortController();
   let loadFailed = false;
@@ -55,6 +57,8 @@ export async function startGame(): Promise<void> {
       touchJump = false;
       nearby: typeof FRIENDS[number] | undefined;
       speechUntil = 0;
+      fallExplained = false;
+      foodRecoveryExplained = false;
       lastObjective = "";
       won = false;
       wasGrounded = true;
@@ -76,7 +80,6 @@ export async function startGame(): Promise<void> {
         for (let i=0;i<4;i++) images.push(`distant-island-${i}`);
         for (const variant of ["stable","fragile"]) for (const size of ["small","medium","large"]) images.push(`island-${variant}-${size}`);
         for (const image of new Set(images)) this.load.image(image, `/game/${image}.png`);
-        this.load.image("sky","/game/cielo-fonda.webp");
         for (const sheet of ["chofis-run", "chofis-jump", "crow-poses", "marin-poses"]) {
           this.load.spritesheet(sheet, `/game/${sheet}.png`, {frameWidth:320,frameHeight:320});
         }
@@ -158,10 +161,11 @@ export async function startGame(): Promise<void> {
         this.player = this.physics.add.sprite(this.spawn.x,this.spawn.y,"__WHITE").setOrigin(.5,1).setDisplaySize(40.625,58.75).setVisible(false);
         this.player.setBodySize(this.player.width,this.player.height).setOffset(0,0).setMaxVelocity(340,1100).setDragX(2800);
         this.avatar = this.add.image(this.spawn.x,this.spawn.y,"chofis-front").setOrigin(.5,.9625).setDisplaySize(100,100).setDepth(5);
-        this.events.on(Phaser.Scenes.Events.POST_UPDATE,() => {
+        this.events.on(Phaser.Scenes.Events.POST_UPDATE,(_time: number, delta: number) => {
           this.avatar.setPosition(this.player.x,this.player.y);
-          this.positionInteraction();
+          if (!this.focusedFriend) this.updatePlatforms(delta);
         });
+        this.events.on(Phaser.Scenes.Events.RENDER,() => this.positionInteraction());
         this.physics.add.collider(this.player,ground,(_player,platform) => {
           if (!this.player.body!.touching.down) return;
           const index = (platform as Phaser.Physics.Arcade.Image).getData("index") as number;
@@ -193,7 +197,7 @@ export async function startGame(): Promise<void> {
             }
             stamps.add(item.id);
             try { localStorage.setItem(key,JSON.stringify([...stamps])); } catch { /* Keep this session playable. */ }
-            this.say("Chofis",`${item.id === "empanada" ? "Empanada lista" : item.id === "completo" ? "Ya tengo el completo" : "Ya tengo el terremoto"}. ${nextStop(stamps).instruction}.`);
+            this.say("Chofis",`${item.id === "empanada" ? "Empanada lista" : item.id === "completo" ? "Ya tengo el completo" : "Ya tengo el terremoto"}.`,2500);
           });
         }
         this.restoreCamera();
@@ -201,9 +205,25 @@ export async function startGame(): Promise<void> {
           if (this.focusedFriend) this.focusCamera(this.focusedFriend,true);
           else this.restoreCamera();
         });
-        window.addEventListener("resize",() => {
+        const resize = () => {
+          const density = Math.min(window.devicePixelRatio || 1,3);
+          if (density !== pixelRatio) {
+            pixelRatio = density;
+            // Text lives directly in the scene or in a platform container.
+            for (const child of this.children.list) {
+              const objects = child instanceof Phaser.GameObjects.Container ? child.list : [child];
+              for (const object of objects) if (object instanceof Phaser.GameObjects.Text) object.setResolution(pixelRatio);
+            }
+          }
           this.scale.resize(Math.round(root.clientWidth*pixelRatio),Math.round(root.clientHeight*pixelRatio));
-        },{signal:events.signal});
+          this.scale.setZoom(1/pixelRatio);
+        };
+        window.addEventListener("resize",resize,{signal:events.signal});
+        // A density-only change does not reliably send resize or media-query events.
+        this.events.on(Phaser.Scenes.Events.PRE_UPDATE,() => {
+          if (Math.min(window.devicePixelRatio || 1,3) !== pixelRatio) resize();
+        });
+        resize();
         this.game.events.on(Phaser.Core.Events.BLUR,() => { held.clear(); this.keys && this.input.keyboard!.resetKeys(); this.bufferedUntil = 0; });
         interact.addEventListener("click",() => this.talk(),{signal:events.signal});
         for (const dialog of [conversation,gallery,letter]) {
@@ -243,12 +263,16 @@ export async function startGame(): Promise<void> {
             const lamp = this.add.image(friend.x+165,friend.y-285,"lantern").setOrigin(.5,0).setDepth(-1);
             lamp.setScale(100/lamp.height);
             this.add.circle(friend.x+165,friend.y-205,42,0xffd394,.07).setDepth(-2);
-            const pot = this.add.image(friend.x-165,friend.y,"flowerpot").setOrigin(.5,1).setDepth(-1);
-            pot.setScale(55/pot.height);
+            if (friend.name !== "Pibble") {
+              const pot = this.add.image(friend.x-165,friend.y,"flowerpot").setOrigin(.5,1).setDepth(-1);
+              pot.setScale(55/pot.height);
+            }
             this.add.ellipse(friend.x,friend.y-95,230,260,0xffc397,.055).setDepth(-2);
-            for (let bulb=0;bulb<9;bulb++) {
-              const x = friend.x-160+bulb*40, y=friend.y-310+Math.sin(bulb/8*Math.PI)*30;
-              if (bulb) g.lineStyle(1,0xecc9c1,.45).lineBetween(x-40,friend.y-310+Math.sin((bulb-1)/8*Math.PI)*30,x,y);
+            const intervals = friend.name === "Pibble" ? 4 : 8;
+            const spacing = 320/intervals;
+            for (let bulb=0;bulb<=intervals;bulb++) {
+              const x = friend.x-160+bulb*spacing, y=friend.y-310+Math.sin(bulb/intervals*Math.PI)*30;
+              if (bulb) g.lineStyle(1,0xecc9c1,.45).lineBetween(x-spacing,friend.y-310+Math.sin((bulb-1)/intervals*Math.PI)*30,x,y);
               g.fillStyle(0xffd7a9,.06).fillCircle(x,y+5,13);
               g.fillStyle(0xffdcaf,.85).fillCircle(x,y+5,3);
             }
@@ -278,13 +302,13 @@ export async function startGame(): Promise<void> {
         }
         const sign = (x:number,y:number,text:string) => {
           this.add.image(x,y,"sign").setOrigin(.5,1).setDisplaySize(175,135).setDepth(-1);
-          this.add.text(x,y-81,text,{fontFamily:"Georgia",fontSize:"14px",color:"#382938",align:"center",lineSpacing:3,resolution:pixelRatio}).setOrigin(.5).setDepth(-1);
+          this.add.text(x,y-81,text,{fontFamily:"Georgia",fontSize:"20px",color:"#382938",align:"center",lineSpacing:3,resolution:pixelRatio}).setOrigin(.5).setDepth(-1);
         };
         sign(550,700,"Salta →");
         this.add.text(1740,224,"Tus dibujos ↑",{fontFamily:"Georgia",fontSize:"18px",color:"#eadbc5",shadow:{color:"#182139",blur:5,fill:true},resolution:pixelRatio}).setOrigin(.5);
-        sign(3720,650,"Espera a que\nla isla se acerque →");
-        sign(6800,630,"Las grietas avisan:\npisa y salta →");
-        sign(10160,560,"Ya falta poco.\nSigue las luces →");
+        sign(3720,650,"Espera y\nsalta →");
+        sign(6800,630,"Pisa y\nsalta →");
+        sign(10160,560,"Sigue las\nluces →");
         this.add.text(13700,294,"la fonda de los dos",{fontFamily:"Georgia",fontSize:"27px",color:"#f1d7ae",resolution:pixelRatio}).setOrigin(.5);
       }
 
@@ -339,8 +363,12 @@ export async function startGame(): Promise<void> {
         if (!this.nearby || this.focusedFriend) { interact.hidden = true; return; }
         const camera = this.cameras.main;
         const half = interact.offsetWidth/2+12;
-        interact.style.left = `${Phaser.Math.Clamp((this.nearby.x-camera.worldView.x)*camera.zoom/pixelRatio,half,root.clientWidth-half)}px`;
-        interact.style.top = `${Math.max(145,(this.nearby.y-this.nearby.height-camera.worldView.y)*camera.zoom/pixelRatio-55)}px`;
+        // The game camera pans and zooms without rotation.
+        const origin = camera.getWorldPoint(0,0);
+        const x = (this.nearby.x-origin.x)*camera.zoom/pixelRatio;
+        const y = (this.nearby.y-this.nearby.height-origin.y)*camera.zoom/pixelRatio;
+        interact.style.left = `${Phaser.Math.Clamp(x,half,root.clientWidth-half)}px`;
+        interact.style.top = `${Math.max(145,y-55)}px`;
       }
 
       updatePlatforms(delta: number) {
@@ -407,13 +435,12 @@ export async function startGame(): Promise<void> {
           return;
         }
         this.effect("tap",.5);
-        const item = friend.name === "Marin" ? "empanada" : friend.name === "Pibble" ? "completo" : friend.name === "Supergirl" ? "terremoto" : null;
         root.querySelector("#speaker")!.textContent = friend.name;
-        root.querySelector("#dialogue-text")!.textContent = item && stamps.has(item) ? `¡Ya lo tienes! ${nextStop(stamps).instruction}.` : friend.text;
+        root.querySelector("#dialogue-text")!.textContent = replyFor(friend.name,stamps);
         conversation.showModal();
       }
 
-      update(time: number, delta=1000/120) {
+      update(time: number) {
         if (!this.player) return;
         for (const portrait of this.portraits.values()) {
           const until = portrait.getData("poseUntil");
@@ -421,7 +448,6 @@ export async function startGame(): Promise<void> {
           else if (until && portrait.texture.key === "marin-poses" && time > until-1500) portrait.setFrame(2);
         }
         if (this.focusedFriend) return;
-        this.updatePlatforms(delta);
         const body = this.player.body as Phaser.Physics.Arcade.Body;
         const grounded = body.blocked.down || body.touching.down;
         if (grounded && !this.wasGrounded && this.lastVelocityY > 100) {
@@ -464,14 +490,20 @@ export async function startGame(): Promise<void> {
           this.player.setVelocity(0);
           this.lastGrounded = -1000;
           this.bufferedUntil = 0;
-          this.say("Chofis","Otra vez. Los objetos que recogí siguen conmigo.");
+          let reminder = this.fallExplained ? "" : "Volviste a la bandera.";
+          if (stamps.size && !this.foodRecoveryExplained) {
+            reminder += `${reminder ? " " : ""}La comida sigue contigo.`;
+            this.foodRecoveryExplained = true;
+          }
+          this.fallExplained = true;
+          if (reminder) this.say("Fonda",reminder,3000);
         }
         const next = nextStop(stamps);
         let zone: typeof ZONES[number] = ZONES[0];
         for (const candidate of ZONES) if (this.player.x >= candidate.x) zone = candidate;
         const zoneLabel = root.querySelector(".game-hud span")!;
         if (!this.won && zoneLabel.textContent !== zone.name) zoneLabel.textContent = zone.name;
-        const text = this.won ? "La fonda es nuestra, amorcito ♥" : `${stamps.size}/3 · ${next.instruction} ${next.x < this.player.x-60 ? "←" : "→"}`;
+        const text = this.won ? "La fonda es nuestra, amorcito ♥" : `Comida para Crow: ${stamps.size}/3 · ${next.instruction} ${next.x < this.player.x-60 ? "←" : "→"}`;
         if (text !== this.lastObjective) { objective.textContent=text; this.lastObjective=text; }
         this.nearby = FRIENDS.find(friend => Math.abs(friend.x-this.player.x)<100 && Math.abs(friend.y-body.bottom)<85);
         interact.hidden = !this.nearby;

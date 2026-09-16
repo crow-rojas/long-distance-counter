@@ -36,6 +36,7 @@ body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s
 #close-conversation::before { content: "E · "; }
 .conversing .game-hud, .conversing .keyboard-help, .conversing .touch-controls, .conversing #sound, .conversing #reset-preview { visibility: hidden; }
 @media (pointer: coarse), (max-width: 700px) {
+  #fonda #sound, #fonda #interact, #fonda dialog button { min-height: 44px; }
   .touch-controls { display: flex; }
   .keyboard-help { display: none; }
   .game-hud { left: 19px; top: calc(var(--letterbox) + 12px); }

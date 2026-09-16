@@ -15,8 +15,7 @@ export function startScene(
   getUniforms: () => SceneUniforms
 ): SceneHandle {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
-  const pixelRatio = Math.min(window.devicePixelRatio, 2);
-  renderer.setPixelRatio(pixelRatio);
+  let pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
   renderer.autoClear = false;
 
   // --- Background: orthographic fullscreen quad with dawn shader ---
@@ -44,7 +43,10 @@ export function startScene(
   const drift = createDrift(pixelRatio);
   fgScene.add(drift.mesh);
 
+  let stopped = false;
+
   function resize() {
+    if (stopped) return;
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     renderer.setSize(w, h, false);
@@ -52,18 +54,26 @@ export function startScene(
     fgCamera.aspect = w / h;
     fgCamera.updateProjectionMatrix();
   }
-  resize();
-
   const ro = new ResizeObserver(resize);
   ro.observe(canvas);
 
+  function updateDensity() {
+    if (stopped) return;
+    pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    renderer.setPixelRatio(pixelRatio);
+    flower.setPixelRatio(pixelRatio);
+    drift.setPixelRatio(pixelRatio);
+    resize();
+  }
+  updateDensity();
+
   let raf = 0;
-  let stopped = false;
   let paused = false;
   let gameMode = false;
 
   function frame() {
     if (stopped || paused) return;
+    if (Math.min(window.devicePixelRatio || 1, 2) !== pixelRatio) updateDensity();
 
     const u = getUniforms();
     applyUniforms(bgMaterial, u);
@@ -112,6 +122,7 @@ export function startScene(
       frame();
     },
     stop() {
+      if (stopped) return;
       stopped = true;
       cancelAnimationFrame(raf);
       ro.disconnect();

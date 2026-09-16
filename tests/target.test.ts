@@ -12,14 +12,13 @@ describe("target", () => {
   });
 
   it("target is 06:55 in Chile time on 2026-09-18 (CLST, -03:00)", () => {
-    const d = new Date(TARGET_UTC_ISO);
-    // 06:55 -03:00 == 09:55 UTC
-    expect(d.getUTCFullYear()).toBe(2026);
-    expect(d.getUTCMonth()).toBe(8); // September = 8 (zero-indexed)
-    expect(d.getUTCDate()).toBe(18);
-    expect(d.getUTCHours()).toBe(9);
-    expect(d.getUTCMinutes()).toBe(55);
-    expect(d.getUTCSeconds()).toBe(0);
+    const parts = new Intl.DateTimeFormat("en", {
+      timeZone: "America/Santiago", year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+    }).formatToParts(new Date(TARGET_UTC_ISO));
+    expect(Object.fromEntries(parts.map(({ type, value }) => [type, value]))).toMatchObject({
+      year: "2026", month: "09", day: "18", hour: "06", minute: "55", second: "00",
+    });
   });
 
   it("TARGET_LABEL is the display string", () => {

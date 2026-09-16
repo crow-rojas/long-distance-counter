@@ -7,6 +7,7 @@ import centerFrag from "./shaders/center.frag?raw";
 export type FlowerHandle = {
   group: THREE.Group;
   update(time: number, arrival: number, opacity?: number): void;
+  setPixelRatio(value: number): void;
   dispose(): void;
 };
 
@@ -139,6 +140,9 @@ export function createFlower(pixelRatio: number): FlowerHandle {
 
   return {
     group,
+    setPixelRatio(value) {
+      (center.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value = value;
+    },
     update(time, arrival, opacity=1) {
       // Rotate the entire flower very slowly around Y
       group.rotation.y = time * 0.07;

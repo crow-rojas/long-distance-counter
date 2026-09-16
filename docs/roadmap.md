@@ -6,7 +6,7 @@ Estas ideas quedan pendientes; no forman parte de esta entrega. El orden es una 
 
 ## Primero: darle nuestro toque
 
-- [ ] **Revisar todos los diálogos en un solo lugar.** Mostrar las conversaciones, sus variantes, los objetivos y la carta final con quién habla y cuándo aparecen. Permitir que Crow les dé su voz y sus referencias de pareja. Empezar por un archivo editable antes de construir una interfaz.
+- [x] **Reunir todos los diálogos en un solo lugar.** [Catálogo de textos y variantes](dialogues.md), con sus fuentes editables. Pendiente: que Crow les dé su voz y referencias de pareja.
 - [ ] **UI más mínima y con símbolos.** Simplificar objetivos, progreso, interacción y sonido. Conservar nombres accesibles, contraste y botones cómodos para tocar.
 - [ ] **Sentarse en las bancas.** Acercarse y usar E o un tap para sentarse; moverse o saltar para levantarse. Una pausa para disfrutar el lugar.
 - [ ] **Personajes con más vida.** Probar parpadeos, pequeños cambios de postura y reacciones al interactuar. Mantener los diálogos manuales y evitar rebotes constantes; respetar movimiento reducido.

@@ -1,6 +1,5 @@
-// Run with the arrival preview open and Vite running:
-// agent-browser --session chofis-v3 eval --stdin < tests/platformer.browser.js
-// Exercises the actual Phaser physics and DOM. Uses only preview progress; reload afterward.
+// With Vite running: corepack pnpm@9 test:browser
+// Exercises actual Phaser physics and DOM in a disposable, muted preview session.
 (async () => {
   if (!new URLSearchParams(location.search).has("t")) throw Error("Use the arrival preview.");
   const urls = performance.getEntriesByType("resource").map(r=>r.name).filter(u=>u.includes("/src/game/game.ts"));
@@ -26,6 +25,24 @@
   } finally {
     root.style.cssText=originalStyle;window.dispatchEvent(new Event("resize"));
   }
+  const dprDescriptor=Object.getOwnPropertyDescriptor(window,"devicePixelRatio");
+  const visibleWidth=scene.cameras.main.width/scene.cameras.main.zoom;
+  try {
+    for(const ratio of [1,2,1,3]) {
+      Object.defineProperty(window,"devicePixelRatio",{configurable:true,value:ratio});
+      scene.events.emit("preupdate",scene.time.now,1000/60);
+      check(Math.abs(game.canvas.width/game.canvas.getBoundingClientRect().width-ratio)<.02,
+        "Monitor density change kept the old canvas resolution");
+      check(Math.abs(scene.cameras.main.width/scene.cameras.main.zoom-visibleWidth)<1,
+        "Monitor density change altered the visible world");
+      const labels=scene.children.list.flatMap(child=>child.type==="Container"?child.list:[child]).filter(child=>child.type==="Text");
+      check(labels.every(label=>label.style.resolution===ratio),"Existing text retained its old density");
+    }
+  } finally {
+    if(dprDescriptor)Object.defineProperty(window,"devicePixelRatio",dprDescriptor);
+    else delete window.devicePixelRatio;
+    window.dispatchEvent(new Event("resize"));
+  }
   const sound=document.querySelector("#sound");
   for(let i=0;i<2;i++) { sound.focus(); sound.click(); check(document.activeElement===game.canvas,"Sound kept keyboard focus"); }
   sound.focus();
@@ -43,9 +60,9 @@
   const originalTime=time;
   const press=key=>scene.keys[key].onDown(new KeyboardEvent("keydown"));
   const release=key=>scene.keys[key].onUp(new KeyboardEvent("keyup"));
-  const frame=()=>{
-    time+=1000/120; scene.time.now=time;
-    world.update(time,1000/120); scene.update(time,1000/120); world.postUpdate();
+  const frame=(delta=1000/120)=>{
+    time+=delta; scene.time.now=time;
+    world.update(time,delta); scene.update(time,delta); scene.events.emit("postupdate",time,delta);
     check(Math.abs(body.width-40.625)<.01 && Math.abs(body.height-58.75)<.01,"Animation changed player collision size");
   };
   const advance=n=>{for(let i=0;i<n;i++)frame()};
@@ -67,6 +84,13 @@
   };
   game.loop.sleep();
   try {
+    check(!localStorage.getItem("chofis-platformer-preview"),"Use a fresh browser session");
+    body.reset(120,1200);scene.update(time);
+    const speech=document.querySelector("#speech");
+    check(speech.textContent==="Fonda: Volviste a la bandera.","First fall claims food before collecting any");
+    const firstReminder=scene.speechUntil;
+    body.reset(120,1200);time+=100;scene.update(time);
+    check(scene.speechUntil===firstReminder,"Repeated falls repeat the tutorial");
     // Exercise create() velocities before resetIslands can replace them.
     const movers=scene.platforms.filter(p=>p.definition[3]?.startsWith("moving"));
     const starts=movers.map(p=>({x:p.sprite.x,y:p.sprite.y}));
@@ -78,12 +102,17 @@
         const dx=Math.abs(p.sprite.x-x),dy=Math.abs(p.sprite.y-y);
         check(kind==="moving-x" ? dx<=52 && dy<.01 : dx<.01 && dy<=42,
           `${kind} left its route after create(): ${dx}, ${dy}`);
-        check(p.art.alpha>0 && Math.abs(p.art.x-p.sprite.x)<2 && Math.abs(p.art.y-p.sprite.y)<2,
+        check(p.art.alpha>0 && Math.abs(p.art.x-p.sprite.x)<.001 && Math.abs(p.art.y-p.sprite.y)<.001,
           "Moving island artwork stopped following its body");
         if(Math.hypot(p.sprite.x-starts[index].x,p.sprite.y-starts[index].y)>20)moved.add(index);
       });
     }
     check(moved.size===movers.length,"Some moving islands never started moving");
+    for(const hz of [30,60,120]) for(let i=0;i<20;i++) {
+      frame(1000/hz);
+      check(movers.every(p=>Math.abs(p.art.x-p.sprite.x)<.001 && Math.abs(p.art.y-p.sprite.y)<.001),
+        `Platform art trails physics at ${hz} Hz`);
+    }
     resetIslands(); reset(120,700);
     for(let i=0;i<40;i++) {
       release(i%2?"RIGHT":"LEFT"); press(i%2?"LEFT":"RIGHT"); frame();
@@ -178,6 +207,12 @@
     check(body.touching.down && Math.abs(body.bottom-355)<1,"Cannot step off the drawings branch back to the main route");connections++;
     for(const item of ITEMS) {reset(item.x,item.y+35);advance(10)}
     check(JSON.parse(localStorage.getItem("chofis-platformer-preview")).length===3,"Not all food was collected");
+    scene.foodRecoveryExplained=false;
+    body.reset(player.x,1200);scene.update(time);
+    check(speech.textContent==="Fonda: La comida sigue contigo.","Food recovery reminder is missing");
+    const foodReminder=scene.speechUntil;
+    body.reset(player.x,1200);time+=100;scene.update(time);
+    check(scene.speechUntil===foodReminder,"Food recovery reminder repeats");
     resetIslands();const cp=CHECKPOINTS[5];reset(PLATFORMS[cp][0]+120,PLATFORMS[cp][1]);
     check(localStorage.getItem("chofis-platformer-preview:checkpoint")===String(cp),"Checkpoint was not persisted");
     const spawn={...scene.spawn};body.reset(player.x,1200);scene.update(time);

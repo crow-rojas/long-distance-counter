@@ -6,23 +6,8 @@ import { createArrival } from "./ui/arrival";
 import { startScene } from "./scene/scene";
 import { createPointer } from "./input/pointer";
 
-function supportsWebGL(): boolean {
-  try {
-    const c = document.createElement("canvas");
-    return !!(c.getContext("webgl2") || c.getContext("webgl"));
-  } catch {
-    return false;
-  }
-}
-
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const useShader = supportsWebGL();
-
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-if (!useShader) {
-  canvas.style.display = "none";
-  document.body.classList.add("no-webgl");
-}
 
 const labelEl = document.getElementById("label") as HTMLElement;
 labelEl.textContent = TARGET_LABEL;
@@ -44,12 +29,28 @@ const uniforms = {
   arrival: 0,
 };
 
-const sceneHandle = useShader ? startScene(canvas, () => uniforms) : null;
+let sceneHandle: ReturnType<typeof startScene> | null = null;
+try {
+  sceneHandle = startScene(canvas, () => uniforms);
+} catch {
+  canvas.style.display = "none";
+  document.body.classList.add("no-webgl");
+}
 
 let rafId = 0;
 let paused = false;
 let revealingGame = false;
 let gameStarted = false;
+let stopped = false;
+
+function stopCountdown() {
+  if (stopped) return;
+  stopped = true;
+  cancelAnimationFrame(rafId);
+  sceneHandle?.stop();
+  sceneHandle = null;
+  pointer.dispose();
+}
 
 async function revealGame() {
   try {
@@ -57,6 +58,22 @@ async function revealGame() {
     await startGame();
     gameStarted = true;
     sceneHandle?.enterGame();
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      stopCountdown();
+    } else {
+      const root = document.getElementById("fonda")!;
+      const finish = () => {
+        root.removeEventListener("transitionend", onFade);
+        clearTimeout(timeout);
+        stopCountdown();
+      };
+      const onFade = (event: TransitionEvent) => {
+        if (event.target === root && event.propertyName === "opacity") finish();
+      };
+      root.addEventListener("transitionend", onFade);
+      // game.css fades opacity for 1.8s; also finish if the browser drops the event.
+      const timeout = setTimeout(finish, 2000);
+    }
   } catch {
     gameStarted = false;
     // A failed chunk request must leave a way to recover on an intermittent connection.
@@ -71,7 +88,7 @@ async function revealGame() {
 }
 
 function tick() {
-  if (paused) return;
+  if (paused || stopped) return;
   // Freeze time uniform when reduced motion is set — shader becomes a still
   uniforms.time = reducedMotion ? 0 : (performance.now() - t0) / 1000;
   uniforms.pointer = pointer.get();
@@ -94,6 +111,7 @@ function tick() {
 }
 
 document.addEventListener("visibilitychange", () => {
+  if (stopped) return;
   if (document.hidden) {
     paused = true;
     cancelAnimationFrame(rafId);

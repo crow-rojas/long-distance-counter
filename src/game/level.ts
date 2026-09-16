@@ -27,20 +27,20 @@ export const ZONES = [
   { name:"Camino a Crow", x:10000, checkpoint:29 },
 ] as const;
 export const FRIENDS = [
-  { name:"Marin", image:"marin-poses", x:430, y:700, height:150, text:"Sigue las islas hacia arriba para buscar la empanada. Mantén apretado el salto para subir. Más arriba hay un rincón para tus dibujos." },
-  { name:"Tus dibujos", image:"marin-bunny", x:1990, y:175, height:105, text:"" },
-  { name:"Pibble", image:"pibble", x:3590, y:650, height:83, text:"Estas islas se mueven. Espera a que se acerquen y salta. El completo está al otro lado." },
-  { name:"Supergirl", image:"supergirl", x:6960, y:630, height:155, text:"Las islas con grietas ceden al pisarlas. Prepara el siguiente salto antes de aterrizar. El terremoto está arriba." },
-  { name:"Krypto", image:"krypto", x:7150, y:630, height:74, text:"¡Guau! Si una isla se cae, espera un poco: vuelve a aparecer. Las banderitas guardan tu punto de regreso." },
-  { name:"Crow", image:"crow-poses", x:13700, y:650, height:104, text:"Amorcito, te guardé un lugar. Nos falta la comida: empanada, completo y terremoto." },
+  { name:"Marin", image:"marin-poses", x:430, y:700, height:150 },
+  { name:"Tus dibujos", image:"marin-bunny", x:1990, y:175, height:105 },
+  { name:"Pibble", image:"pibble", x:3590, y:650, height:83 },
+  { name:"Supergirl", image:"supergirl", x:6960, y:630, height:155 },
+  { name:"Krypto", image:"krypto", x:7150, y:630, height:74 },
+  { name:"Crow", image:"crow-poses", x:13700, y:650, height:104 },
 ] as const;
 export const ITEMS: { id: Stamp; x: number; y: number; instruction: string }[] = [
-  { id: "empanada", x: 1750, y: 308, instruction: "Sube por las islas y recoge la empanada" },
-  { id: "completo", x: 5880, y: 308, instruction: "Cruza las islas móviles y recoge el completo" },
-  { id: "terremoto", x: 9150, y: 193, instruction: "Sube hasta el terremoto y recógelo" },
+  { id: "empanada", x: 1750, y: 308, instruction: "Busca la empanada" },
+  { id: "completo", x: 5880, y: 308, instruction: "Cruza hasta el completo" },
+  { id: "terremoto", x: 9150, y: 193, instruction: "Sube por el terremoto" },
 ];
 
 export function nextStop(stamps: Set<Stamp>) {
   return ITEMS.find(item => !stamps.has(item.id)) ??
-    { x: 13700, y: 650, instruction: "Llega a la fonda y abraza a Crow" };
+    { x: 13700, y: 650, instruction: "Llega hasta Crow" };
 }

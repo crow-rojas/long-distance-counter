@@ -52,6 +52,10 @@ def main():
     args = parser.parse_args()
     if args.source.resolve() == args.destination.resolve():
         parser.error("Keep originals and output in separate folders.")
+    missing = [name for name in ["cielo-fonda-v3", "plataformas-fonda-v3", "decoracion-fonda-v3", "islas-lejanas-v3"]
+               if not (args.source/f"{name}.jpeg").is_file()]
+    if missing:
+        parser.error(f"Missing source images: {', '.join(missing)}")
     args.destination.mkdir(parents=True, exist_ok=True)
     files = []
 
