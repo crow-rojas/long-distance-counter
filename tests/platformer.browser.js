@@ -110,6 +110,8 @@
         "Bench sat automatically or did not offer interaction");
       press("E");frame();release("E");advance(2);
       check(scene.seatedBench?.x===bench.x && scene.avatar.isCropped,"E did not seat Chofis");
+      check(Math.abs(scene.avatar.displayWidth-100)<1.3 && Math.abs(scene.avatar.displayHeight-100)<1.3,
+        "Sitting stretches Chofis instead of preserving her standing size");
       check(!world.isPaused && scene.input.keyboard.enabled,"Sitting paused the world or disabled input");
       const clock=scene.levelTime;
       advance(120);

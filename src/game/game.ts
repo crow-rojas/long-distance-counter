@@ -563,8 +563,7 @@ export async function startGame(): Promise<void> {
         if (this.seatedBench) {
           // Tuck the feet from the existing 320px pose onto the bench seat.
           this.avatar.setTexture(this.won ? "chofis-happy" : "chofis-front")
-            .setCrop(0,0,320,270).setFlipX(false).setAngle(0)
-            .setDisplaySize(108,88*(1+breath));
+            .setCrop(0,0,320,270).setFlipX(false).setAngle(0);
         }
         if (this.player.y > 1050) {
           this.stand();
