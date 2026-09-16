@@ -2,11 +2,12 @@
 
 Checkpoint del 16 de septiembre de 2026: aventura completa y jugable, cuatro zonas, arte nuevo, conversaciones, objetos, checkpoints y encuentro con Crow. El contador revela el juego el 18 de septiembre a las 06:55 de Chile.
 
-Estas ideas quedan pendientes; no forman parte de esta entrega. El orden es una propuesta para avanzar de a poco después de probar en celular.
+Estas ideas quedan pendientes; no forman parte de esta entrega. El orden es una propuesta para avanzar de a poco con las siguientes mejoras. La dificultad actual queda aprobada por Crow y se mantiene por ahora.
 
 ## Primero: darle nuestro toque
 
-- [x] **Reunir todos los diálogos en un solo lugar.** [Catálogo de textos y variantes](dialogues.md), con sus fuentes editables. Pendiente: que Crow les dé su voz y referencias de pareja.
+- [x] **Reunir todos los diálogos en un solo lugar.** [Catálogo de textos y variantes](dialogues.md), con sus fuentes editables. Pendiente: personalizar las frases con referencias de pareja.
+- [ ] **Personalizar los diálogos escritos y la carta.** Siguiente paso: revisar los textos personaje por personaje, empezando por Marin, y terminar con Crow y la carta. Mantener las instrucciones claras.
 - [ ] **UI más mínima y con símbolos.** Simplificar objetivos, progreso, interacción y sonido. Conservar nombres accesibles, contraste y botones cómodos para tocar.
 - [ ] **Sentarse en las bancas.** Acercarse y usar E o un tap para sentarse; moverse o saltar para levantarse. Una pausa para disfrutar el lugar.
 - [ ] **Personajes con más vida.** Probar parpadeos, pequeños cambios de postura y reacciones al interactuar. Mantener los diálogos manuales y evitar rebotes constantes; respetar movimiento reducido.
@@ -23,7 +24,7 @@ Estas ideas quedan pendientes; no forman parte de esta entrega. El orden es una 
 
 ## Antes de la sorpresa
 
-- [ ] Probar una partida completa en el celular de Crow: saltos, dificultad, lectura, sonido y duración.
+- [ ] Probar una partida completa en el celular de Crow: controles, lectura, sonido y duración, conservando la dificultad actual.
 - [ ] Reemplazar la carta provisional y revisar las frases de la pareja.
 - [x] Incluir Piano 3 en el deploy por indicación de Crow y conservar [el respaldo de itch.io y la licencia del pack](licenses/alkakrab-piano.md).
 - [ ] Comprobar la transición a las 06:55 con la vista de prueba y confirmar que la URL normal siga usando la hora real.

@@ -2,7 +2,7 @@
 
 > Ejecución: agente principal y tres trabajadores con archivos separados. Usar el spec como contrato; conservar las simplificaciones existentes que ya funcionan.
 
-**Objetivo:** aplicar los hallazgos comprobados de voz, nitidez, ciclo de vida y mantenimiento.
+**Objetivo:** aplicar los hallazgos comprobados de textos, nitidez, ciclo de vida y mantenimiento.
 
 **Arquitectura:** la escena continúa en Phaser y la portada en Three.js. Se añade únicamente un módulo de diálogos y un runner de pruebas con Node.
 
@@ -24,7 +24,7 @@ Responsable: trabajador Phaser. Archivos: `src/main.ts`, `src/scene/`, pruebas d
 - [x] Actualizar DPR de la portada mientras siga activa, incluidos sus uniformes de partículas.
 - [x] Eliminar shaders muertos solo tras confirmar que no tienen imports.
 
-## 2. Voz y superficie táctil
+## 2. Textos y superficie táctil
 
 Responsable: trabajador editorial. Archivos: `src/game/dialogue.ts`, `src/game/level.ts`, `src/game/game.css`, `tests/dialogue.test.ts`, `docs/dialogues.md`.
 

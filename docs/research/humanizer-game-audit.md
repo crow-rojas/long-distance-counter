@@ -51,7 +51,7 @@ Las banderas guardan desde la primera isla, pero la explicación está en Krypto
 
 Introducir una sola explicación contextual, por ejemplo “Si te caes, vuelves a esta bandera”, al primer checkpoint útil. Tras caer, informar una vez que conserva la comida cuando efectivamente tiene alguna; evitar la misma frase de 6,5 segundos en cada intento. Mantener recuperación inmediata y sin pérdida. Aceptación: primera caída con cero objetos y caídas repetidas con comida tienen mensajes pertinentes.
 
-### 4. P2: dar una función distinta a cada voz y evitar que recite el HUD
+### 4. P2: dar una función distinta a cada personaje y evitar que repita el HUD
 
 Marin concentra salto, objetivo y galería; Pibble y Supergirl explican obstáculos; Krypto añade recuperación. Esa distribución es útil ([level.ts:30](../../src/game/level.ts#L30)). El problema concreto es que tres personajes comparten “¡Ya lo tienes! [siguiente instrucción]” ([game.ts:410](../../src/game/game.ts#L410)), y Crow enumera toda la comida aunque solo falte una.
 
@@ -71,6 +71,6 @@ No eliminar los copihues repetidos en checkpoints ni las flechas de plataformas 
 
 Dejar intacta `LETTER` ([game.ts:6](../../src/game/game.ts#L6)); solo Crow aporta su versión. También conservar la portada “dawn / she's here.”, la flor, paleta, bandas cinematográficas, dibujos, DPR hasta 3× del juego, estructura de cuatro zonas y física actual. El cambio de idioma de portada a juego no prueba genericidad y no justifica traducirla sin una decisión editorial.
 
-No añadir ahora bancas interactivas, editor, voces, más animaciones ni ajustes amplios de dificultad. Los 850 ms de aviso y 2,5 s de recuperación de islas frágiles son parámetros existentes, no tiempos validados con la destinataria ([game.ts:175](../../src/game/game.ts#L175), [game.ts:358](../../src/game/game.ts#L358)). Si una partida real muestra frustración, especificar una ayuda concreta antes de alterar el recorrido.
+No añadir ahora bancas interactivas, editor, más animaciones ni ajustes amplios de dificultad. Los 850 ms de aviso y 2,5 s de recuperación de islas frágiles son parámetros existentes, no tiempos validados con la destinataria ([game.ts:175](../../src/game/game.ts#L175), [game.ts:358](../../src/game/game.ts#L358)). Si una partida real muestra frustración, especificar una ayuda concreta antes de alterar el recorrido.
 
 Siguiente entrega: una especificación breve con los textos por estado, medidas táctiles y comparación visual de los puestos, preservando los elementos anteriores. Después implementar P1 y los P2 elegidos; comprobar teléfono en ambas orientaciones, teclado, pausa, caídas y guardado. Mantener la validación silenciosa y adaptar la comprobación de sonido para que no lo active. Ninguna implementación forma parte de esta auditoría.

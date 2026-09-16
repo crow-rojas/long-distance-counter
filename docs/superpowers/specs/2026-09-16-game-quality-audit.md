@@ -1,10 +1,10 @@
-# Auditoría de la fonda: voz, código y nitidez
+# Auditoría de la fonda: textos, código y nitidez
 
 ## Objetivo
 
 Conservar la fonda que ya le gustó a Crow y corregir los detalles que la hacen sentirse genérica, difícil de mantener o poco cuidada. La investigación precede a los cambios; una preferencia estética no se presenta como un bug ni como prueba de que algo fue hecho con IA.
 
-El equipo revisa tres áreas: voz y presentación, Phaser/Three.js y calidad del repositorio. Los informes con sus fuentes quedan en `docs/research/`. Este documento reúne las decisiones de implementación.
+El equipo revisa tres áreas: textos y presentación, Phaser/Three.js y calidad del repositorio. Los informes con sus fuentes quedan en `docs/research/`. Este documento reúne las decisiones de implementación.
 
 ## Criterios de diseño
 
@@ -34,7 +34,7 @@ Se conserva el máximo de 3×. Las cámaras, los textos dibujados en canvas y la
 
 ## Decisiones de implementación
 
-### Voz y lectura
+### Textos y lectura
 
 El encabezado debe conservar el destino: `Comida para Crow: 0/3`, además del nombre de la zona y la siguiente acción. Las reacciones al recoger comida serán breves; el HUD ya explica qué sigue.
 
@@ -66,7 +66,7 @@ Se retiran configuraciones vacías, declaraciones de imports `?raw` ya cubiertas
 
 ## Fuentes y reparto
 
-- [Voz, presentación y accesibilidad](../../research/humanizer-game-audit.md): guía humanizer, W3C y Xbox Accessibility Guidelines.
+- [Textos, presentación y accesibilidad](../../research/humanizer-game-audit.md): guía humanizer, W3C y Xbox Accessibility Guidelines.
 - [Phaser y Three.js](../../research/phaser-runtime-audit.md): documentación y código oficial de las versiones instaladas, y MDN para DPR.
 - [Calidad del repo](../../research/repo-quality-audit.md): Node, Vite, Vitest, GitHub Pages y avisos de los mantenedores.
 
