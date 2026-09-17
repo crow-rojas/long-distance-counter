@@ -5,7 +5,7 @@ import { replyFor, formatText } from "./dialogue";
 import texts from "./es.json";
 import { setButtonIcon } from "./button-icons";
 import { readStamps, readyForCrow } from "./progress";
-import { BENCHES, CHECKPOINTS, FRIENDS, ITEMS, nextStop, PLATFORMS, SIDE_PLATFORMS, WORLD_WIDTH, ZONES, type Platform } from "./level";
+import { BENCHES, CHECKPOINTS, ENDING_GATE_X, FRIENDS, ITEMS, nextStop, PLATFORMS, SIDE_PLATFORMS, WORLD_WIDTH, ZONES, type Platform } from "./level";
 
 // Exported for browser integration checks; Phaser remains the only game runtime.
 export let game: Phaser.Game;
@@ -25,6 +25,7 @@ export async function startGame(): Promise<void> {
     <button id="reset-preview" hidden></button>
     <p id="speech" role="status" hidden></p>
     <button id="interact" hidden></button>
+    <button id="read-letter" hidden></button>
     <dialog id="conversation" aria-labelledby="speaker"><p id="speaker"></p><p id="dialogue-text"></p><button id="close-conversation"></button></dialog>
     <dialog id="gallery" aria-labelledby="gallery-title"><h1 id="gallery-title" tabindex="-1"></h1><div class="drawings"><img src="/game/marin-devil.png"><img src="/game/marin-bunny.png"></div><button id="close-gallery"></button></dialog>
     <p class="keyboard-help"></p>
@@ -47,6 +48,7 @@ export async function startGame(): Promise<void> {
     ["#close-conversation","continue",texts.interfaz.interaccion.seguir],
     ["#close-gallery","close",texts.galeria.volver],
     ["#close-letter","close",texts.carta.volver],
+    ["#read-letter","letter",texts.final.releer],
     ["[data-control=left]","left",texts.interfaz.controles.moverIzquierda],
     ["[data-control=right]","right",texts.interfaz.controles.moverDerecha],
     ["[data-control=jump]","jump",texts.interfaz.controles.saltar],
@@ -78,6 +80,7 @@ export async function startGame(): Promise<void> {
   const speech = root.querySelector<HTMLElement>("#speech")!;
   const interact = root.querySelector<HTMLButtonElement>("#interact")!;
   const letter = root.querySelector<HTMLDialogElement>("#letter")!;
+  const readLetter = root.querySelector<HTMLButtonElement>("#read-letter")!;
   const conversation = root.querySelector<HTMLDialogElement>("#conversation")!;
   const gallery = root.querySelector<HTMLDialogElement>("#gallery")!;
   const soundButton = root.querySelector<HTMLButtonElement>("#sound")!;
@@ -88,10 +91,12 @@ export async function startGame(): Promise<void> {
   let saved: string | null = null;
   let savedCheckpoint: string | null = null;
   let introSeen = false;
+  let endingSeen = false;
   try {
     saved = localStorage.getItem(key);
     savedCheckpoint = localStorage.getItem(`${key}:checkpoint`);
     introSeen = localStorage.getItem(`${key}:intro-seen`) === "1";
+    endingSeen = localStorage.getItem(`${key}:ending-seen`) === "1";
   } catch { /* Storage is optional. */ }
   const stamps = readStamps(saved);
   const provisions = root.querySelector("#provisions")!;
@@ -161,6 +166,16 @@ export async function startGame(): Promise<void> {
       introStatic = reduced;
       introEnd = { x:0, y:0 };
       introTravel = 0;
+      endingPhase?: "walking" | "together" | "finished";
+      endingElapsed = 0;
+      endingStartX = ENDING_GATE_X;
+      endingStartY = 650;
+      endingLanding = 0;
+      endingCameraStart = new Phaser.Math.Vector2();
+      endingStatic = reduced;
+      gate!: Phaser.GameObjects.Container;
+      gateLabel!: Phaser.GameObjects.Text;
+      hearts: Phaser.GameObjects.Graphics[] = [];
 
       preload() {
         const images = ["chofis-front", "chofis-happy", "ramada", "volantin", "copihue", ...FRIENDS.filter(f => !f.image.endsWith("-poses")).map(f => f.image), ...ITEMS.map(i => `sticker-${i.id}`)];
@@ -202,6 +217,7 @@ export async function startGame(): Promise<void> {
               localStorage.removeItem(key);
               localStorage.removeItem(`${key}:checkpoint`);
               localStorage.removeItem(`${key}:intro-seen`);
+              localStorage.removeItem(`${key}:ending-seen`);
             } catch { /* Reload also clears in-memory progress. */ }
             location.reload();
           };
@@ -285,13 +301,15 @@ export async function startGame(): Promise<void> {
             }
             stamps.add(item.id);
             updateFood();
+            this.updateGate();
             try { localStorage.setItem(key,JSON.stringify([...stamps])); } catch { /* Keep this session playable. */ }
             this.say(texts.personajes.Chofis,texts.recogida[item.id],2500);
           });
         }
         this.restoreCamera();
         this.scale.on("resize",() => {
-          if (this.introActive) this.layoutIntro();
+          if (this.endingPhase) this.drawEnding();
+          else if (this.introActive) this.layoutIntro();
           else if (this.focusedFriend) this.focusCamera(this.focusedFriend,true);
           else this.restoreCamera();
         });
@@ -316,6 +334,7 @@ export async function startGame(): Promise<void> {
         resize();
         this.game.events.on(Phaser.Core.Events.BLUR,() => { held.clear(); this.keys && this.input.keyboard!.resetKeys(); this.bufferedUntil = 0; });
         interact.addEventListener("click",() => this.useInteraction(),{signal:events.signal});
+        readLetter.addEventListener("click",() => this.openLetter(),{signal:events.signal});
         for (const dialog of [conversation,gallery,letter]) {
           dialog.querySelector("button")!.addEventListener("click",() => dialog.close(),{signal:events.signal});
           dialog.addEventListener("close",() => this.resumeGameplay(),{signal:events.signal});
@@ -343,12 +362,21 @@ export async function startGame(): Promise<void> {
         document.addEventListener("visibilitychange",() => {
           if (!document.hidden) staticIntro();
         },{signal:events.signal});
-        motion.addEventListener("change",() => { if (motion.matches) staticIntro(); },{signal:events.signal});
+        motion.addEventListener("change",() => {
+          if (!motion.matches) return;
+          staticIntro();
+          if (this.endingPhase) {
+            this.endingStatic = true;
+            this.endingElapsed = Math.max(3000,this.endingElapsed);
+            this.drawEnding();
+          }
+        },{signal:events.signal});
         const show = () => {
           if (document.hidden || this.presented || events.signal.aborted) return;
           this.presented = true;
           root.inert = false;
-          if (!introSeen && !stamps.size && !hasCheckpoint) {
+          if (endingSeen && readyForCrow(stamps)) this.startEnding(true);
+          else if (!introSeen && !stamps.size && !hasCheckpoint) {
             this.introActive = true;
             this.introStatic = motion.matches;
             this.player.body!.reset(this.spawn.x,checkpoint[1]);
@@ -442,6 +470,26 @@ export async function startGame(): Promise<void> {
           this.portraits.set(friend.name,image);
           image.setInteractive({useHandCursor:true}).on("pointerup",() => this.talk(friend));
         });
+        // A small wooden entrance, using the same cream and plum as the fonda.
+        const posts = this.add.graphics().setDepth(2);
+        posts.fillStyle(0x765448).fillRoundedRect(ENDING_GATE_X-43,532,9,118,3)
+          .fillRoundedRect(ENDING_GATE_X+34,532,9,118,3);
+        posts.lineStyle(4,0xe8c6a0).lineBetween(ENDING_GATE_X-46,532,ENDING_GATE_X+46,532);
+        const bars = this.add.graphics().fillStyle(0xb99069);
+        for (const x of [-30,-10,10,30]) bars.fillRoundedRect(x-4,-90,8,90,2);
+        bars.fillRect(-34,-68,68,8).fillRect(-34,-27,68,8);
+        this.gate = this.add.container(ENDING_GATE_X,650,[bars]).setDepth(2);
+        this.gateLabel = this.add.text(ENDING_GATE_X,510,"",{
+          fontFamily:"Georgia",fontSize:"16px",color:"#f1d7ae",align:"center",resolution:pixelRatio,
+          shadow:{color:"#171320",blur:5,fill:true},
+        }).setOrigin(.5,1);
+        this.updateGate();
+        const heart = Array.from({length:48},(_,i) => {
+          const t=i*Math.PI*2/48;
+          return new Phaser.Math.Vector2(16*Math.sin(t)**3,-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t)));
+        });
+        for (let i=0;i<5;i++) this.hearts.push(this.add.graphics().fillStyle(i%2 ? 0xf1d7ae : 0xffb6d1)
+          .fillPoints(heart,true).setScale(.55).setDepth(6).setVisible(false));
         for (const index of CHECKPOINTS) {
           const [x,y,w] = PLATFORMS[index];
           const flower = this.add.image(x+w-35,y+25,"copihue").setOrigin(.5,.15).setDepth(1);
@@ -506,6 +554,13 @@ export async function startGame(): Promise<void> {
       }
 
       resumeGameplay(animate=true) {
+        if (this.endingPhase) {
+          if (this.won) {
+            readLetter.hidden = false;
+            readLetter.focus({preventScroll:true});
+          }
+          return;
+        }
         this.focusedFriend = undefined;
         held.clear();
         this.input.keyboard!.enabled = true;
@@ -516,6 +571,84 @@ export async function startGame(): Promise<void> {
         root.classList.remove("conversing");
         this.restoreCamera(animate);
         this.game.canvas.focus({preventScroll:true});
+      }
+
+      updateGate() {
+        const open = readyForCrow(stamps);
+        this.gate.setVisible(!open);
+        this.gateLabel.setText(open ? texts.final.entradaAbierta : texts.final.entradaCerrada);
+      }
+
+      startEnding(restored=false) {
+        if (this.endingPhase || !readyForCrow(stamps)) return;
+        const crow = FRIENDS.find(friend => friend.name === "Crow")!;
+        this.endingPhase = "walking";
+        this.endingStatic = motion.matches;
+        this.endingStartX = Phaser.Math.Clamp(this.player.x,ENDING_GATE_X,crow.x-82);
+        this.endingStartY = this.player.y;
+        this.endingLanding = !restored && !this.endingStatic && Math.abs(this.player.y-crow.y)>5 ? 350 : 0;
+        this.endingElapsed = restored ? 5000 : this.endingStatic ? 3000 : 0;
+        this.cameras.main.getWorldPoint(this.cameras.main.width/2,this.cameras.main.height/2,this.endingCameraStart);
+        this.pauseGameplay(crow);
+        this.gateLabel.setVisible(false);
+        root.classList.remove("conversing");
+        root.classList.add("ending");
+        this.cameras.main.panEffect.reset();
+        this.cameras.main.zoomEffect.reset();
+        for (const portrait of this.portraits.values()) this.tweens.killTweensOf(portrait);
+        this.portraits.get("Crow")!.setAngle(0).setFrame(1).setData("poseUntil",0);
+        this.avatar.setCrop().setDisplaySize(100,100).setAngle(0);
+        this.drawEnding();
+        if (restored) this.finishEnding(false);
+      }
+
+      drawEnding() {
+        const crow = FRIENDS.find(friend => friend.name === "Crow")!;
+        const elapsed = Math.max(0,this.endingElapsed-this.endingLanding);
+        const progress = this.endingStatic ? 1 : Math.min(1,elapsed/3000);
+        const landing = this.endingLanding ? Math.min(1,this.endingElapsed/this.endingLanding) : 1;
+        this.player.setPosition(Phaser.Math.Linear(this.endingStartX,crow.x-82,progress),
+          Phaser.Math.Linear(this.endingStartY,crow.y,landing));
+        this.avatar.setPosition(this.player.x,this.player.y).setFlipX(false);
+        if (landing < 1) this.avatar.setTexture("chofis-jump",1);
+        else if (progress < 1) this.avatar.setTexture("chofis-run",Math.floor(elapsed/180)%3);
+        else {
+          this.endingPhase = this.won ? "finished" : "together";
+          this.avatar.setTexture("chofis-happy").setAngle(5);
+          this.portraits.get("Crow")!.setFrame(2).setFlipX(true).setAngle(-5);
+        }
+        const camera = this.cameras.main;
+        const focus = this.endingStatic ? 1 : Phaser.Math.Easing.Sine.InOut(Math.min(1,this.endingElapsed/2000));
+        this.baseZoom = pixelRatio*Math.min(1.1,Math.max(.65,Math.min(root.clientHeight/850,root.clientWidth/580)));
+        camera.setZoom(this.baseZoom*(this.endingStatic ? 1.2 : 1+progress*.35))
+          .centerOn(Phaser.Math.Linear(this.endingCameraStart.x,(this.player.x+crow.x)/2,focus),
+            Phaser.Math.Linear(this.endingCameraStart.y,crow.y-85,focus));
+        for (const [i,heart] of this.hearts.entries()) {
+          const rise = this.endingStatic ? 0 : Math.min(1,Math.max(0,(elapsed-3000-i*120)/1100));
+          heart.setVisible(progress===1).setAlpha(this.endingStatic ? .8 : rise*.8)
+            .setPosition(crow.x-41+(i-2)*22,crow.y-118-(i%2)*22-rise*30);
+        }
+      }
+
+      finishEnding(showLetter=true) {
+        if (this.won) return;
+        this.won = true;
+        this.endingPhase = "finished";
+        this.drawEnding();
+        objective.textContent = this.lastObjective = texts.interfaz.objetivoFinal;
+        this.game.canvas.setAttribute("aria-label",texts.interfaz.zonaFinal);
+        try { localStorage.setItem(`${key}:ending-seen`,"1"); } catch { /* The ending still works without storage. */ }
+        readLetter.hidden = false;
+        if (showLetter) {
+          this.effect("power_up",.3);
+          this.openLetter();
+        }
+      }
+
+      openLetter() {
+        if (!this.won || letter.open) return;
+        letter.showModal();
+        root.querySelector<HTMLElement>("#letter-title")!.focus({preventScroll:true});
       }
 
       positionInteraction() {
@@ -608,6 +741,7 @@ export async function startGame(): Promise<void> {
 
       talk(friend = this.nearby) {
         if (!friend || !this.presented || this.introActive || this.focusedFriend || Math.abs(friend.x-this.player.x)>=100 || Math.abs(friend.y-this.player.body!.bottom)>=85) return;
+        if (friend.name === "Crow") return; // His encounter starts at the entrance, never on tap.
         const portrait = this.portraits.get(friend.name)!;
         this.tweens.killTweensOf(portrait);
         portrait.setY(friend.y).setAngle(0);
@@ -615,7 +749,7 @@ export async function startGame(): Promise<void> {
           portrait.setFrame(1).setData("poseUntil",this.time.now+2200);
         }
         if (!reduced && friend.name !== "Tus dibujos") {
-          const angle = {Marin:3,Pibble:6,Supergirl:2,Krypto:8,Crow:4}[friend.name];
+          const angle = {Marin:3,Pibble:6,Supergirl:2,Krypto:8}[friend.name];
           this.tweens.add({
             targets:portrait,angle:angle*(this.player.x < friend.x ? -1 : 1),
             duration:friend.name === "Krypto" ? 280 : 180,
@@ -629,18 +763,6 @@ export async function startGame(): Promise<void> {
           root.querySelector<HTMLElement>("#gallery-title")!.focus({preventScroll:true});
           return;
         }
-        if (friend.name === "Crow" && readyForCrow(stamps)) {
-          this.effect("power_up",.3);
-          portrait.setFrame(2).setData("poseUntil",Infinity);
-          this.won = true;
-          root.querySelector(".game-hud")!.setAttribute("aria-label",texts.interfaz.zonaFinal);
-          objective.textContent = this.lastObjective = texts.interfaz.objetivoFinal;
-          this.player.setVelocity(0);
-          this.avatar.setTexture("chofis-happy").setFlipX(false).setAngle(0);
-          letter.showModal();
-          root.querySelector<HTMLElement>("#letter-title")!.focus({preventScroll:true});
-          return;
-        }
         this.effect("tap",.5);
         root.querySelector("#speaker")!.textContent = texts.personajes[friend.name];
         root.querySelector("#dialogue-text")!.textContent = replyFor(friend.name,stamps);
@@ -649,6 +771,13 @@ export async function startGame(): Promise<void> {
 
       update(time: number, delta=0) {
         if (!this.player || !this.presented) return;
+        if (this.endingPhase) {
+          if (document.hidden || this.won) return;
+          this.endingElapsed += Math.min(delta,50);
+          this.drawEnding();
+          if (this.endingElapsed >= 5000+this.endingLanding) this.finishEnding();
+          return;
+        }
         if (this.introActive) {
           if (document.hidden) return;
           if (!this.introStatic) this.introElapsed += Math.min(delta,50);
@@ -671,6 +800,13 @@ export async function startGame(): Promise<void> {
         if (this.focusedFriend) return;
         const body = this.player.body as Phaser.Physics.Arcade.Body;
         const grounded = body.blocked.down || body.touching.down;
+        if (!readyForCrow(stamps) && this.player.x>ENDING_GATE_X-24) {
+          this.player.x = ENDING_GATE_X-24;
+          this.player.setVelocityX(Math.min(0,body.velocity.x));
+        } else if (readyForCrow(stamps) && this.player.x>=ENDING_GATE_X && body.bottom>=430 && body.bottom<=662) {
+          this.startEnding();
+          return;
+        }
         if (grounded && !this.wasGrounded && this.lastVelocityY > 100) {
           this.landingUntil = time+150;
           this.effect("tap",.25);
@@ -727,15 +863,16 @@ export async function startGame(): Promise<void> {
           if (reminder) this.say(texts.personajes.Fonda,reminder,3000);
         }
         const next = nextStop(stamps);
-        const text = this.won ? texts.interfaz.objetivoFinal : formatText(texts.interfaz.objetivo,{instruccion:next.instruction,direccion:next.x < this.player.x-60 ? texts.interfaz.direccionIzquierda : ""});
+        const text = !readyForCrow(stamps) && this.player.x>ENDING_GATE_X-180
+          ? replyFor("Crow",stamps)
+          : formatText(texts.interfaz.objetivo,{instruccion:next.instruction,direccion:next.x < this.player.x-60 ? texts.interfaz.direccionIzquierda : ""});
         if (text !== this.lastObjective) { objective.textContent=text; this.lastObjective=text; }
-        this.nearby = FRIENDS.find(friend => Math.abs(friend.x-this.player.x)<100 && Math.abs(friend.y-body.bottom)<85);
+        this.nearby = FRIENDS.find(friend => friend.name !== "Crow" && Math.abs(friend.x-this.player.x)<100 && Math.abs(friend.y-body.bottom)<85);
         this.nearbyBench = BENCHES.find(bench => this.canSit(bench));
         interact.hidden = !this.seatedBench && !this.nearby && !this.nearbyBench;
         if (this.seatedBench) setButtonIcon(interact,"stand",texts.bancas.levantarse);
         else if (this.nearby) {
-          if (this.nearby.name === "Crow" && readyForCrow(stamps)) setButtonIcon(interact,"hug",texts.interfaz.interaccion.abrazar);
-          else if (this.nearby.name === "Tus dibujos") setButtonIcon(interact,"gallery",texts.interfaz.interaccion.verDibujos);
+          if (this.nearby.name === "Tus dibujos") setButtonIcon(interact,"gallery",texts.interfaz.interaccion.verDibujos);
           else setButtonIcon(interact,"talk",formatText(texts.interfaz.interaccion.conPersonaje,{personaje:texts.personajes[this.nearby.name]}));
         } else if (this.nearbyBench) setButtonIcon(interact,"sit",texts.bancas.sentarse);
         if (Phaser.Input.Keyboard.JustDown(this.keys.E)) this.useInteraction();
@@ -753,7 +890,7 @@ export async function startGame(): Promise<void> {
         root.querySelectorAll<HTMLButtonElement>("[data-control]").forEach(button => {
           button.addEventListener("pointerdown",event => {
             const scene = game.scene.scenes[0] as Fonda;
-            if (!scene.presented || scene.introActive) return;
+            if (!scene.presented || scene.introActive || scene.focusedFriend) return;
             event.preventDefault();
             button.setPointerCapture(event.pointerId);
             held.set(event.pointerId,button.dataset.control!);

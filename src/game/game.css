@@ -51,6 +51,8 @@ body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s
 .introducing .game-hud, .introducing .keyboard-help, .introducing .touch-controls, .introducing #interact, .introducing #reset-preview { visibility: hidden; }
 #intro-text { position: absolute; top: calc(var(--letterbox) + 12%); left: 50%; transform: translateX(-50%); width: min(520px,calc(100% - 48px)); margin: 0; text-align: center; text-wrap: balance; font: 400 clamp(22px,3vw,32px)/1.5 "Fraunces Variable",Georgia,serif; text-shadow: 0 2px 5px #10051d,0 0 20px #10051d; white-space: pre-wrap; pointer-events: none; }
 #fonda #skip-intro { position: absolute; right: max(24px,env(safe-area-inset-right)); bottom: calc(var(--letterbox) + 20px); min-height: 44px; }
+.ending .game-hud, .ending .keyboard-help, .ending .touch-controls, .ending #interact, .ending #speech { visibility: hidden; }
+#fonda #read-letter { position: absolute; bottom: calc(var(--letterbox) + 32px); left: 50%; transform: translateX(-50%); width: 56px; height: 56px; }
 @media (pointer: coarse), (max-width: 700px) {
   #fonda #sound, #fonda #interact, #fonda dialog button { min-height: 44px; }
   .touch-controls { display: flex; }

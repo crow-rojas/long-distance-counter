@@ -18,7 +18,7 @@ corepack pnpm@9 dev
 Para probar los últimos cinco segundos del contador, usa `?t=2026-09-18T09:54:55Z`.
 Sin `?t`, o con un valor vacío/inválido, se usa la hora real. Este parámetro es una comodidad de prueba, no control de acceso.
 
-En desarrollo y dentro de esa vista previa, **Reiniciar prueba** o **Shift + R** borran la comida, el checkpoint y la marca de intro vista, y recargan el juego. No borran el progreso del reloj real.
+En desarrollo y dentro de esa vista previa, **Reiniciar prueba** o **Shift + R** borran la comida, el checkpoint, la intro vista y el final guardado, y recargan el juego. No borran el progreso del reloj real.
 
 ## Juego
 
@@ -33,7 +33,7 @@ Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas
 - Sentarse: E o un tap en una banca cercana, con Chofis en el suelo. Moverse, saltar, pulsar E o tocar Levantarse permite seguir. El mundo sigue activo y la banca no aumenta la altura de salto.
 - La cámara se acerca durante la conversación y el texto aparece arriba. E, Escape o Seguir cierran el diálogo. La física y los desafíos se pausan durante las conversaciones, la galería y la carta.
 - En móvil aparecen botones de dirección y salto. Con movimiento reducido, se omiten las transiciones de cámara y los efectos decorativos de movimiento.
-- Los botones usan iconos con nombres accesibles: direcciones, salto, banca, levantarse, conversación, galería, abrazo y cierres. Solo Saltar intro y el reintento de carga conservan texto visible. Los nombres y tooltips se editan en `es.json`.
+- Los botones usan iconos con nombres accesibles: direcciones, salto, banca, levantarse, conversación, galería, carta y cierres. Solo Saltar intro y el reintento de carga conservan texto visible. Los nombres y tooltips se editan en `es.json`.
 - El objetivo muestra la siguiente instrucción y tres dibujos indican la comida pendiente o recogida. Al recogerla aparece a color con una marca; sus descripciones también funcionan con lectores de pantalla.
 - Sonido opcional con el botón de altavoz: efectos CC0 de Brackeys y Piano 3 de AlkaKrab. Empieza en silencio.
 - El canvas y sus textos se dibujan según la densidad de pantalla, hasta 3×. El tamaño visible del mapa y las colisiones no cambian; el giro del celular o cambio de densidad del monitor reajusta canvas, textos y cámara sin recargar.
@@ -41,7 +41,9 @@ Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas
 - Para escribir más diálogos, leer primero los [criterios y ejemplos de Crow](docs/dialogues.md#criterios-para-los-próximos-textos) y aplicar humanizer respetando sus expresiones.
 - Los textos se editan en [es.json](src/game/es.json). La carta final sigue provisional en `carta.texto`; [guía de edición](docs/dialogues.md).
 
-El guardado usa `chofis-platformer-preview` en pruebas y `chofis-platformer` con el reloj real. Cada uno guarda el último checkpoint en la clave correspondiente terminada en `:checkpoint` y la intro completada o saltada en `:intro-seen`. Recargar retoma allí; los guardados anteriores sin checkpoint empiezan en la zona del siguiente objeto pendiente. Los índices ajenos a los checkpoints del mapa se descartan. Si el navegador bloquea el almacenamiento, la sesión sigue siendo jugable.
+La entrada después de la última banca requiere los tres objetos. Al cruzarla, Chofis aterriza si venía saltando y camina hacia Crow durante tres segundos; ambos muestran sus poses felices, aparecen corazones y dos segundos después se abre la carta. Cerrar la carta deja el encuentro como pantalla final, con sonido y un sobre para releerla. El movimiento no vuelve. Con movimiento reducido se omiten la caminata y el movimiento de cámara y corazones.
+
+El guardado usa `chofis-platformer-preview` en pruebas y `chofis-platformer` con el reloj real. Cada uno guarda el último checkpoint en `:checkpoint`, la intro completada o saltada en `:intro-seen` y el final en `:ending-seen`. Un final guardado con los tres objetos vuelve al encuentro y al sobre; de lo contrario, recargar retoma el checkpoint. Los guardados anteriores sin checkpoint empiezan en la zona del siguiente objeto pendiente. Los índices ajenos a los checkpoints del mapa se descartan. Si el navegador bloquea el almacenamiento, la sesión sigue siendo jugable.
 
 ## Dónde está cada cosa
 

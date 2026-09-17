@@ -2,6 +2,7 @@ import type { Stamp } from "./progress";
 import texts from "./es.json";
 
 export const WORLD_WIDTH = 14000;
+export const ENDING_GATE_X = 13470;
 export type PlatformKind = "checkpoint" | "moving-x" | "moving-y" | "fragile";
 export type Platform = readonly [x: number, y: number, width: number, kind?: PlatformKind];
 // Main route, in traversal order. Moving islands travel ±50px horizontally or ±40px vertically.

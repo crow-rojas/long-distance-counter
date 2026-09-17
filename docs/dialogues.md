@@ -26,6 +26,7 @@ No hace falta editar TypeScript ni instalar una librería de i18n. El archivo se
 | `carteles` | Textos de los letreros del mundo. |
 | `galeria` | Título, botón y descripciones accesibles de los dibujos. |
 | `carta` | `titulo`, `texto`, botón `volver` y corazón entre los personajes. El cuerpo sigue provisional. |
+| `final` | Cartel de entrada cerrado/abierto y nombre accesible del sobre para releer la carta. |
 | `carga` | Mensaje y botón para reintentar si falla el arranque del juego. |
 
 Las etiquetas no cambian las teclas, nombres de assets, posiciones del mapa, reglas de conversación ni claves del guardado. La portada del contador conserva sus textos en sus archivos actuales; este JSON reúne los textos del juego.
@@ -56,7 +57,9 @@ Los botones usan iconos SVG. Sus nombres siguen en este JSON y se muestran al pa
 
 ## Cuándo aparece cada variante
 
-Marin, Pibble y Supergirl cambian de respuesta según el objeto correspondiente. Crow distingue un objeto pendiente de varios; el código decide qué comida falta. `dialogos.Crow.completo` conserva la frase escrita por Crow, aunque el encuentro final abre directamente la carta y no muestra ese diálogo. `interfaz.objetivoFinal` es el texto que queda en el HUD después del encuentro.
+Marin, Pibble y Supergirl cambian de respuesta según el objeto correspondiente. Al acercarse a la entrada final sin toda la comida, el objetivo usa `dialogos.Crow.faltaUno` o `faltanVarios` con lo pendiente. `dialogos.Crow.completo` conserva la frase escrita por Crow, aunque la cinemática abre la carta y no muestra ese diálogo. El HUD queda oculto al comenzar el encuentro.
+
+Con los tres objetos, cruzar la entrada final activa la caminata y el encuentro sin tocar a Crow. Después aparece `carta.titulo` y `carta.texto`. Cerrar la carta deja a ambos juntos y un sobre con la etiqueta `final.releer`; no se vuelve al recorrido. El final guardado conserva esta pantalla al recargar.
 
 Las bancas ofrecen `bancas.sentarse` cuando Chofis está cerca y en el suelo. Sentada, el botón cambia a `bancas.levantarse` y aparece `bancas.ayuda` durante tres segundos. También puede levantarse al moverse o saltar; la cámara conserva el encuadre normal.
 

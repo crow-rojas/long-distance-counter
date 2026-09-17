@@ -16,7 +16,7 @@ Estas ideas quedan pendientes; no forman parte de esta entrega. El orden es una 
 ## Después: contar la llegada
 
 - [x] **Inicio con narrativa.** Intro breve con descenso hasta Chofis, texto editable y opción de saltar. Las partidas guardadas entran directamente; movimiento reducido muestra el texto estático.
-- [ ] **Final con narrativa.** Preparar el cierre del encuentro con Crow cuando esté lista la carta.
+- [x] **Final con narrativa.** Entrada con los tres objetos, caminata automática hacia Crow, poses felices, corazones y carta. El encuentro queda como pantalla final con un sobre para releer; se conserva al recargar. El texto de la carta sigue pendiente.
 - [x] **Mejor transición del contador al juego.** Fundido entre la flor y el cielo de la fonda, carga desde la llegada y cámara adaptada a móvil y movimiento reducido.
 - [ ] **Más assets de Nano Banana.** Priorizar poses para sentarse, parpadear y reaccionar, y elementos concretos que pidan las escenas nuevas. Hacer una lista corta con referencias antes de generar.
 

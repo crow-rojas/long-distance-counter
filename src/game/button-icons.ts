@@ -6,12 +6,12 @@ const drawings = {
   stand: '<circle cx="12" cy="4" r="2"/><path d="M12 7v7m-5-5 5 2 5-2m-5 5-4 7m4-7 4 7"/>',
   talk: '<path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-6 4V6a2 2 0 0 1 2-2ZM7 9h10M7 13h6"/>',
   gallery: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 6-6 4 4 3-3 5 5"/>',
-  hug: '<path d="M20 5a5 5 0 0 0-8 1 5 5 0 0 0-8-1c-5 5 2 10 8 15 6-5 13-10 8-15Z"/>',
   play: '<path d="m8 4 12 8-12 8Z"/>',
   skip: '<path d="m5 5 10 7-10 7ZM19 5v14"/>',
   close: '<path d="m6 6 12 12M18 6 6 18"/>',
   continue: '<path d="M4 12h16m-6-6 6 6-6 6"/>',
   reset: '<path d="M3 10a9 9 0 1 1 2 9M3 4v6h6"/>',
+  letter: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>',
 };
 
 export function setButtonIcon(button: HTMLButtonElement, icon: keyof typeof drawings, label: string) {

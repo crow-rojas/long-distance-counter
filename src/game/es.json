@@ -125,8 +125,13 @@
   "carta": {
     "titulo": "Ven acá, mi princesa ❤️",
     "texto": "Chofis, qué ganas tenía de abrazarte. Ya estás aquí. Quiero pasear contigo, probar cosas ricas y tener tus dibujos por toda la casa. Te amo, amorcito. Tu Crow.",
-    "volver": "Volver a la fonda",
+    "volver": "Cerrar carta",
     "corazon": "♥"
+  },
+  "final": {
+    "entradaAbierta": "Crow te espera",
+    "entradaCerrada": "Trae la comida",
+    "releer": "Volver a leer tu carta"
   },
   "carga": {
     "error": "Tu sorpresa está lista.",

@@ -8,7 +8,7 @@
   const {game} = await import(loaded("/src/game/game.ts"));
   const {default:texts} = await import(loaded("/src/game/es.json"));
   const {formatText} = await import(loaded("/src/game/dialogue.ts"));
-  const {BENCHES,PLATFORMS,FRIENDS,ITEMS,CHECKPOINTS} = await import(loaded("/src/game/level.ts"));
+  const {BENCHES,PLATFORMS,FRIENDS,ITEMS,CHECKPOINTS,ENDING_GATE_X} = await import(loaded("/src/game/level.ts"));
   const scene=game.scene.scenes[0], player=scene.player, body=player.body, world=scene.physics.world;
   if (scene.introActive) document.querySelector("#skip-intro").click();
   const check=(ok,message)=>{if(!ok)throw Error(message)};
@@ -94,7 +94,7 @@
   };
   const close=async()=>{
     document.querySelector("#fonda dialog[open]")?.close(); await wait(20);
-    check(!scene.focusedFriend && !world.isPaused && scene.input.keyboard.enabled,"Dialogue did not restore gameplay");
+    if (!scene.endingPhase) check(!scene.focusedFriend && !world.isPaused && scene.input.keyboard.enabled,"Dialogue did not restore gameplay");
   };
   game.loop.sleep();
   try {
@@ -210,7 +210,7 @@
     reset(krypto.x-70,krypto.y);check(dog.flipX,"Krypto did not face Chofis on his left");
     reset(krypto.x+70,krypto.y);check(!dog.flipX,"Krypto did not face Chofis on his right");
     reset(krypto.x-10,krypto.y);check(!dog.flipX,"Krypto flickered inside the facing dead zone");
-    for(const friend of FRIENDS.filter(f=>f.name!=="Tus dibujos")) {
+    for(const friend of FRIENDS.filter(f=>f.name!=="Tus dibujos" && f.name!=="Crow")) {
       reset(friend.x-60,friend.y);
       const portrait=scene.portraits.get(friend.name),width=portrait.displayWidth,height=portrait.displayHeight;
       scene.talk(friend);
@@ -246,7 +246,8 @@
     check(document.querySelector("#gallery").open,"Optional drawings did not open");await close();
     if(JSON.parse(localStorage.getItem("chofis-platformer-preview")??"[]").length<3) {
       const crow=FRIENDS.find(f=>f.name==="Crow");reset(crow.x-50,crow.y);scene.talk(crow);
-      check(!document.querySelector("#letter").open,"Ending opened before food was collected");await close();
+      check(!document.querySelector("#letter").open && !scene.endingPhase && player.x<ENDING_GATE_X,
+        "Locked entrance allowed access before food was collected");
     }
 
     for(const kind of ["moving-x","moving-y"]) {
@@ -315,8 +316,20 @@
     check(localStorage.getItem("chofis-platformer-preview:checkpoint")===String(cp),"Checkpoint was not persisted");
     const spawn={...scene.spawn};body.reset(player.x,1200);scene.update(time);
     check(player.x===spawn.x && player.y===spawn.y,"Fall lost the checkpoint");
-    const crow=FRIENDS.find(f=>f.name==="Crow");reset(crow.x-50,crow.y);scene.talk(crow);
+    reset(ENDING_GATE_X+5,650);
+    check(scene.endingPhase==="walking" && world.isPaused && !document.querySelector("#letter").open,
+      "Final entrance did not start an automatic walk before the letter");
+    const walkStart=player.x;
+    advance(180);
+    check(player.x>walkStart && !scene.won,"Chofis did not walk toward Crow");
+    advance(450);
     check(document.querySelector("#letter").open && scene.won,"Reunion did not open");await close();frame();
+    const endX=player.x;
+    press("LEFT");press("SPACE");advance(120);
+    check(world.isPaused && player.x===endX && !scene.input.keyboard.enabled,"Closing the letter resumed gameplay");
+    check(localStorage.getItem("chofis-platformer-preview:ending-seen")==="1","Final scene was not saved");
+    document.querySelector("#read-letter").click();
+    check(document.querySelector("#letter").open,"Envelope did not reopen the letter");await close();
     check(document.querySelector("#objective").textContent===texts.interfaz.objetivoFinal,"Completed game still asks for food");
     return {passed:true,connections,benches:true,quickTurns:true,movingPlatforms:true,fragilePlatforms:true,manualDialogue:true,gallery:true,checkpoints:true,reunion:true,shortJump:Math.round(short),heldJump:Math.round(tall)};
   } finally {
