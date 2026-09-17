@@ -52,6 +52,8 @@ Los textos se muestran literalmente: `<3`, comillas y emojis funcionan. No admit
 
 El objetivo muestra solo la siguiente instrucción. Los tres dibujos de comida indican el progreso: al recoger uno recupera su color y aparece una marca. Sus descripciones y tooltips usan `interfaz.progreso`. El altavoz conserva las etiquetas de `interfaz.sonido` para lectores de pantalla y el tooltip de su estado.
 
+Los botones usan iconos SVG. Sus nombres siguen en este JSON y se muestran al pasar el cursor o mediante un lector de pantalla. Solo Saltar intro y el reintento de carga conservan texto visible para aclarar su acción. La pista de E aparece en escritorio; en móvil basta tocar. Las direcciones usan `moverIzquierda` y `moverDerecha`; las abreviaturas `izquierda` y `derecha` se conservan, aunque ya no se muestran.
+
 ## Cuándo aparece cada variante
 
 Marin, Pibble y Supergirl cambian de respuesta según el objeto correspondiente. Crow distingue un objeto pendiente de varios; el código decide qué comida falta. `dialogos.Crow.completo` conserva la frase escrita por Crow, aunque el encuentro final abre directamente la carta y no muestra ese diálogo. `interfaz.objetivoFinal` es el texto que queda en el HUD después del encuentro.
@@ -70,7 +72,7 @@ Los diálogos de `src/game/es.json` son la referencia para escribir más. Leerlo
 - Conservar mayúsculas, repeticiones, emoticones y emojis que escribió Crow. No corregirlos para que suenen formales ni agregar emojis como decoración automática.
 - Mantener los chistes de Pibble Martillo e iTownGamePlays en sus conversaciones. Las bromas nuevas y los recuerdos de pareja necesitan contexto de Crow.
 - Escribir instrucciones cortas y concretas. Krypto puede ladrar y explicar entre paréntesis; Crow habla con cariño directo.
-- Evitar guiones largos, puntos medios, viñetas decorativas y flechas en todo texto visible, controles, carteles y contador. Usar palabras, espacios y puntuación corriente.
+- Evitar guiones largos, puntos medios, viñetas decorativas y flechas de texto en controles, carteles y contador. Usar palabras, espacios y puntuación corriente. Los iconos SVG funcionales de dirección, salto y continuar están aprobados; no son adornos tipográficos.
 - Los cambios de texto conservan el mapa y la dificultad actual. El cuerpo de la carta queda pendiente de Crow.
 
 ## Comprobación

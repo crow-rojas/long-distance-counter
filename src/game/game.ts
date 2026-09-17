@@ -3,6 +3,7 @@ import "./game.css";
 import { isPreview } from "../countdown/compute";
 import { replyFor, formatText } from "./dialogue";
 import texts from "./es.json";
+import { setButtonIcon } from "./button-icons";
 import { readStamps, readyForCrow } from "./progress";
 import { BENCHES, CHECKPOINTS, FRIENDS, ITEMS, nextStop, PLATFORMS, SIDE_PLATFORMS, WORLD_WIDTH, ZONES, type Platform } from "./level";
 
@@ -14,7 +15,7 @@ export async function startGame(): Promise<void> {
   root.id = "fonda";
   root.innerHTML = `<div id="platformer"></div>
     <header class="game-hud"><ul id="provisions"></ul><p id="objective" aria-live="polite"></p></header>
-    <button id="sound" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <button id="sound" aria-pressed="false"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M11 4 6 8H3v8h3l5 4Z"/>
       <path class="sound-on" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>
       <path class="sound-off" d="m16 9 5 6m0-6-5 6"/>
@@ -33,26 +34,28 @@ export async function startGame(): Promise<void> {
   for (const [selector, text] of Object.entries({
     "#objective": texts.interfaz.cargando,
     "#intro-text": texts.intro.texto,
-    "#skip-intro": texts.intro.saltar,
-    "#reset-preview": texts.interfaz.reiniciar,
-    "#interact": texts.interfaz.interaccion.hablar,
-    "#close-conversation": texts.interfaz.interaccion.seguir,
     "#gallery-title": texts.galeria.titulo,
-    "#close-gallery": texts.galeria.volver,
     ".keyboard-help": texts.interfaz.controles.ayudaTeclado,
-    "[data-control=left]": texts.interfaz.controles.izquierda,
-    "[data-control=right]": texts.interfaz.controles.derecha,
-    "[data-control=jump]": texts.interfaz.controles.saltar,
     "#letter-title": texts.carta.titulo,
     ".reunion span": texts.carta.corazon,
     "#letter > p": texts.carta.texto,
-    "#close-letter": texts.carta.volver,
   })) root.querySelector(selector)!.textContent = text;
+  for (const [selector, icon, label] of [
+    ["#skip-intro","skip",texts.intro.saltar],
+    ["#reset-preview","reset",texts.interfaz.reiniciar],
+    ["#interact","talk",texts.interfaz.interaccion.hablar],
+    ["#close-conversation","continue",texts.interfaz.interaccion.seguir],
+    ["#close-gallery","close",texts.galeria.volver],
+    ["#close-letter","close",texts.carta.volver],
+    ["[data-control=left]","left",texts.interfaz.controles.moverIzquierda],
+    ["[data-control=right]","right",texts.interfaz.controles.moverDerecha],
+    ["[data-control=jump]","jump",texts.interfaz.controles.saltar],
+  ] as const) setButtonIcon(root.querySelector<HTMLButtonElement>(selector)!,icon,label);
   for (const [selector, attribute, text] of [
     ["#sound", "aria-label", texts.interfaz.sonido.activar],
     ["#sound", "title", texts.interfaz.sonido.desactivado],
     ["#provisions", "aria-label", texts.interfaz.misionInicial],
-    ["#reset-preview", "title", texts.interfaz.atajoReiniciar],
+    ["#reset-preview", "title", `${texts.interfaz.reiniciar} (${texts.interfaz.atajoReiniciar})`],
     ["#interact", "data-prefix", texts.interfaz.interaccion.prefijoTecla],
     ["#close-conversation", "data-prefix", texts.interfaz.interaccion.prefijoTecla],
     [".touch-controls", "aria-label", texts.interfaz.controles.descripcion],
@@ -383,7 +386,7 @@ export async function startGame(): Promise<void> {
         const progress = this.introStatic ? 1 : Phaser.Math.Clamp((this.introElapsed-1500)/2500,0,1);
         this.cameras.main.setScroll(this.introEnd.x,this.introEnd.y-this.introTravel*(1-Phaser.Math.Easing.Sine.InOut(progress)));
         introText.hidden = !this.introStatic && this.introElapsed < 4000;
-        skipIntro.textContent = this.introStatic ? texts.intro.jugar : texts.intro.saltar;
+        setButtonIcon(skipIntro,this.introStatic ? "play" : "skip",this.introStatic ? texts.intro.jugar : texts.intro.saltar);
       }
 
       finishIntro() {
@@ -714,10 +717,12 @@ export async function startGame(): Promise<void> {
         this.nearby = FRIENDS.find(friend => Math.abs(friend.x-this.player.x)<100 && Math.abs(friend.y-body.bottom)<85);
         this.nearbyBench = BENCHES.find(bench => this.canSit(bench));
         interact.hidden = !this.seatedBench && !this.nearby && !this.nearbyBench;
-        if (this.seatedBench) interact.textContent = texts.bancas.levantarse;
+        if (this.seatedBench) setButtonIcon(interact,"stand",texts.bancas.levantarse);
         else if (this.nearby) {
-          interact.textContent = this.nearby.name === "Crow" && readyForCrow(stamps) ? texts.interfaz.interaccion.abrazar : this.nearby.name === "Tus dibujos" ? texts.interfaz.interaccion.verDibujos : formatText(texts.interfaz.interaccion.conPersonaje,{personaje:texts.personajes[this.nearby.name]});
-        } else if (this.nearbyBench) interact.textContent = texts.bancas.sentarse;
+          if (this.nearby.name === "Crow" && readyForCrow(stamps)) setButtonIcon(interact,"hug",texts.interfaz.interaccion.abrazar);
+          else if (this.nearby.name === "Tus dibujos") setButtonIcon(interact,"gallery",texts.interfaz.interaccion.verDibujos);
+          else setButtonIcon(interact,"talk",formatText(texts.interfaz.interaccion.conPersonaje,{personaje:texts.personajes[this.nearby.name]}));
+        } else if (this.nearbyBench) setButtonIcon(interact,"sit",texts.bancas.sentarse);
         if (Phaser.Input.Keyboard.JustDown(this.keys.E)) this.useInteraction();
         if (time > this.speechUntil) speech.hidden=true;
       }

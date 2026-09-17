@@ -33,6 +33,7 @@ Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas
 - Sentarse: E o un tap en una banca cercana, con Chofis en el suelo. Moverse, saltar, pulsar E o tocar Levantarse permite seguir. El mundo sigue activo y la banca no aumenta la altura de salto.
 - La cámara se acerca durante la conversación y el texto aparece arriba. E, Escape o Seguir cierran el diálogo. La física y los desafíos se pausan durante las conversaciones, la galería y la carta.
 - En móvil aparecen botones de dirección y salto. Con movimiento reducido, se omiten las transiciones de cámara y los efectos decorativos de movimiento.
+- Los botones usan iconos con nombres accesibles: direcciones, salto, banca, levantarse, conversación, galería, abrazo y cierres. Solo Saltar intro y el reintento de carga conservan texto visible. Los nombres y tooltips se editan en `es.json`.
 - El objetivo muestra la siguiente instrucción y tres dibujos indican la comida pendiente o recogida. Al recogerla aparece a color con una marca; sus descripciones también funcionan con lectores de pantalla.
 - Sonido opcional con el botón de altavoz: efectos CC0 de Brackeys y Piano 3 de AlkaKrab. Empieza en silencio.
 - El canvas y sus textos se dibujan según la densidad de pantalla, hasta 3×. El tamaño visible del mapa y las colisiones no cambian; el giro del celular o cambio de densidad del monitor reajusta canvas, textos y cámara sin recargar.

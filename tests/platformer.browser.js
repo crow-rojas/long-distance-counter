@@ -13,6 +13,10 @@
   if (scene.introActive) document.querySelector("#skip-intro").click();
   const check=(ok,message)=>{if(!ok)throw Error(message)};
   const foodSlots=[...document.querySelectorAll("#provisions [data-food]")];
+  for(const button of document.querySelectorAll("#fonda button")) {
+    check(button.querySelector("svg[aria-hidden=true]") && button.getAttribute("aria-label"),
+      `Button ${button.id || button.dataset.control} needs an icon and accessible name`);
+  }
   check(foodSlots.length===3 && foodSlots.every(slot=>!slot.classList.contains("collected") && slot.getAttribute("aria-label")),
     "HUD must show three named, initially missing foods");
   const canvasBounds=game.canvas.getBoundingClientRect();
@@ -112,8 +116,12 @@
       reset(bench.x,bench.y);
       check(!scene.seatedBench && document.querySelector("#interact").textContent===texts.bancas.sentarse,
         "Bench sat automatically or did not offer interaction");
+      check(document.querySelector("#interact").dataset.icon==="sit","Bench has no sitting icon");
       press("E");frame();release("E");advance(2);
       check(scene.seatedBench?.x===bench.x && scene.avatar.isCropped,"E did not seat Chofis");
+      check(document.querySelector("#interact").dataset.icon==="stand" &&
+        document.querySelector("#interact").getAttribute("aria-label")===texts.bancas.levantarse,
+        "Seated interaction did not change its icon and accessible action");
       check(Math.abs(scene.avatar.displayWidth-100)<1.3 && Math.abs(scene.avatar.displayHeight-100)<1.3,
         "Sitting stretches Chofis instead of preserving her standing size");
       check(!world.isPaused && scene.input.keyboard.enabled,"Sitting paused the world or disabled input");

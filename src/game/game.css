@@ -3,7 +3,12 @@ body.playing #fonda { opacity: 1; pointer-events: auto; }
 body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s; }
 #platformer { position: absolute; inset: 0; }
 #platformer canvas { display: block; }
-#fonda button { color: inherit; background: #26132bdd; border: 1px solid #be7fa2; padding: 11px 19px; font: 15px system-ui,sans-serif; border-radius: 7px; cursor: pointer; touch-action: none; }
+#fonda button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 44px; min-height: 44px; color: inherit; background: #171320e6; border: 1px solid #f1d7ae80; padding: 10px 14px; font: 14px system-ui,sans-serif; border-radius: 24px; cursor: pointer; touch-action: none; }
+#fonda .icon-only { padding: 10px; }
+.icon-only .button-label { display: none; }
+.button-icon { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+@media (hover: hover) { #fonda button:hover { background: #392b42; border-color: #f1d7ae; } }
+#fonda button:active { background: #574057; }
 #fonda button:focus-visible, #fonda canvas:focus-visible { outline: 2px solid #ffc3df; outline-offset: 4px; }
 #fonda [hidden] { display: none !important; }
 .game-hud { position: absolute; top: calc(var(--letterbox) + 12px); left: max(20px,env(safe-area-inset-left)); right: max(80px,calc(env(safe-area-inset-right) + 60px)); pointer-events: none; text-shadow: 0 2px 4px #10051d,0 0 14px #10051d; }
@@ -14,19 +19,19 @@ body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s
 #provisions .collected img { opacity: 1; filter: none; }
 #provisions .collected::after { content: ""; position: absolute; bottom: -1px; right: -1px; width: 4px; height: 8px; border: solid #f1d7ae; border-width: 0 2px 2px 0; transform: rotate(45deg); filter: drop-shadow(0 1px 2px #10051d); }
 #fonda #sound { position: absolute; right: max(20px,env(safe-area-inset-right)); top: calc(var(--letterbox) + 10px); width: 44px; height: 44px; padding: 10px; border-radius: 50%; background: #171320cc; border-color: #f1d7ae66; }
-#sound svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 #sound[aria-pressed="false"] .sound-on, #sound[aria-pressed="true"] .sound-off { display: none; }
-#fonda #reset-preview { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--letterbox) + 10px); padding: 3px 7px; border: 0; background: transparent; font-size: 10px; color: #bcb4c7; }
+#fonda #reset-preview { position: absolute; right: max(74px,calc(env(safe-area-inset-right) + 54px)); top: calc(var(--letterbox) + 10px); width: 44px; height: 44px; padding: 10px; border-color: #f1d7ae40; background: #171320b8; color: #c7becb; }
 #objective { font: 400 18px/1.4 "Fraunces Variable",Georgia,serif; margin: 0; max-width: 480px; }
 #speech { position: absolute; left: 50%; bottom: calc(var(--letterbox) + 78px); transform: translateX(-50%); margin: 0; width: min(570px,calc(100% - 36px)); color: #fff3f9; text-align: center; text-shadow: 0 2px 3px #16071f, 0 0 8px #16071f, 0 0 18px #16071f; font: 500 15px/1.6 system-ui,sans-serif; pointer-events: none; }
 #fonda #interact { position: absolute; transform: translateX(-50%); white-space: nowrap; min-height: 44px; padding: 8px 14px; border-radius: 24px; border-color: #f1d7ae80; background: #171320e6; font-size: 13px; }
-#interact::before { content: attr(data-prefix); }
+#interact::before, #close-conversation::before { content: attr(data-prefix); border-right: 1px solid #f1d7ae50; padding-right: 8px; font: 12px system-ui,sans-serif; }
 .keyboard-help { position: absolute; bottom: calc(var(--letterbox) + 7px); left: 24px; font: 12px system-ui,sans-serif; color: #e8bad3; pointer-events: none; }
 .touch-controls { display: none; position: absolute; bottom: calc(var(--letterbox) + 14px); left: max(18px,env(safe-area-inset-left)); right: max(18px,env(safe-area-inset-right)); justify-content: space-between; pointer-events: none; }
 .touch-controls div { display: flex; gap: 10px; }
 #fonda .touch-controls button { width: 58px; height: 58px; font-size: 14px; font-weight: 500; padding: 0; border-radius: 50%; border-color: #f1d7ae66; background: #171320d9; pointer-events: auto; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-.touch-controls button:active { background: #794262 !important; }
-#fonda .touch-controls button[data-control="jump"] { width: 78px; border-radius: 30px; }
+.touch-controls .button-icon { width: 27px; height: 27px; stroke-width: 2; }
+#fonda .touch-controls button:active { background: #794262; }
+#fonda .touch-controls button[data-control="jump"] { width: 64px; height: 64px; border-radius: 50%; }
 #fonda dialog { width: min(430px,calc(100% - 40px)); max-height: calc(100dvh - 48px); box-sizing: border-box; color: #ffe4ef; background: #22122fec; border: 1px solid #a76b90; border-radius: 12px; padding: 30px; }
 #fonda dialog::backdrop { background: #0a041899; }
 #fonda dialog h1 { font-size: 30px; font-weight: 400; margin: 0 0 14px; }
@@ -40,7 +45,8 @@ body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s
 #fonda #conversation #speaker { font: 24px "Fraunces Variable",Georgia,serif; color: #f1d7ae; margin: 0 0 10px; }
 #fonda #conversation #dialogue-text { margin: 0 0 16px; line-height: 1.6; }
 #fonda #conversation::backdrop { background: linear-gradient(#101321d9, #10132122 50%,transparent); }
-#close-conversation::before { content: attr(data-prefix); }
+#fonda #close-gallery, #fonda #close-letter { position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; padding: 10px; background: transparent; border-color: transparent; }
+#gallery-title, #letter-title { padding-right: 32px; }
 .conversing .game-hud, .conversing .keyboard-help, .conversing .touch-controls, .conversing #sound, .conversing #reset-preview { visibility: hidden; }
 .introducing .game-hud, .introducing .keyboard-help, .introducing .touch-controls, .introducing #interact, .introducing #reset-preview { visibility: hidden; }
 #intro-text { position: absolute; top: calc(var(--letterbox) + 12%); left: 50%; transform: translateX(-50%); width: min(520px,calc(100% - 48px)); margin: 0; text-align: center; text-wrap: balance; font: 400 clamp(22px,3vw,32px)/1.5 "Fraunces Variable",Georgia,serif; text-shadow: 0 2px 5px #10051d,0 0 20px #10051d; white-space: pre-wrap; pointer-events: none; }

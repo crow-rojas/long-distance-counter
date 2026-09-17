@@ -34,9 +34,9 @@ it("keeps the documented placeholders valid in the editable templates", () => {
 it("omits decorative separators and arrow characters from the interface", () => {
   const excluded = /[\u2013\u2014\u00b7\u2022\u2190-\u21ff\u2794\u279c]|&(?:bull|middot|[lr]arr);/i;
   const sources = import.meta.glob<string>(["../index.html", "../src/game/game.ts", "../src/game/game.css",
-    "../src/game/dialogue.ts", "../src/game/es.json", "../src/game/level.ts", "../src/countdown/target.ts", "../src/ui/countdown.ts"],
+    "../src/game/dialogue.ts", "../src/game/es.json", "../src/game/level.ts", "../src/game/button-icons.ts", "../src/countdown/target.ts", "../src/ui/countdown.ts"],
   { query: "?raw", import: "default", eager: true });
-  expect(Object.keys(sources)).toHaveLength(8);
+  expect(Object.keys(sources)).toHaveLength(9);
   expect(JSON.stringify(texts)).not.toMatch(excluded);
   for (const [path, source] of Object.entries(sources)) {
     expect(source, path).not.toMatch(excluded);
