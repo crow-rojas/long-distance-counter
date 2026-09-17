@@ -1,0 +1,20 @@
+body.editor { margin:0; height:100dvh; overflow:hidden; color:#f1e7dc; background:#211c2b; font:13px system-ui,sans-serif; --letterbox:0px; }
+.editor #fonda { inset:64px 0 72px; opacity:1; transition:none; }
+.editor #fonda.map-editing > :not(#platformer) { display:none; }
+#tools, #inspector { position:fixed; left:0; right:0; display:flex; align-items:center; gap:12px; padding:10px 18px; box-sizing:border-box; }
+#tools { top:0; height:64px; }
+#inspector { bottom:0; height:72px; border-top:1px solid #ffffff16; }
+#tools strong { margin-right:10px; white-space:nowrap; }
+.editor button { width:40px; height:40px; display:inline-flex; justify-content:center; align-items:center; padding:8px; color:inherit; background:transparent; border:1px solid #f1d7ae50; border-radius:8px; cursor:pointer; }
+.editor button:hover { background:#f1d7ae20; }
+.editor button:focus-visible, .editor input:focus-visible, .editor select:focus-visible { outline:2px solid #ffc3df; outline-offset:2px; }
+.editor input, .editor select { color:inherit; background:#171320; border:1px solid #ffffff30; border-radius:4px; padding:7px; font:inherit; accent-color:#e6b4ce; }
+#objects { width:280px; }
+#properties { display:flex; gap:14px; }
+#properties label { display:flex; align-items:center; gap:6px; }
+#properties input { width:70px; }
+#status { margin:0 0 0 auto; color:#c4b8cd; max-width:480px; font-size:12px; }
+#status.error { color:#ffa5b8; }
+.editor [hidden] { display:none !important; }
+.editor.testing #tools > :not(strong):not(#stop), .editor.testing #properties { display:none; }
+.editor.busy #tools, .editor.busy #inspector { pointer-events:none; opacity:.6; }

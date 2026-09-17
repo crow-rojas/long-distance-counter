@@ -5,12 +5,15 @@ import { replyFor, formatText } from "./dialogue";
 import texts from "./es.json";
 import { setButtonIcon } from "./button-icons";
 import { readStamps, readyForCrow } from "./progress";
-import { BENCHES, CHECKPOINTS, ENDING_GATE_X, FRIENDS, ITEMS, nextStop, PLATFORMS, SIDE_PLATFORMS, WORLD_WIDTH, ZONES, type Platform } from "./level";
+import { createLevel, type Platform } from "./level";
+import { defaultMap, type MapData } from "./map-data";
+import { STAMPS } from "./progress";
 
 // Exported for browser integration checks; Phaser remains the only game runtime.
 export let game: Phaser.Game;
 
-export async function startGame(): Promise<void> {
+export async function startGame(options:{map?:MapData; editing?:boolean; sandbox?:boolean; spawn?:{x:number;y:number}; fullBag?:boolean} = {}): Promise<void> {
+  const {MAP,platformRecords,BENCHES,CHECKPOINTS,ENDING_GATE_X,FRIENDS,ITEMS,nextStop,PLATFORMS,SIDE_PLATFORMS,WORLD_WIDTH} = createLevel(options.map);
   const root = document.createElement("main");
   root.id = "fonda";
   root.innerHTML = `<div id="platformer"></div>
@@ -87,18 +90,20 @@ export async function startGame(): Promise<void> {
   const introText = root.querySelector<HTMLElement>("#intro-text")!;
   const skipIntro = root.querySelector<HTMLButtonElement>("#skip-intro")!;
   const preview = isPreview;
-  const key = preview ? "chofis-platformer-preview" : "chofis-platformer";
+  const key = (preview ? "chofis-platformer-preview" : "chofis-platformer") + (MAP.id===defaultMap.id ? "" : `:${MAP.id}`);
   let saved: string | null = null;
   let savedCheckpoint: string | null = null;
-  let introSeen = false;
+  let introSeen = !!options.sandbox;
   let endingSeen = false;
   try {
-    saved = localStorage.getItem(key);
-    savedCheckpoint = localStorage.getItem(`${key}:checkpoint`);
-    introSeen = localStorage.getItem(`${key}:intro-seen`) === "1";
-    endingSeen = localStorage.getItem(`${key}:ending-seen`) === "1";
+    if (!options.sandbox) {
+      saved = localStorage.getItem(key);
+      savedCheckpoint = localStorage.getItem(`${key}:checkpoint`);
+      introSeen = localStorage.getItem(`${key}:intro-seen`) === "1";
+      endingSeen = localStorage.getItem(`${key}:ending-seen`) === "1";
+    }
   } catch { /* Storage is optional. */ }
-  const stamps = readStamps(saved);
+  const stamps = readStamps(options.fullBag ? JSON.stringify(STAMPS) : saved);
   const provisions = root.querySelector("#provisions")!;
   for (const item of ITEMS) {
     const slot = document.createElement("li");
@@ -122,7 +127,12 @@ export async function startGame(): Promise<void> {
     }
   };
   updateFood();
-  const hasCheckpoint = savedCheckpoint !== null && savedCheckpoint.trim() !== "" && CHECKPOINTS.includes(Number(savedCheckpoint));
+  let checkpointIndex = platformRecords.findIndex(p=>p.id===savedCheckpoint);
+  // Old releases saved array positions. New saves use IDs so reordering a map is safe.
+  if (checkpointIndex<0 && MAP.id===defaultMap.id && savedCheckpoint!==null && /^\d+$/.test(savedCheckpoint)) {
+    checkpointIndex=platformRecords.findIndex(p=>p.id===`platform-${Number(savedCheckpoint)}`);
+  }
+  const hasCheckpoint = CHECKPOINTS.includes(checkpointIndex);
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const reduced = motion.matches;
   let pixelRatio = Math.min(window.devicePixelRatio || 1,3);
@@ -178,7 +188,7 @@ export async function startGame(): Promise<void> {
       hearts: Phaser.GameObjects.Graphics[] = [];
 
       preload() {
-        const images = ["chofis-front", "chofis-happy", "ramada", "volantin", "copihue", ...FRIENDS.filter(f => !f.image.endsWith("-poses")).map(f => f.image), ...ITEMS.map(i => `sticker-${i.id}`)];
+        const images = ["chofis-front", "chofis-happy", "ramada", "volantin", "copihue", ...MAP.decorations.filter(d=>d.image!=="garland").map(d=>d.image), ...FRIENDS.filter(f => !f.image.endsWith("-poses")).map(f => f.image), ...ITEMS.map(i => `sticker-${i.id}`)];
         images.push("bench","lantern","flowerpot","sign");
         for (let i=0;i<4;i++) images.push(`distant-island-${i}`);
         for (const variant of ["stable","fragile"]) for (const size of ["small","medium","large"]) images.push(`island-${variant}-${size}`);
@@ -211,7 +221,7 @@ export async function startGame(): Promise<void> {
         for (const event of ["keydown","keyup"] as const) soundButton.addEventListener(event,e => {
           if (e.code === "Space" || e.code === "Enter") e.stopPropagation();
         },{signal:events.signal});
-        if (import.meta.env.DEV && preview) {
+        if (import.meta.env.DEV && preview && !options.sandbox) {
           const reset = () => {
             try {
               localStorage.removeItem(key);
@@ -245,7 +255,7 @@ export async function startGame(): Promise<void> {
           // Prepared textures share a walkable edge at row 112; physics stays at y.
           image.setOrigin(0,112/image.height).setDisplaySize(w,Math.min(210,w*.68));
           const markings = this.add.graphics();
-          const art = this.add.container(x,y,[image,markings]);
+          const art = this.add.container(x,y,[image,markings]).setData("mapId",platformRecords[index].id);
           if (kind === "checkpoint") {
             markings.lineStyle(2,0xe8d9ba,.7).lineBetween(65,0,65,-48);
             markings.fillStyle(0xe8d9ba).fillTriangle(65,-48,90,-37,65,-26);
@@ -257,17 +267,16 @@ export async function startGame(): Promise<void> {
           this.platforms.push({definition,sprite,art,crumbleAt:0,restoreAt:0});
         });
         this.decorations();
-        const next = ITEMS.findIndex(item => !stamps.has(item.id));
-        this.lastCheckpoint = hasCheckpoint
-          ? Number(savedCheckpoint) : ZONES[next < 0 ? 3 : next].checkpoint;
+        this.lastCheckpoint = hasCheckpoint ? checkpointIndex :
+          CHECKPOINTS.filter(index=>PLATFORMS[index][0]<=nextStop(stamps).x).at(-1) ?? CHECKPOINTS[0];
         const checkpoint = PLATFORMS[this.lastCheckpoint];
-        this.spawn = { x: checkpoint[0]+120, y: checkpoint[1]-25 };
+        this.spawn = options.spawn ?? (!hasCheckpoint && !stamps.size ? {...MAP.spawn} : { x:checkpoint[0]+Math.min(120,checkpoint[2]-25),y:checkpoint[1]-25 });
         this.player = this.physics.add.sprite(this.spawn.x,this.spawn.y,"__WHITE").setOrigin(.5,1).setDisplaySize(40.625,58.75).setVisible(false);
         this.player.setBodySize(this.player.width,this.player.height).setOffset(0,0).setMaxVelocity(340,1100).setDragX(2800);
         this.avatar = this.add.image(this.spawn.x,this.spawn.y,"chofis-front").setOrigin(.5,.9625).setDisplaySize(100,100).setDepth(5);
         this.events.on(Phaser.Scenes.Events.POST_UPDATE,(_time: number, delta: number) => {
           this.avatar.setPosition(this.player.x,this.player.y-(this.seatedBench ? 28 : 0));
-          if (this.presented && !this.introActive && !this.focusedFriend) this.updatePlatforms(delta);
+          if (this.presented && !options.editing && !this.introActive && !this.focusedFriend) this.updatePlatforms(delta);
         });
         this.events.on(Phaser.Scenes.Events.RENDER,() => this.positionInteraction());
         this.physics.add.collider(this.player,ground,(_player,platform) => {
@@ -275,10 +284,10 @@ export async function startGame(): Promise<void> {
           const index = (platform as Phaser.Physics.Arcade.Image).getData("index") as number;
           const island = this.platforms[index];
           if (island.definition[3] === "checkpoint") {
-            this.spawn = { x:island.definition[0]+120,y:island.definition[1]-25 };
+            this.spawn = { x:island.definition[0]+Math.min(120,island.definition[2]-25),y:island.definition[1]-25 };
             if (index !== this.lastCheckpoint) {
               this.lastCheckpoint = index;
-              try { localStorage.setItem(`${key}:checkpoint`,String(index)); } catch { /* Session checkpoint still works. */ }
+              try { if (!options.sandbox) localStorage.setItem(`${key}:checkpoint`,platformRecords[index].id); } catch { /* Session checkpoint still works. */ }
             }
           } else if (island.definition[3] === "fragile" && !island.crumbleAt && !island.restoreAt) {
             island.crumbleAt = this.levelTime+850;
@@ -287,7 +296,7 @@ export async function startGame(): Promise<void> {
         for (const item of ITEMS) {
           if (stamps.has(item.id)) continue;
           const halo = this.add.circle(item.x,item.y,44,0xffb6d1,.1).setStrokeStyle(1,0xffc3d9,.5);
-          const food = this.physics.add.staticImage(item.x,item.y,`sticker-${item.id}`);
+          const food = this.physics.add.staticImage(item.x,item.y,`sticker-${item.id}`).setData("mapId",item.id);
           food.setScale(65/Math.max(food.width,food.height)).refreshBody();
           // Keep pickup reach consistent even when the drawing is tall or narrow.
           food.body!.setSize(72,72);
@@ -302,12 +311,13 @@ export async function startGame(): Promise<void> {
             stamps.add(item.id);
             updateFood();
             this.updateGate();
-            try { localStorage.setItem(key,JSON.stringify([...stamps])); } catch { /* Keep this session playable. */ }
+            try { if (!options.sandbox) localStorage.setItem(key,JSON.stringify([...stamps])); } catch { /* Keep this session playable. */ }
             this.say(texts.personajes.Chofis,texts.recogida[item.id],2500);
           });
         }
         this.restoreCamera();
         this.scale.on("resize",() => {
+          if (options.editing) return;
           if (this.endingPhase) this.drawEnding();
           else if (this.introActive) this.layoutIntro();
           else if (this.focusedFriend) this.focusCamera(this.focusedFriend,true);
@@ -375,11 +385,17 @@ export async function startGame(): Promise<void> {
           if (document.hidden || this.presented || events.signal.aborted) return;
           this.presented = true;
           root.inert = false;
-          if (endingSeen && readyForCrow(stamps)) this.startEnding(true);
+          if (options.editing) {
+            root.classList.add("map-editing");
+            this.avatar.setVisible(false);
+            this.cameras.main.stopFollow().removeBounds();
+            this.add.image(MAP.spawn.x,MAP.spawn.y,"chofis-front").setOrigin(.5,1)
+              .setDisplaySize(100,100).setAlpha(.6).setDepth(8).setData("mapId",MAP.spawn.id);
+          } else if (endingSeen && readyForCrow(stamps)) this.startEnding(true);
           else if (!introSeen && !stamps.size && !hasCheckpoint) {
             this.introActive = true;
             this.introStatic = motion.matches;
-            this.player.body!.reset(this.spawn.x,checkpoint[1]);
+            this.player.body!.reset(this.spawn.x,this.spawn.y);
             root.classList.add("introducing");
             skipIntro.hidden = false;
             this.layoutIntro();
@@ -388,7 +404,7 @@ export async function startGame(): Promise<void> {
           // Commit opacity:0 before changing the class, including warm-cache loads.
           void root.offsetWidth;
           document.body.classList.add("playing");
-          document.getElementById("hero")!.setAttribute("aria-hidden","true");
+          document.getElementById("hero")?.setAttribute("aria-hidden","true");
           document.documentElement.lang = "es";
           document.title = texts.interfaz.titulo;
           resolve();
@@ -422,7 +438,7 @@ export async function startGame(): Promise<void> {
         this.introActive = false;
         root.classList.remove("introducing");
         introText.hidden = skipIntro.hidden = true;
-        try { localStorage.setItem(`${key}:intro-seen`,"1"); } catch { /* Playing does not require storage. */ }
+        try { if (!options.sandbox) localStorage.setItem(`${key}:intro-seen`,"1"); } catch { /* Playing does not require storage. */ }
         this.resumeGameplay(false);
         this.say(texts.personajes.Fonda,texts.intro.ayuda,5000);
       }
@@ -440,29 +456,29 @@ export async function startGame(): Promise<void> {
           g.fillStyle(0xffcae6,.35).fillCircle(x,y,1.6);
           g.lineStyle(1,0xffc7df,.18).lineBetween(x-4,y,x+4,y).lineBetween(x,y-4,x,y+4);
         }
-        FRIENDS.forEach(friend => {
-          if (friend.name === "Marin" || friend.name === "Pibble" || friend.name === "Crow") {
-            const stall = this.add.image(friend.x,friend.y+5,"ramada").setOrigin(.5,1).setDepth(-1);
-            stall.setScale(300/stall.height).setTint(0xe5bdd5);
-            const lamp = this.add.image(friend.x+165,friend.y-285,"lantern").setOrigin(.5,0).setDepth(-1);
-            lamp.setScale(100/lamp.height);
-            this.add.circle(friend.x+165,friend.y-205,42,0xffd394,.07).setDepth(-2);
-            if (friend.name !== "Pibble") {
-              const pot = this.add.image(friend.x-165,friend.y,"flowerpot").setOrigin(.5,1).setDepth(-1);
-              pot.setScale(55/pot.height);
+        for (const decoration of MAP.decorations) {
+          const {x,y,height,image,originY,angle,depth,alpha,tint,id} = decoration;
+          if (image === "garland") {
+            const lights = this.add.graphics();
+            for (let i=0;i<=8;i++) {
+              const lx=-160+i*40, ly=Math.sin(i/8*Math.PI)*30;
+              if (i) lights.lineStyle(1,0xecc9c1,.45).lineBetween(lx-40,Math.sin((i-1)/8*Math.PI)*30,lx,ly);
+              lights.fillStyle(0xffd7a9,.06).fillCircle(lx,ly+5,13);
+              lights.fillStyle(0xffdcaf,.85).fillCircle(lx,ly+5,3);
             }
-            this.add.ellipse(friend.x,friend.y-95,230,260,0xffc397,.055).setDepth(-2);
-            const intervals = friend.name === "Pibble" ? 4 : 8;
-            const spacing = 320/intervals;
-            for (let bulb=0;bulb<=intervals;bulb++) {
-              const x = friend.x-160+bulb*spacing, y=friend.y-310+Math.sin(bulb/intervals*Math.PI)*30;
-              if (bulb) g.lineStyle(1,0xecc9c1,.45).lineBetween(x-spacing,friend.y-310+Math.sin((bulb-1)/intervals*Math.PI)*30,x,y);
-              g.fillStyle(0xffd7a9,.06).fillCircle(x,y+5,13);
-              g.fillStyle(0xffdcaf,.85).fillCircle(x,y+5,3);
-            }
+            this.add.container(x,y,[this.add.rectangle(0,15,340,65,0,0),lights])
+              .setScale(height/60).setAngle(angle).setDepth(depth).setAlpha(alpha).setData("mapId",id);
+          } else {
+            const art = this.add.image(x,y,image).setOrigin(.5,originY).setAngle(angle).setDepth(depth).setAlpha(alpha).setTint(tint).setData("mapId",id);
+            art.setScale(height/art.height);
+            if (image === "lantern") this.add.circle(x,y+height*.8,42*height/100,0xffd394,.07).setDepth(depth-1);
+            if (image === "ramada") this.add.ellipse(x,y-height*.33,230*height/300,260*height/300,0xffc397,.055).setDepth(depth-1);
+            if (image === "volantin" && !reduced && !options.editing) this.tweens.add({targets:art,y:y-12,angle:angle+15,duration:3600+x/2,yoyo:true,repeat:-1,ease:"Sine.easeInOut"});
           }
+        }
+        FRIENDS.forEach(friend => {
           const image = this.add.image(friend.x,friend.y,friend.image,0).setOrigin(.5,friend.image.endsWith("-poses") ? .9625 : 1);
-          image.setDisplaySize(friend.height*image.width/image.height,friend.height);
+          image.setDisplaySize(friend.height*image.width/image.height,friend.height).setData("mapId",friend.id);
           if (friend.name === "Tus dibujos") {
             g.fillStyle(0x382a35).fillRoundedRect(friend.x-65,friend.y-123,130,128,5);
             g.lineStyle(3,0xd2ad82).strokeRoundedRect(friend.x-65,friend.y-123,130,128,5);
@@ -472,17 +488,18 @@ export async function startGame(): Promise<void> {
         });
         // A small wooden entrance, using the same cream and plum as the fonda.
         const posts = this.add.graphics().setDepth(2);
-        posts.fillStyle(0x765448).fillRoundedRect(ENDING_GATE_X-43,532,9,118,3)
-          .fillRoundedRect(ENDING_GATE_X+34,532,9,118,3);
-        posts.lineStyle(4,0xe8c6a0).lineBetween(ENDING_GATE_X-46,532,ENDING_GATE_X+46,532);
+        posts.fillStyle(0x765448).fillRoundedRect(-43,-118,9,118,3).fillRoundedRect(34,-118,9,118,3);
+        posts.lineStyle(4,0xe8c6a0).lineBetween(-46,-118,46,-118);
         const bars = this.add.graphics().fillStyle(0xb99069);
         for (const x of [-30,-10,10,30]) bars.fillRoundedRect(x-4,-90,8,90,2);
         bars.fillRect(-34,-68,68,8).fillRect(-34,-27,68,8);
-        this.gate = this.add.container(ENDING_GATE_X,650,[bars]).setDepth(2);
-        this.gateLabel = this.add.text(ENDING_GATE_X,510,"",{
+        this.gate = this.add.container(0,0,[bars]);
+        this.gateLabel = this.add.text(0,-140,"",{
           fontFamily:"Georgia",fontSize:"16px",color:"#f1d7ae",align:"center",resolution:pixelRatio,
           shadow:{color:"#171320",blur:5,fill:true},
         }).setOrigin(.5,1);
+        this.add.container(ENDING_GATE_X,MAP.ending.y,[this.add.rectangle(0,-75,100,150,0,0),posts,this.gate,this.gateLabel])
+          .setDepth(2).setData("mapId",MAP.ending.id);
         this.updateGate();
         const heart = Array.from({length:48},(_,i) => {
           const t=i*Math.PI*2/48;
@@ -490,31 +507,22 @@ export async function startGame(): Promise<void> {
         });
         for (let i=0;i<5;i++) this.hearts.push(this.add.graphics().fillStyle(i%2 ? 0xf1d7ae : 0xffb6d1)
           .fillPoints(heart,true).setScale(.55).setDepth(6).setVisible(false));
-        for (const index of CHECKPOINTS) {
-          const [x,y,w] = PLATFORMS[index];
-          const flower = this.add.image(x+w-35,y+25,"copihue").setOrigin(.5,.15).setDepth(1);
-          flower.setScale(75/flower.height).setAngle(-25).setTint(0xe9bddc);
-        }
-        for (const [x,y] of [[800,230],[3900,230],[4950,155],[6150,165],[10500,125],[13300,265]]) {
-          const kite = this.add.image(x,y,"volantin").setDepth(-2).setAlpha(.7).setAngle(-12);
-          kite.setScale(115/kite.height).setTint(0xe8c2ea);
-          if (!reduced) this.tweens.add({targets:kite,y:y-12,angle:3,duration:3600+x/2,yoyo:true,repeat:-1,ease:"Sine.easeInOut"});
-        }
         for (const bench of BENCHES) {
           this.add.image(bench.x,bench.y,"bench").setOrigin(.5,1).setDepth(-1)
-            .setDisplaySize(140,bench.height).setInteractive({useHandCursor:true})
+            .setDisplaySize(140,bench.height).setData("mapId",bench.id).setInteractive({useHandCursor:true})
             .on("pointerup",() => this.useBench(bench));
         }
-        const sign = (x:number,y:number,text:string) => {
-          this.add.image(x,y,"sign").setOrigin(.5,1).setDisplaySize(175,135).setDepth(-1);
-          this.add.text(x,y-81,text,{fontFamily:"Georgia",fontSize:"20px",color:"#382938",align:"center",lineSpacing:3,resolution:pixelRatio}).setOrigin(.5).setDepth(-1);
-        };
-        sign(550,700,texts.carteles.entrada);
-        this.add.text(1740,224,texts.carteles.dibujos,{fontFamily:"Georgia",fontSize:"18px",color:"#eadbc5",shadow:{color:"#182139",blur:5,fill:true},resolution:pixelRatio}).setOrigin(.5);
-        sign(3720,650,texts.carteles.islasMoviles);
-        sign(6800,630,texts.carteles.grietas);
-        sign(10160,560,texts.carteles.luces);
-        this.add.text(13700,294,texts.carteles.fonda,{fontFamily:"Georgia",fontSize:"27px",color:"#f1d7ae",resolution:pixelRatio}).setOrigin(.5);
+        for (const sign of MAP.signs) {
+          const content = sign.text || texts.carteles[sign.textKey];
+          const label = this.add.text(0,sign.board ? -81 : 0,content,{
+            fontFamily:"Georgia",fontSize:sign.board ? "20px" : sign.textKey==="fonda" ? "27px" : "18px",
+            color:sign.board ? "#382938" : "#f1d7ae",align:"center",lineSpacing:3,resolution:pixelRatio,
+          }).setOrigin(.5);
+          const children:Phaser.GameObjects.GameObject[] = [];
+          if (sign.board) children.push(this.add.image(0,0,"sign").setOrigin(.5,1).setDisplaySize(175,135));
+          children.push(label);
+          this.add.container(sign.x,sign.y,children).setDepth(-1).setData("mapId",sign.id);
+        }
       }
 
       restoreCamera(animate=false) {
@@ -637,7 +645,7 @@ export async function startGame(): Promise<void> {
         this.drawEnding();
         objective.textContent = this.lastObjective = texts.interfaz.objetivoFinal;
         this.game.canvas.setAttribute("aria-label",texts.interfaz.zonaFinal);
-        try { localStorage.setItem(`${key}:ending-seen`,"1"); } catch { /* The ending still works without storage. */ }
+        try { if (!options.sandbox) localStorage.setItem(`${key}:ending-seen`,"1"); } catch { /* The ending still works without storage. */ }
         readLetter.hidden = false;
         if (showLetter) {
           this.effect("power_up",.3);
@@ -653,7 +661,7 @@ export async function startGame(): Promise<void> {
 
       positionInteraction() {
         const target = this.seatedBench ?? this.nearby ?? this.nearbyBench;
-        if (!target || !this.presented || this.introActive || this.focusedFriend) { interact.hidden = true; return; }
+        if (options.editing || !target || !this.presented || this.introActive || this.focusedFriend) { interact.hidden = true; return; }
         const camera = this.cameras.main;
         const half = interact.offsetWidth/2+12;
         // The game camera pans and zooms without rotation.
@@ -708,7 +716,7 @@ export async function startGame(): Promise<void> {
       }
 
       useBench(bench: typeof BENCHES[number]) {
-        if (!this.presented || this.introActive || this.focusedFriend) return;
+        if (options.editing || !this.presented || this.introActive || this.focusedFriend) return;
         if (this.seatedBench) {
           if (this.seatedBench === bench) this.stand();
           return;
@@ -740,7 +748,7 @@ export async function startGame(): Promise<void> {
       }
 
       talk(friend = this.nearby) {
-        if (!friend || !this.presented || this.introActive || this.focusedFriend || Math.abs(friend.x-this.player.x)>=100 || Math.abs(friend.y-this.player.body!.bottom)>=85) return;
+        if (options.editing || !friend || !this.presented || this.introActive || this.focusedFriend || Math.abs(friend.x-this.player.x)>=100 || Math.abs(friend.y-this.player.body!.bottom)>=85) return;
         if (friend.name === "Crow") return; // His encounter starts at the entrance, never on tap.
         const portrait = this.portraits.get(friend.name)!;
         this.tweens.killTweensOf(portrait);
@@ -770,7 +778,7 @@ export async function startGame(): Promise<void> {
       }
 
       update(time: number, delta=0) {
-        if (!this.player || !this.presented) return;
+        if (options.editing || !this.player || !this.presented) return;
         if (this.endingPhase) {
           if (document.hidden || this.won) return;
           this.endingElapsed += Math.min(delta,50);
@@ -803,7 +811,7 @@ export async function startGame(): Promise<void> {
         if (!readyForCrow(stamps) && this.player.x>ENDING_GATE_X-24) {
           this.player.x = ENDING_GATE_X-24;
           this.player.setVelocityX(Math.min(0,body.velocity.x));
-        } else if (readyForCrow(stamps) && this.player.x>=ENDING_GATE_X && body.bottom>=430 && body.bottom<=662) {
+        } else if (readyForCrow(stamps) && this.player.x>=ENDING_GATE_X && body.bottom>=MAP.ending.y-220 && body.bottom<=MAP.ending.y+12) {
           this.startEnding();
           return;
         }

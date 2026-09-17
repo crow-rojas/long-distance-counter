@@ -43,7 +43,21 @@ Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas
 
 La entrada después de la última banca requiere los tres objetos. Al cruzarla, Chofis aterriza si venía saltando y camina hacia Crow durante tres segundos; ambos muestran sus poses felices, aparecen corazones y dos segundos después se abre la carta. Cerrar la carta deja el encuentro como pantalla final, con sonido y un sobre para releerla. El movimiento no vuelve. Con movimiento reducido se omiten la caminata y el movimiento de cámara y corazones.
 
-El guardado usa `chofis-platformer-preview` en pruebas y `chofis-platformer` con el reloj real. Cada uno guarda el último checkpoint en `:checkpoint`, la intro completada o saltada en `:intro-seen` y el final en `:ending-seen`. Un final guardado con los tres objetos vuelve al encuentro y al sobre; de lo contrario, recargar retoma el checkpoint. Los guardados anteriores sin checkpoint empiezan en la zona del siguiente objeto pendiente. Los índices ajenos a los checkpoints del mapa se descartan. Si el navegador bloquea el almacenamiento, la sesión sigue siendo jugable.
+El guardado usa `chofis-platformer-preview` en pruebas y `chofis-platformer` con el reloj real. Cada uno guarda el ID del checkpoint en `:checkpoint`, la intro completada o saltada en `:intro-seen` y el final en `:ending-seen`. Se siguen leyendo los índices del mapa original para conservar partidas anteriores. Un final guardado con los tres objetos vuelve al encuentro y al sobre; de lo contrario, recargar retoma el checkpoint. Un mapa con otro `id` usa un guardado separado. Si el navegador bloquea el almacenamiento, la sesión sigue siendo jugable.
+
+## Editor mínimo
+
+Abrir `/editor.html` en escritorio, con Vite o en el sitio construido. El mapa está en [src/game/map.json](src/game/map.json): plataformas, personajes, comida, bancas, decoración, carteles, inicio y entrada final.
+
+- Seleccionar en el lienzo o en la lista. Arrastrar para mover; los campos inferiores ajustan posición y tamaño.
+- Rueda para zoom, arrastre con botón derecho para recorrer y botón de encuadre para centrar la selección.
+- El botón de reproducir prueba desde la selección. **Con comida** permite probar el final; Escape vuelve al editor.
+- El borrador se guarda en este navegador. Descargar el JSON conserva una copia; importar permite recuperarla. Ninguna prueba cambia el progreso de la sorpresa.
+- Para incorporar un mapa, reemplazar `src/game/map.json` por el JSON exportado y comprobar el recorrido antes de publicar. El editor no publica cambios.
+
+El MVP no incluye biblioteca, duplicar, borrar ni historial. Esas modificaciones pueden hacerse directamente en el JSON. Los carteles permiten un `text` propio; vacío usa la frase de `es.json` indicada por `textKey`. Los IDs de elementos deben mantenerse al moverlos para conservar los checkpoints.
+
+Comprobación del editor: `node scripts/test-browser.mjs http://127.0.0.1:5173/editor.html tests/editor.browser.js`.
 
 ## Dónde está cada cosa
 

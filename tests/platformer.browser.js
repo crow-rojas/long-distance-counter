@@ -8,7 +8,7 @@
   const {game} = await import(loaded("/src/game/game.ts"));
   const {default:texts} = await import(loaded("/src/game/es.json"));
   const {formatText} = await import(loaded("/src/game/dialogue.ts"));
-  const {BENCHES,PLATFORMS,FRIENDS,ITEMS,CHECKPOINTS,ENDING_GATE_X} = await import(loaded("/src/game/level.ts"));
+  const {BENCHES,PLATFORMS,FRIENDS,ITEMS,CHECKPOINTS,ENDING_GATE_X,createLevel} = await import(loaded("/src/game/level.ts"));
   const scene=game.scene.scenes[0], player=scene.player, body=player.body, world=scene.physics.world;
   if (scene.introActive) document.querySelector("#skip-intro").click();
   const check=(ok,message)=>{if(!ok)throw Error(message)};
@@ -313,7 +313,7 @@
     body.reset(player.x,1200);time+=100;scene.update(time);
     check(scene.speechUntil===foodReminder,"Food recovery reminder repeats");
     resetIslands();const cp=CHECKPOINTS[5];reset(PLATFORMS[cp][0]+120,PLATFORMS[cp][1]);
-    check(localStorage.getItem("chofis-platformer-preview:checkpoint")===String(cp),"Checkpoint was not persisted");
+    check(localStorage.getItem("chofis-platformer-preview:checkpoint")===createLevel().platformRecords[cp].id,"Checkpoint ID was not persisted");
     const spawn={...scene.spawn};body.reset(player.x,1200);scene.update(time);
     check(player.x===spawn.x && player.y===spawn.y,"Fall lost the checkpoint");
     reset(ENDING_GATE_X+5,650);

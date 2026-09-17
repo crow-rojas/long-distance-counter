@@ -1,0 +1,798 @@
+{
+  "version": 1,
+  "id": "fonda-original",
+  "width": 14000,
+  "spawn": {
+    "id": "spawn",
+    "x": 120,
+    "y": 700
+  },
+  "ending": {
+    "id": "ending",
+    "x": 13470,
+    "y": 650
+  },
+  "platforms": [
+    {
+      "id": "platform-0",
+      "x": 0,
+      "y": 700,
+      "width": 640,
+      "kind": "checkpoint",
+      "branch": false
+    },
+    {
+      "id": "platform-1",
+      "x": 735,
+      "y": 620,
+      "width": 220,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-2",
+      "x": 1060,
+      "y": 535,
+      "width": 190,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-3",
+      "x": 1340,
+      "y": 440,
+      "width": 200,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-4",
+      "x": 1630,
+      "y": 355,
+      "width": 240,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-5",
+      "x": 1980,
+      "y": 455,
+      "width": 160,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-6",
+      "x": 2260,
+      "y": 560,
+      "width": 200,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-7",
+      "x": 2590,
+      "y": 650,
+      "width": 250,
+      "kind": "checkpoint",
+      "branch": false
+    },
+    {
+      "id": "platform-8",
+      "x": 2960,
+      "y": 570,
+      "width": 180,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-9",
+      "x": 3260,
+      "y": 650,
+      "width": 560,
+      "kind": "checkpoint",
+      "branch": false
+    },
+    {
+      "id": "platform-10",
+      "x": 3950,
+      "y": 600,
+      "width": 180,
+      "kind": "moving-x",
+      "branch": false
+    },
+    {
+      "id": "platform-11",
+      "x": 4240,
+      "y": 530,
+      "width": 170,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-12",
+      "x": 4520,
+      "y": 490,
+      "width": 170,
+      "kind": "moving-y",
+      "branch": false
+    },
+    {
+      "id": "platform-13",
+      "x": 4800,
+      "y": 420,
+      "width": 180,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-14",
+      "x": 5110,
+      "y": 510,
+      "width": 240,
+      "kind": "checkpoint",
+      "branch": false
+    },
+    {
+      "id": "platform-15",
+      "x": 5480,
+      "y": 435,
+      "width": 160,
+      "kind": "moving-x",
+      "branch": false
+    },
+    {
+      "id": "platform-16",
+      "x": 5790,
+      "y": 355,
+      "width": 180,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-17",
+      "x": 6080,
+      "y": 435,
+      "width": 170,
+      "kind": "moving-y",
+      "branch": false
+    },
+    {
+      "id": "platform-18",
+      "x": 6360,
+      "y": 520,
+      "width": 200,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-19",
+      "x": 6700,
+      "y": 630,
+      "width": 570,
+      "kind": "checkpoint",
+      "branch": false
+    },
+    {
+      "id": "platform-20",
+      "x": 7380,
+      "y": 550,
+      "width": 170,
+      "kind": "fragile",
+      "branch": false
+    },
+    {
+      "id": "platform-21",
+      "x": 7660,
+      "y": 465,
+      "width": 140,
+      "kind": "fragile",
+      "branch": false
+    },
+    {
+      "id": "platform-22",
+      "x": 7910,
+      "y": 385,
+      "width": 170,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-23",
+      "x": 8200,
+      "y": 465,
+      "width": 220,
+      "kind": "checkpoint",
+      "branch": false
+    },
+    {
+      "id": "platform-24",
+      "x": 8550,
+      "y": 400,
+      "width": 140,
+      "kind": "fragile",
+      "branch": false
+    },
+    {
+      "id": "platform-25",
+      "x": 8800,
+      "y": 320,
+      "width": 130,
+      "kind": "fragile",
+      "branch": false
+    },
+    {
+      "id": "platform-26",
+      "x": 9040,
+      "y": 240,
+      "width": 220,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-27",
+      "x": 9380,
+      "y": 350,
+      "width": 160,
+      "kind": "fragile",
+      "branch": false
+    },
+    {
+      "id": "platform-28",
+      "x": 9680,
+      "y": 460,
+      "width": 190,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-29",
+      "x": 10000,
+      "y": 560,
+      "width": 330,
+      "kind": "checkpoint",
+      "branch": false
+    },
+    {
+      "id": "platform-30",
+      "x": 10460,
+      "y": 485,
+      "width": 160,
+      "kind": "moving-x",
+      "branch": false
+    },
+    {
+      "id": "platform-31",
+      "x": 10750,
+      "y": 420,
+      "width": 140,
+      "kind": "fragile",
+      "branch": false
+    },
+    {
+      "id": "platform-32",
+      "x": 11020,
+      "y": 345,
+      "width": 180,
+      "kind": "moving-y",
+      "branch": false
+    },
+    {
+      "id": "platform-33",
+      "x": 11330,
+      "y": 435,
+      "width": 220,
+      "kind": "checkpoint",
+      "branch": false
+    },
+    {
+      "id": "platform-34",
+      "x": 11680,
+      "y": 370,
+      "width": 130,
+      "kind": "fragile",
+      "branch": false
+    },
+    {
+      "id": "platform-35",
+      "x": 11930,
+      "y": 295,
+      "width": 150,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-36",
+      "x": 12220,
+      "y": 380,
+      "width": 160,
+      "kind": "moving-x",
+      "branch": false
+    },
+    {
+      "id": "platform-37",
+      "x": 12530,
+      "y": 475,
+      "width": 140,
+      "kind": "fragile",
+      "branch": false
+    },
+    {
+      "id": "platform-38",
+      "x": 12800,
+      "y": 560,
+      "width": 180,
+      "kind": "solid",
+      "branch": false
+    },
+    {
+      "id": "platform-39",
+      "x": 13110,
+      "y": 650,
+      "width": 890,
+      "kind": "checkpoint",
+      "branch": false
+    },
+    {
+      "id": "platform-40",
+      "x": 1630,
+      "y": 260,
+      "width": 160,
+      "kind": "solid",
+      "branch": true
+    },
+    {
+      "id": "platform-41",
+      "x": 1870,
+      "y": 175,
+      "width": 240,
+      "kind": "solid",
+      "branch": true
+    }
+  ],
+  "friends": [
+    {
+      "id": "friend-0",
+      "name": "Marin",
+      "image": "marin-poses",
+      "x": 430,
+      "y": 700,
+      "height": 150
+    },
+    {
+      "id": "friend-1",
+      "name": "Tus dibujos",
+      "image": "marin-bunny",
+      "x": 1990,
+      "y": 175,
+      "height": 105
+    },
+    {
+      "id": "friend-2",
+      "name": "Pibble",
+      "image": "pibble",
+      "x": 3590,
+      "y": 650,
+      "height": 83
+    },
+    {
+      "id": "friend-3",
+      "name": "Supergirl",
+      "image": "supergirl",
+      "x": 6960,
+      "y": 630,
+      "height": 155
+    },
+    {
+      "id": "friend-4",
+      "name": "Krypto",
+      "image": "krypto",
+      "x": 7150,
+      "y": 630,
+      "height": 74
+    },
+    {
+      "id": "friend-5",
+      "name": "Crow",
+      "image": "crow-poses",
+      "x": 13700,
+      "y": 650,
+      "height": 104
+    }
+  ],
+  "items": [
+    {
+      "id": "empanada",
+      "x": 1750,
+      "y": 308
+    },
+    {
+      "id": "completo",
+      "x": 5880,
+      "y": 308
+    },
+    {
+      "id": "terremoto",
+      "x": 9150,
+      "y": 193
+    }
+  ],
+  "benches": [
+    {
+      "id": "bench-0",
+      "x": 185,
+      "y": 700,
+      "height": 92
+    },
+    {
+      "id": "bench-1",
+      "x": 13330,
+      "y": 650,
+      "height": 92
+    }
+  ],
+  "decorations": [
+    {
+      "id": "decoration-0",
+      "image": "ramada",
+      "x": 430,
+      "y": 705,
+      "height": 300,
+      "angle": 0,
+      "depth": -1,
+      "alpha": 1,
+      "originY": 1,
+      "tint": 15056341
+    },
+    {
+      "id": "decoration-1",
+      "image": "lantern",
+      "x": 595,
+      "y": 415,
+      "height": 100,
+      "angle": 0,
+      "depth": -1,
+      "alpha": 1,
+      "originY": 0,
+      "tint": 16777215
+    },
+    {
+      "id": "decoration-2",
+      "image": "flowerpot",
+      "x": 265,
+      "y": 700,
+      "height": 55,
+      "angle": 0,
+      "depth": -1,
+      "alpha": 1,
+      "originY": 1,
+      "tint": 16777215
+    },
+    {
+      "id": "decoration-3",
+      "image": "garland",
+      "x": 430,
+      "y": 390,
+      "height": 60,
+      "angle": 0,
+      "depth": -2,
+      "alpha": 1,
+      "originY": 1,
+      "tint": 16777215
+    },
+    {
+      "id": "decoration-4",
+      "image": "ramada",
+      "x": 3590,
+      "y": 655,
+      "height": 300,
+      "angle": 0,
+      "depth": -1,
+      "alpha": 1,
+      "originY": 1,
+      "tint": 15056341
+    },
+    {
+      "id": "decoration-5",
+      "image": "lantern",
+      "x": 3755,
+      "y": 365,
+      "height": 100,
+      "angle": 0,
+      "depth": -1,
+      "alpha": 1,
+      "originY": 0,
+      "tint": 16777215
+    },
+    {
+      "id": "decoration-6",
+      "image": "garland",
+      "x": 3590,
+      "y": 340,
+      "height": 60,
+      "angle": 0,
+      "depth": -2,
+      "alpha": 1,
+      "originY": 1,
+      "tint": 16777215
+    },
+    {
+      "id": "decoration-7",
+      "image": "ramada",
+      "x": 13700,
+      "y": 655,
+      "height": 300,
+      "angle": 0,
+      "depth": -1,
+      "alpha": 1,
+      "originY": 1,
+      "tint": 15056341
+    },
+    {
+      "id": "decoration-8",
+      "image": "lantern",
+      "x": 13865,
+      "y": 365,
+      "height": 100,
+      "angle": 0,
+      "depth": -1,
+      "alpha": 1,
+      "originY": 0,
+      "tint": 16777215
+    },
+    {
+      "id": "decoration-9",
+      "image": "flowerpot",
+      "x": 13535,
+      "y": 650,
+      "height": 55,
+      "angle": 0,
+      "depth": -1,
+      "alpha": 1,
+      "originY": 1,
+      "tint": 16777215
+    },
+    {
+      "id": "decoration-10",
+      "image": "garland",
+      "x": 13700,
+      "y": 340,
+      "height": 60,
+      "angle": 0,
+      "depth": -2,
+      "alpha": 1,
+      "originY": 1,
+      "tint": 16777215
+    },
+    {
+      "id": "decoration-11",
+      "image": "copihue",
+      "x": 605,
+      "y": 725,
+      "height": 75,
+      "angle": -25,
+      "depth": 1,
+      "alpha": 1,
+      "originY": 0.15,
+      "tint": 15318492
+    },
+    {
+      "id": "decoration-12",
+      "image": "copihue",
+      "x": 2805,
+      "y": 675,
+      "height": 75,
+      "angle": -25,
+      "depth": 1,
+      "alpha": 1,
+      "originY": 0.15,
+      "tint": 15318492
+    },
+    {
+      "id": "decoration-13",
+      "image": "copihue",
+      "x": 3785,
+      "y": 675,
+      "height": 75,
+      "angle": -25,
+      "depth": 1,
+      "alpha": 1,
+      "originY": 0.15,
+      "tint": 15318492
+    },
+    {
+      "id": "decoration-14",
+      "image": "copihue",
+      "x": 5315,
+      "y": 535,
+      "height": 75,
+      "angle": -25,
+      "depth": 1,
+      "alpha": 1,
+      "originY": 0.15,
+      "tint": 15318492
+    },
+    {
+      "id": "decoration-15",
+      "image": "copihue",
+      "x": 7235,
+      "y": 655,
+      "height": 75,
+      "angle": -25,
+      "depth": 1,
+      "alpha": 1,
+      "originY": 0.15,
+      "tint": 15318492
+    },
+    {
+      "id": "decoration-16",
+      "image": "copihue",
+      "x": 8385,
+      "y": 490,
+      "height": 75,
+      "angle": -25,
+      "depth": 1,
+      "alpha": 1,
+      "originY": 0.15,
+      "tint": 15318492
+    },
+    {
+      "id": "decoration-17",
+      "image": "copihue",
+      "x": 10295,
+      "y": 585,
+      "height": 75,
+      "angle": -25,
+      "depth": 1,
+      "alpha": 1,
+      "originY": 0.15,
+      "tint": 15318492
+    },
+    {
+      "id": "decoration-18",
+      "image": "copihue",
+      "x": 11515,
+      "y": 460,
+      "height": 75,
+      "angle": -25,
+      "depth": 1,
+      "alpha": 1,
+      "originY": 0.15,
+      "tint": 15318492
+    },
+    {
+      "id": "decoration-19",
+      "image": "copihue",
+      "x": 13965,
+      "y": 675,
+      "height": 75,
+      "angle": -25,
+      "depth": 1,
+      "alpha": 1,
+      "originY": 0.15,
+      "tint": 15318492
+    },
+    {
+      "id": "decoration-20",
+      "image": "volantin",
+      "x": 800,
+      "y": 230,
+      "height": 115,
+      "angle": -12,
+      "depth": -2,
+      "alpha": 0.7,
+      "originY": 0.5,
+      "tint": 15254250
+    },
+    {
+      "id": "decoration-21",
+      "image": "volantin",
+      "x": 3900,
+      "y": 230,
+      "height": 115,
+      "angle": -12,
+      "depth": -2,
+      "alpha": 0.7,
+      "originY": 0.5,
+      "tint": 15254250
+    },
+    {
+      "id": "decoration-22",
+      "image": "volantin",
+      "x": 4950,
+      "y": 155,
+      "height": 115,
+      "angle": -12,
+      "depth": -2,
+      "alpha": 0.7,
+      "originY": 0.5,
+      "tint": 15254250
+    },
+    {
+      "id": "decoration-23",
+      "image": "volantin",
+      "x": 6150,
+      "y": 165,
+      "height": 115,
+      "angle": -12,
+      "depth": -2,
+      "alpha": 0.7,
+      "originY": 0.5,
+      "tint": 15254250
+    },
+    {
+      "id": "decoration-24",
+      "image": "volantin",
+      "x": 10500,
+      "y": 125,
+      "height": 115,
+      "angle": -12,
+      "depth": -2,
+      "alpha": 0.7,
+      "originY": 0.5,
+      "tint": 15254250
+    },
+    {
+      "id": "decoration-25",
+      "image": "volantin",
+      "x": 13300,
+      "y": 265,
+      "height": 115,
+      "angle": -12,
+      "depth": -2,
+      "alpha": 0.7,
+      "originY": 0.5,
+      "tint": 15254250
+    }
+  ],
+  "signs": [
+    {
+      "id": "sign-0",
+      "x": 550,
+      "y": 700,
+      "textKey": "entrada",
+      "text": "",
+      "board": true
+    },
+    {
+      "id": "sign-1",
+      "x": 3720,
+      "y": 650,
+      "textKey": "islasMoviles",
+      "text": "",
+      "board": true
+    },
+    {
+      "id": "sign-2",
+      "x": 6800,
+      "y": 630,
+      "textKey": "grietas",
+      "text": "",
+      "board": true
+    },
+    {
+      "id": "sign-3",
+      "x": 10160,
+      "y": 560,
+      "textKey": "luces",
+      "text": "",
+      "board": true
+    },
+    {
+      "id": "sign-4",
+      "x": 1740,
+      "y": 224,
+      "textKey": "dibujos",
+      "text": "",
+      "board": false
+    },
+    {
+      "id": "sign-5",
+      "x": 13700,
+      "y": 294,
+      "textKey": "fonda",
+      "text": "",
+      "board": false
+    }
+  ]
+}

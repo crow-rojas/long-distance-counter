@@ -12,6 +12,9 @@ const drawings = {
   continue: '<path d="M4 12h16m-6-6 6 6-6 6"/>',
   reset: '<path d="M3 10a9 9 0 1 1 2 9M3 4v6h6"/>',
   letter: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>',
+  download: '<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>',
+  upload: '<path d="M12 15V3m-5 5 5-5 5 5M4 17v4h16v-4"/>',
+  frame: '<path d="M3 9V3h6m6 0h6v6m0 6v6h-6m-6 0H3v-6"/><circle cx="12" cy="12" r="3"/>',
 };
 
 export function setButtonIcon(button: HTMLButtonElement, icon: keyof typeof drawings, label: string) {

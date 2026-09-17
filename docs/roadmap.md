@@ -22,7 +22,8 @@ Estas ideas quedan pendientes; no forman parte de esta entrega. El orden es una 
 
 ## Herramientas para seguir construyendo
 
-- [ ] **Editor simple de niveles.** Colocar y mover plataformas y decoraciones sobre el mapa, con una cuadrícula opcional y un botón para probar. Primera versión local: importar/exportar un archivo y conservar el formato del mapa actual. Sin cuentas ni servidor.
+- [x] **Editor mínimo de niveles.** Seleccionar y mover elementos, ajustar posición/tamaño, importar/exportar JSON y probar desde la selección. Escritorio, sin cuentas ni servidor. Por indicación de Crow se descartaron biblioteca, historial y paneles adicionales.
+- [ ] **Rediseñar el mapa con las indicaciones de Crow.** El mapa ya está en `src/game/map.json`. Priorizar variedad de espacios y exploración; reducir pistas obvias y mantener textos concisos. Elegir nuevos assets según el diseño.
 
 ## Antes de la sorpresa
 

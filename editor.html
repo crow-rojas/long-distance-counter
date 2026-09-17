@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Mapa de la fonda</title></head>
+<body class="editor">
+  <header id="tools">
+    <strong>Mapa de la fonda</strong>
+    <select id="objects" aria-label="Seleccionar elemento"></select>
+    <button id="frame"></button><button id="import"></button><button id="export"></button><button id="play"></button><button id="stop" hidden></button>
+    <label><input id="full-bag" type="checkbox">Con comida</label>
+  </header>
+  <footer id="inspector"><form id="properties"></form><p id="status" role="status">Cargando...</p></footer>
+  <input id="map-file" type="file" accept=".json,application/json" hidden>
+  <script type="module" src="/src/game/editor.ts"></script>
+</body>
+</html>
