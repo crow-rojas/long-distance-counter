@@ -52,3 +52,19 @@ Las hojas de Marin diablita y conejita y todos los frames individuales están pr
 Los cuatro originales permanecen intactos. La lámina `mundo/contact-sheet.jpg`, creada para la revisión inicial y no regenerada por el script, permite revisar los recortes sobre un fondo oscuro. La selección de columnas y el tratamiento del fondo están ajustados a estas imágenes.
 
 Para regenerar y promover copias revisadas, sigue la [receta en carpeta temporal del README](../README.md#preparar-dibujos). Los originales nunca se reemplazan.
+
+## Decoración y color de la fonda, v4
+
+Los cuatro JPEG nuevos producen un picnic y nueve accesorios independientes. Los recortes quedan en `Chofis/assets/generados/festival/pieces/`; el picnic y las copias listas para la web, en `festival/`. Los originales de `resultados/` se conservan.
+
+```sh
+uv run scripts/prepare-festival.py ~/Downloads/Chofis /tmp/fonda-festival
+```
+
+El script reutiliza el recorte y escalado de `prepare-world.py`. Comprueba los márgenes de cada recorte, conserva el alfa del escenario existente y monta los accesorios en tres variantes de la ramada: `ramada-empanadas`, `ramada-completos` y `ramada-terremotos`. Las telas cuelgan del frente y la comida apoya sobre el mesón. Son imágenes completas, de las mismas dimensiones que la ramada original, sin nuevas piezas que puedan flotar o desalinearse al editar el mapa.
+
+La paleta combina cielo azul lavanda con rosa cálido, roca ciruela, madera miel, greda coral, verde y turquesa. La corrección parte de los archivos preparados originales en `assets/generados/`, nunca de una copia ya corregida. No modifica los dibujos de los personajes ni la comida coleccionable. Los controles usan ciruela, crema y acentos verdes.
+
+Los tres `pickup-*.png` se preparan desde los stickers de `public/game/`, conservando estos últimos para el HUD. Son imágenes de 512 píxeles con brillo suave integrado en el alfa. En el mapa se dibujan a 100 píxeles, de los cuales 84 corresponden a la comida. El brillo no requiere un efecto de GPU por fotograma; el balanceo solo mueve la imagen y conserva el área de recogida de 72 píxeles.
+
+Antes de promover los PNG y WebP de la raíz a `public/game/`, revisar los recortes sobre fondo oscuro. Después ejecutar `uv run scripts/check-map-layout.py` y revisar el escenario en desktop y móvil. La carpeta `pieces/` sirve para futuras composiciones y no se publica.

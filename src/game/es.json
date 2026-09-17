@@ -16,18 +16,18 @@
   },
   "dialogos": {
     "Marin": {
-      "sinEmpanada": "¡Omg! Hola Chofis, la empanada está más adelante, ve por ella 🫪",
+      "sinEmpanada": "¡Omg! Hola Chofis 🫪",
       "conEmpanada": "¡Encontraste la empanada! ¡Yei!"
     },
     "Pibble": {
-      "sinCompleto": "Dicen que más adelante está iTownGamePlays, y te va a tocar. ¡Ten cuidado buscando el completo!",
+      "sinCompleto": "Dicen que por aquí está iTownGamePlays, y te va a tocar.",
       "conCompleto": "Ya tienes el completo, Pibble Martillo estaría orgulloso."
     },
     "Supergirl": {
-      "sinTerremoto": "Solo te falta el terremoto, eh? Cuidado con las siguientes grietas, se caen después de un ratito.",
+      "sinTerremoto": "Cuidado con las réplicas.",
       "conTerremoto": "¡Conseguiste el terremoto! No te vayas a marear, cuidado con las réplica AJSD"
     },
-    "Krypto": "Woof woof woof woof (las banderas son un checkpoint 🥳)",
+    "Krypto": "Woof woof woof woof 🥳",
     "Crow": {
       "faltaUno": "Mi princesa, nos falta {comida} :(",
       "faltanVarios": "Mi princesa, nos faltan {comida} :(",
@@ -36,15 +36,13 @@
   },
   "interfaz": {
     "titulo": "La fonda entre estrellas",
-    "misionInicial": "Lleva la comida a Crow",
+    "misionInicial": "Junta la comida para Crow",
     "cargando": "Cargando la fonda...",
-    "objetivo": "{instruccion}{direccion}",
     "progreso": {
       "estado": "{comida}: {estado}",
       "lista": "ya está",
       "pendiente": "falta"
     },
-    "direccionIzquierda": ", a tu izquierda",
     "zonaFinal": "De México a Chile, juntos al fin",
     "objetivoFinal": "La fonda es nuestra, amorcito",
     "subtitulo": "{personaje}: {texto}",
@@ -75,12 +73,6 @@
       "descripcionJuego": "Plataformas: flechas para moverte, Espacio para saltar. Recoge la comida y llega hasta Crow."
     }
   },
-  "objetivos": {
-    "empanada": "Busca la empanada",
-    "completo": "Busca el completo",
-    "terremoto": "Busca el terremoto",
-    "crow": "Llega hasta Crow"
-  },
   "zonas": {
     "entrada": "Entrada a la fonda",
     "volantines": "Islas de los volantines",
@@ -100,8 +92,7 @@
   "intro": {
     "texto": "Llegaste a Chile, pero este cuervo dónde se metió",
     "saltar": "Saltar intro",
-    "jugar": "Jugar",
-    "ayuda": "Marin está más adelante. Acércate y habla con ella."
+    "jugar": "Jugar"
   },
   "bancas": {
     "sentarse": "Sentarse",
@@ -114,27 +105,33 @@
     "grietas": "Pisa y\nsalta",
     "luces": "Sigue las\nluces",
     "dibujos": "Tus dibujos arriba",
-    "fonda": "la fonda de los dos"
+    "fonda": "la fonda\nde los dos"
   },
   "galeria": {
     "titulo": "Un rincón para tus dibujos",
     "volver": "Volver al camino",
     "marinDiablita": "Marin diablita dibujada por Chofis",
-    "marinConejita": "Marin conejita dibujada por Chofis"
+    "marinConejita": "Marin conejita dibujada por Chofis",
+    "anterior": "Dibujo anterior",
+    "siguiente": "Dibujo siguiente"
   },
   "carta": {
     "titulo": "Ven acá, mi princesa ❤️",
     "texto": "Chofis, qué ganas tenía de abrazarte. Ya estás aquí. Quiero pasear contigo, probar cosas ricas y tener tus dibujos por toda la casa. Te amo, amorcito. Tu Crow.",
-    "volver": "Cerrar carta",
-    "corazon": "♥"
+    "corazon": "♥",
+    "salir": "Salir"
   },
   "final": {
     "entradaAbierta": "Crow te espera",
-    "entradaCerrada": "Trae la comida",
-    "releer": "Volver a leer tu carta"
+    "entradaCerrada": "Trae la comida"
   },
   "carga": {
     "error": "Tu sorpresa está lista.",
     "reintentar": "Abrir mi sorpresa"
+  },
+  "inicio": {
+    "titulo": "La fonda de los dos",
+    "sonido": "Toca el altavoz para activar la música y los sonidos.",
+    "jugar": "Jugar"
   }
 }

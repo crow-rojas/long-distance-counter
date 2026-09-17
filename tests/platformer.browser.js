@@ -9,11 +9,15 @@
   const {default:texts} = await import(loaded("/src/game/es.json"));
   const {formatText} = await import(loaded("/src/game/dialogue.ts"));
   const {BENCHES,PLATFORMS,FRIENDS,ITEMS,CHECKPOINTS,ENDING_GATE_X,createLevel} = await import(loaded("/src/game/level.ts"));
+  const {MAP,platformRecords,WORLD_BOTTOM,ENDING_AREA}=createLevel();
+  const start=MAP.spawn,marin=FRIENDS.find(f=>f.name==="Marin");
   const scene=game.scene.scenes[0], player=scene.player, body=player.body, world=scene.physics.world;
+  document.querySelector("#start-game").click();
   if (scene.introActive) document.querySelector("#skip-intro").click();
   const check=(ok,message)=>{if(!ok)throw Error(message)};
   const foodSlots=[...document.querySelectorAll("#provisions [data-food]")];
   for(const button of document.querySelectorAll("#fonda button")) {
+    if (["start-game","exit-game"].includes(button.id)) {check(button.textContent.trim(),"Start/exit need visible labels");continue;}
     check(button.querySelector("svg[aria-hidden=true]") && button.getAttribute("aria-label"),
       `Button ${button.id || button.dataset.control} needs an icon and accessible name`);
   }
@@ -93,17 +97,30 @@
     }
   };
   const close=async()=>{
-    document.querySelector("#fonda dialog[open]")?.close(); await wait(20);
+    document.querySelector("#fonda dialog[open]")?.close();
+    for(let i=0;i<20 && scene.focusedFriend && !scene.endingPhase;i++)await wait(25);
     if (!scene.endingPhase) check(!scene.focusedFriend && !world.isPaused && scene.input.keyboard.enabled,"Dialogue did not restore gameplay");
   };
   game.loop.sleep();
   try {
-    check(!localStorage.getItem("chofis-platformer-preview"),"Use a fresh browser session");
-    body.reset(120,1200);scene.update(time);
+    for(const item of ITEMS) {
+      const art=scene.children.list.find(child=>child.getData("mapId")===item.id);
+      const pickup=world.staticBodies.entries.find(b=>b.center.x===item.x && b.center.y===item.y && b.width===72);
+      check(art && pickup && Math.abs(Math.max(art.displayWidth,art.displayHeight)-100)<.01,
+        "Collectible must be larger without changing its pickup reach");
+      const tween=scene.tweens.getTweensOf(art)[0];
+      check(tween,"Collectible has no idle movement");
+      tween.seek(800);
+      check(art.y!==item.y && pickup.center.x===item.x && pickup.center.y===item.y,
+        "Collectible animation moved its collision area");
+      tween.seek(0);
+    }
+    check(!localStorage.getItem("chofis-platformer-preview:fonda-plaza"),"Use a fresh browser session");
+    body.reset(start.x,WORLD_BOTTOM+50);scene.update(time);
     const speech=document.querySelector("#speech");
     check(speech.textContent===formatText(texts.interfaz.subtitulo,{personaje:texts.personajes.Fonda,texto:texts.caidas.primeraSinComida}),"First fall claims food before collecting any");
     const firstReminder=scene.speechUntil;
-    body.reset(120,1200);time+=100;scene.update(time);
+    body.reset(start.x,WORLD_BOTTOM+50);time+=100;scene.update(time);
     check(scene.speechUntil===firstReminder,"Repeated falls repeat the tutorial");
     let benchJumpHeight=0;
     for(const bench of BENCHES) {
@@ -129,7 +146,8 @@
       advance(120);
       check(scene.levelTime>clock && player.x===bench.x && Math.abs(body.bottom-bench.y)<1,
         "Seated player drifted or stopped the world");
-      check(Math.abs(scene.avatar.y-(player.y-28))<.01,"Sitting pose is not on the seat");
+      const seatY=drawing.y-bench.height*28/92;
+      check(Math.abs(scene.avatar.y-seatY)<.01,"Sitting pose is not on the resized seat");
       sound.focus();sound.click();sound.click();
       check(scene.seatedBench?.x===bench.x && document.activeElement===game.canvas,"Sound broke sitting or focus");
       press("E");frame();release("E");frame();
@@ -154,7 +172,7 @@
       scene.touchJump=true;frame();
       check(!scene.seatedBench && body.velocity.y<0,"Touch jump did not stand up");
     }
-    reset(120,700);
+    reset(start.x,start.y);
     // Exercise create() velocities before resetIslands can replace them.
     const movers=scene.platforms.filter(p=>p.definition[3]?.startsWith("moving"));
     const starts=movers.map(p=>({x:p.sprite.x,y:p.sprite.y}));
@@ -177,7 +195,7 @@
       check(movers.every(p=>Math.abs(p.art.x-p.sprite.x)<.001 && Math.abs(p.art.y-p.sprite.y)<.001),
         `Platform art trails physics at ${hz} Hz`);
     }
-    resetIslands(); reset(120,700);
+    resetIslands(); reset(start.x,start.y);
     for(let i=0;i<40;i++) {
       release(i%2?"RIGHT":"LEFT"); press(i%2?"LEFT":"RIGHT"); frame();
       check(scene.avatar.texture.key==="chofis-run","Quick turn flashed the front sprite");
@@ -185,20 +203,20 @@
     release("LEFT"); release("RIGHT"); advance(35);
     check(scene.avatar.texture.key==="chofis-front","Idle pose never returned after stopping");
     const height=hold=>{
-      reset(120,700); press("SPACE"); frame(); if(!hold)release("SPACE");
+      reset(start.x,start.y); press("SPACE"); frame(); if(!hold)release("SPACE");
       let top=body.bottom;
       for(let i=0;i<110;i++){frame();top=Math.min(top,body.bottom)}
-      return 700-top;
+      return start.y-top;
     };
     const short=height(false),tall=height(true);
     check(tall>short+60,"Holding jump did not increase its height");
     check(Math.abs(benchJumpHeight-tall)<2,"Sitting changed jump height or difficulty");
-    reset(630,700); player.setVelocityX(340); press("RIGHT"); advance(13);
+    reset(MAP.platforms[0].x+MAP.platforms[0].width-10,start.y); player.setVelocityX(340); press("RIGHT"); advance(13);
     check(!body.touching.down,"Coyote test never left the edge");
     press("SPACE");frame(); check(body.velocity.y < -650,"Coyote jump was lost");
     advance(20);const before=body.velocity.y;release("SPACE");press("SPACE");frame();
     check(body.velocity.y>before,"Unexpected double jump");
-    reset(300,700);scene.lastGrounded=-1000;body.reset(300,660);player.setVelocityY(500);press("SPACE");advance(13);
+    reset(start.x,start.y);scene.lastGrounded=-1000;body.reset(start.x,start.y-40);player.setVelocityY(500);press("SPACE");advance(13);
     check(body.velocity.y<0,"Buffered jump was lost");
 
     for(const friend of FRIENDS) {
@@ -223,12 +241,15 @@
         portrait.displayWidth===width && portrait.displayHeight===height,"Greeting did not restore the original pose");
       await close();
     }
-    reset(350,700);press("E");frame();release("E");
+    reset(marin.x-60,marin.y);press("E");frame();release("E");
     check(document.querySelector("#conversation").open && document.querySelector("#speaker").textContent===texts.personajes.Marin,"E did not open the nearby conversation");
     check(world.isPaused && !scene.input.keyboard.enabled,"Conversation did not pause gameplay");
     scene.useBench(BENCHES[0]);
     check(!scene.seatedBench,"Bench interrupted a dialogue");
     check(scene.portraits.get("Marin").frame.name===1,"Marin did not greet on interaction");
+    advance(100);
+    check(scene.portraits.get("Marin").frame.name===2 && scene.portraits.get("Marin").flipX,
+      "Marin should point left during her conversation");
     await close();
     const originalName=texts.personajes.Marin;
     try {
@@ -239,14 +260,23 @@
       check(speaker.textContent===texts.personajes.Marin && speaker.childElementCount===0,"Edited name was treated as HTML or broke character identity");
       await close();
     } finally { texts.personajes.Marin=originalName; }
-    reset(120,700);scene.portraits.get("Marin").emit("pointerup");
+    reset(start.x,start.y);scene.portraits.get("Marin").emit("pointerup");
     check(!scene.focusedFriend,"An out-of-range NPC tap worked");
     const gallery=FRIENDS.find(f=>f.name==="Tus dibujos");reset(gallery.x,gallery.y);scene.talk(gallery);
     check(scene.tweens.getTweensOf(scene.portraits.get(gallery.name)).length===0,"Gallery art should stay still");
-    check(document.querySelector("#gallery").open,"Optional drawings did not open");await close();
-    if(JSON.parse(localStorage.getItem("chofis-platformer-preview")??"[]").length<3) {
+    const galleryDialog=document.querySelector("#gallery"),galleryImage=galleryDialog.querySelector("img");
+    check(galleryDialog.open && galleryDialog.querySelectorAll("img").length===1,"Gallery should display one drawing");
+    const firstDrawing=galleryImage.src;
+    document.querySelector("#next-drawing").click();
+    check(galleryDialog.open && galleryImage.src!==firstDrawing && world.isPaused,"Next drawing closed the gallery or resumed gameplay");
+    galleryDialog.dispatchEvent(new KeyboardEvent("keydown",{code:"ArrowLeft",bubbles:true}));
+    check(galleryImage.src===firstDrawing && galleryImage.alt===texts.galeria.marinDiablita,"Keyboard navigation lost the first drawing or alt text");
+    document.querySelector("#previous-drawing").click();
+    check(galleryImage.src!==firstDrawing,"Previous drawing should wrap to the last");
+    await close();
+    if(JSON.parse(localStorage.getItem("chofis-platformer-preview:fonda-plaza")??"[]").length<3) {
       const crow=FRIENDS.find(f=>f.name==="Crow");reset(crow.x-50,crow.y);scene.talk(crow);
-      check(!document.querySelector("#letter").open && !scene.endingPhase && player.x<ENDING_GATE_X,
+      check(!document.querySelector("#letter").open && !scene.endingPhase && scene.barrier.body.enable,
         "Locked entrance allowed access before food was collected");
     }
 
@@ -259,7 +289,7 @@
     resetIslands();const fragile=scene.platforms.find(p=>p.definition[3]==="fragile");
     reset(fragile.sprite.x+fragile.definition[2]/2,fragile.sprite.y);
     check(fragile.crumbleAt>scene.levelTime,"Fragile island did not warn before falling");
-    reset(350,700);scene.talk(FRIENDS[0]);
+    reset(marin.x-60,marin.y);scene.talk(FRIENDS[0]);
     const clock=scene.levelTime,position=scene.platforms[10].sprite.x;
     advance(180);
     check(scene.levelTime===clock && scene.platforms[10].sprite.x===position,"Challenges advanced during dialogue");await close();
@@ -268,55 +298,71 @@
 
     // Find a real takeoff timing for every connection in both directions, including moving islands.
     const traverse=(fromIndex,toIndex)=>{
-      const direction=toIndex>fromIndex?1:-1;
       const from=scene.platforms[fromIndex],to=scene.platforms[toIndex];
-      for(const phase of [0,50,130,240,350]) for(const margin of [8,25,45]) {
-        resetIslands();reset(120,700);advance(phase);
+      const direction=to.definition[0]+to.definition[2]/2>from.definition[0]+from.definition[2]/2?1:-1;
+      const overlapLeft=Math.max(from.definition[0],to.definition[0])+25;
+      const overlapRight=Math.min(from.definition[0]+from.definition[2],to.definition[0]+to.definition[2])-25;
+      if(to.definition[1]<from.definition[1] && overlapLeft<overlapRight) {
+        resetIslands();reset((overlapLeft+overlapRight)/2,from.definition[1]);press("SPACE");
+        for(let i=0;i<180;i++) {frame();if(body.touching.down && Math.abs(body.bottom-to.sprite.y)<1)return true;}
+      }
+      for(const jump of to.definition[1]>from.definition[1] ? [false,true] : [true]) for(const phase of [0,50,130,240,350]) for(const margin of [-8,8,25,45]) {
+        resetIslands();reset(start.x,start.y);advance(phase);
         reset(from.sprite.x+(direction>0?from.definition[2]-margin:margin),from.sprite.y);
         if(!body.touching.down)continue;
-        player.setVelocityX(direction*340);press(direction>0?"RIGHT":"LEFT");press("SPACE");
+        const takeoffX=player.x;
+        player.setVelocityX(direction*340);press(direction>0?"RIGHT":"LEFT");if(jump)press("SPACE");
         for(let i=0;i<220;i++) {
-          const target=to.sprite.x+(direction>0?40:to.definition[2]-40);
+          const target=Math.max(to.sprite.x+40,Math.min(to.sprite.x+to.definition[2]-40,takeoffX+direction*140));
           if(direction*(player.x-target)>=-18)release(direction>0?"RIGHT":"LEFT");
           frame();
-          if(body.touching.down && Math.abs(body.bottom-to.sprite.y)<1 && player.x>to.sprite.x && player.x<to.sprite.x+to.definition[2])return true;
-          if(player.y>950)break;
+          if(body.touching.down && Math.abs(body.bottom-to.sprite.y)<1 && body.right>to.sprite.x && body.left<to.sprite.x+to.definition[2])return true;
+          if(player.y>Math.max(from.definition[1],to.definition[1])+450)break;
         }
       }
       return false;
     };
+    const indices=name=>platformRecords.filter(p=>new RegExp(`^${name}-\\d+$`).test(p.id)).map(p=>platformRecords.indexOf(p));
+    const idx=id=>platformRecords.findIndex(p=>p.id===id);
+    const paths=[
+      [...indices("arrival"),idx("plaza-0")],
+      [idx("plaza-0"),idx("plaza-1")],
+      [idx("terremoto-1"),idx("crow-1")],
+      [idx("completo-return-1"),idx("crow-1")],
+      [idx("plaza-0"),...indices("empanada")],
+      [idx("empanada-11"),...indices("drawings")],
+      [idx("plaza-1"),...indices("completo")],
+      [idx("plaza-0"),idx("crow-0"),idx("terremoto-0"),idx("empanada-return-2"),...indices("terremoto").slice(1)],
+    ];
     let connections=0;
-    for(let i=0;i<PLATFORMS.length-1;i++) for(const direction of [1,-1]) {
-      const from=direction>0?i:i+1,to=direction>0?i+1:i;
-      check(traverse(from,to),`Cannot traverse ${from} → ${to}: ${JSON.stringify(PLATFORMS[from])} to ${JSON.stringify(PLATFORMS[to])}`);connections++;
+    for(const path of paths) for(let i=0;i<path.length-1;i++) for(const [from,to] of path===paths[0] ? [[path[i],path[i+1]]] : [[path[i],path[i+1]],[path[i+1],path[i]]]) {
+      check(traverse(from,to),`Cannot traverse ${platformRecords[from].id} to ${platformRecords[to].id}: ${JSON.stringify(PLATFORMS[from])} to ${JSON.stringify(PLATFORMS[to])}`);connections++;
     }
-    // Jump vertically through the one-way island to enter the optional branch.
-    resetIslands();reset(1710,355);press("SPACE");advance(100);
-    check(body.touching.down && Math.abs(body.bottom-260)<1,"Vertical entrance to the drawings is unreachable");connections++;
-    for(const [from,to] of [[40,41],[41,40]]) {
-      check(traverse(from,to),`Optional branch ${from} → ${to} is unreachable`);connections++;
+    for(const path of [
+      [idx("empanada-11"),idx("empanada-return-0"),idx("empanada-return-1"),idx("terremoto-2"),idx("empanada-return-2"),idx("terremoto-0"),idx("crow-0"),idx("plaza-0")],
+      [idx("completo-9"),...indices("completo-return"),idx("plaza-1")],
+      [idx("terremoto-18"),...indices("terremoto-return"),idx("completo-return-1"),idx("completo-return-2"),idx("plaza-1")],
+    ]) for(let i=0;i<path.length-1;i++) {
+      check(traverse(path[i],path[i+1]),`Cannot descend ${platformRecords[path[i]].id} to ${platformRecords[path[i+1]].id}`);connections++;
     }
-    resetIslands();reset(1710,260);press("RIGHT");
-    for(let i=0;i<150;i++) {if(player.x>=1810)release("RIGHT");frame()}
-    check(body.touching.down && Math.abs(body.bottom-355)<1,"Cannot step off the drawings branch back to the main route");connections++;
     for(const item of ITEMS) {
       reset(item.x,item.y+35);advance(10);
       check(document.querySelector(`#provisions [data-food="${item.id}"]`).classList.contains("collected"),
         "Food HUD did not match collected items");
     }
     check(foodSlots.every(slot=>slot.classList.contains("collected")),"Completed food HUD has missing items");
-    check(JSON.parse(localStorage.getItem("chofis-platformer-preview")).length===3,"Not all food was collected");
+    check(JSON.parse(localStorage.getItem("chofis-platformer-preview:fonda-plaza")).length===3,"Not all food was collected");
     scene.foodRecoveryExplained=false;
-    body.reset(player.x,1200);scene.update(time);
+    body.reset(player.x,WORLD_BOTTOM+50);scene.update(time);
     check(speech.textContent===formatText(texts.interfaz.subtitulo,{personaje:texts.personajes.Fonda,texto:texts.caidas.conComida}),"Food recovery reminder is missing");
     const foodReminder=scene.speechUntil;
-    body.reset(player.x,1200);time+=100;scene.update(time);
+    body.reset(player.x,WORLD_BOTTOM+50);time+=100;scene.update(time);
     check(scene.speechUntil===foodReminder,"Food recovery reminder repeats");
     resetIslands();const cp=CHECKPOINTS[5];reset(PLATFORMS[cp][0]+120,PLATFORMS[cp][1]);
-    check(localStorage.getItem("chofis-platformer-preview:checkpoint")===createLevel().platformRecords[cp].id,"Checkpoint ID was not persisted");
-    const spawn={...scene.spawn};body.reset(player.x,1200);scene.update(time);
+    check(localStorage.getItem("chofis-platformer-preview:fonda-plaza:checkpoint")===createLevel().platformRecords[cp].id,"Checkpoint ID was not persisted");
+    const spawn={...scene.spawn};body.reset(player.x,WORLD_BOTTOM+50);scene.update(time);
     check(player.x===spawn.x && player.y===spawn.y,"Fall lost the checkpoint");
-    reset(ENDING_GATE_X+5,650);
+    reset(ENDING_GATE_X+5,MAP.ending.y);
     check(scene.endingPhase==="walking" && world.isPaused && !document.querySelector("#letter").open,
       "Final entrance did not start an automatic walk before the letter");
     const walkStart=player.x;
@@ -327,8 +373,8 @@
     const endX=player.x;
     press("LEFT");press("SPACE");advance(120);
     check(world.isPaused && player.x===endX && !scene.input.keyboard.enabled,"Closing the letter resumed gameplay");
-    check(localStorage.getItem("chofis-platformer-preview:ending-seen")==="1","Final scene was not saved");
-    document.querySelector("#read-letter").click();
+    check(localStorage.getItem("chofis-platformer-preview:fonda-plaza:ending-seen")==="1","Final scene was not saved");
+    scene.openLetter();
     check(document.querySelector("#letter").open,"Envelope did not reopen the letter");await close();
     check(document.querySelector("#objective").textContent===texts.interfaz.objetivoFinal,"Completed game still asks for food");
     return {passed:true,connections,benches:true,quickTurns:true,movingPlatforms:true,fragilePlatforms:true,manualDialogue:true,gallery:true,checkpoints:true,reunion:true,shortJump:Math.round(short),heldJump:Math.round(tall)};

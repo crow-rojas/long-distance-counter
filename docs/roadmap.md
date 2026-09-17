@@ -10,20 +10,22 @@ Estas ideas quedan pendientes; no forman parte de esta entrega. El orden es una 
 - [x] **Incorporar los diálogos escritos por Crow.** Conservar sus chistes y forma de hablar; los criterios para próximos textos están en el catálogo.
 - [ ] **Escribir la carta final.** Crow la hará después.
 - [x] **UI más mínima y con etiquetas claras.** Objetivo corto, tres dibujos de comida con estado e iconos en los controles e interacciones. Conserva nombres accesibles, tooltips y áreas cómodas para tocar. Saltar intro y el reintento de carga mantienen texto visible.
-- [x] **Sentarse en las bancas.** E o un tap desde cerca para sentarse. Moverse, saltar, E o Levantarse para continuar. Las dos bancas usan el dibujo actual de Chofis, con el mundo activo y la misma altura de salto.
+- [x] **Sentarse en las bancas.** E o un tap desde cerca para sentarse. Moverse, saltar, E o Levantarse para continuar. Las bancas usan el dibujo actual de Chofis, con el mundo activo y la misma altura de salto.
 - [x] **Personajes con más vida.** Krypto mira hacia Chofis; al interactuar, Pibble se balancea, Krypto inclina la cabeza, Supergirl hace un gesto leve y Marin y Crow saludan con sus poses actuales. Gestos breves, sin deformar sprites ni rebotes constantes. Con movimiento reducido se omiten las inclinaciones. Los parpadeos quedan para cuando haya nuevos frames.
 
 ## Después: contar la llegada
 
+- [x] **Pantalla de inicio.** Jugar y aviso para activar el sonido manualmente; el mundo permanece pausado hasta empezar.
 - [x] **Inicio con narrativa.** Intro breve con descenso hasta Chofis, texto editable y opción de saltar. Las partidas guardadas entran directamente; movimiento reducido muestra el texto estático.
-- [x] **Final con narrativa.** Entrada con los tres objetos, caminata automática hacia Crow, poses felices, corazones y carta. El encuentro queda como pantalla final con un sobre para releer; se conserva al recargar. El texto de la carta sigue pendiente.
+- [x] **Final con narrativa.** Entrada con los tres objetos, caminata automática hacia Crow, poses felices, corazones y carta. La carta termina con Salir, que apaga el sonido, borra el progreso actual y vuelve al inicio. Una partida completada que se recarga antes de salir conserva la carta. El texto de la carta sigue pendiente.
 - [x] **Mejor transición del contador al juego.** Fundido entre la flor y el cielo de la fonda, carga desde la llegada y cámara adaptada a móvil y movimiento reducido.
 - [ ] **Más assets de Nano Banana.** Priorizar poses para sentarse, parpadear y reaccionar, y elementos concretos que pidan las escenas nuevas. Hacer una lista corta con referencias antes de generar.
 
 ## Herramientas para seguir construyendo
 
 - [x] **Editor mínimo de niveles.** Seleccionar y mover elementos, ajustar posición/tamaño, importar/exportar JSON y probar desde la selección. Escritorio, sin cuentas ni servidor. Por indicación de Crow se descartaron biblioteca, historial y paneles adicionales.
-- [ ] **Rediseñar el mapa con las indicaciones de Crow.** El mapa ya está en `src/game/map.json`. Priorizar variedad de espacios y exploración; reducir pistas obvias y mantener textos concisos. Elegir nuevos assets según el diseño.
+- [x] **Rediseñar el mapa con las indicaciones de Crow.** Isla inicial aislada, plaza con Crow protegido en el centro y tres rutas libres: empanada al oeste, completo al este y terremoto arriba. 68 plataformas, bajadas de regreso, bancas y más decoración con los assets existentes. Sin instrucciones secuenciales. El mapa está en `src/game/map.json`; [guía del recorrido](map.md).
+- [x] **Ambientación del mapa nuevo.** Picnic junto a Crow y puestos de empanadas, completos y terremotos con los cuatro dibujos v4. Cielo más claro, escenario con más color y controles a juego. Colocación revisada con el chequeo de siluetas y encuadres de desktop y móvil.
 
 ## Antes de la sorpresa
 

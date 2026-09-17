@@ -1,5 +1,3 @@
-import type { Stamp } from "./progress";
-import texts from "./es.json";
 import { defaultMap, parseMap, type MapData } from "./map-data";
 
 export type PlatformKind = "checkpoint" | "moving-x" | "moving-y" | "fragile";
@@ -13,12 +11,16 @@ export function createLevel(data:MapData=defaultMap) {
   const SIDE_PLATFORMS = platformRecords.filter(p=>p.branch).map(tuple);
   const CHECKPOINTS = PLATFORMS.flatMap((p,i)=>p[3]==="checkpoint" ? [i] : []);
   const FRIENDS = MAP.friends;
-  const ITEMS = MAP.items.map(item=>({...item,instruction:texts.objetivos[item.id]}));
-  const nextStop = (stamps:Set<Stamp>) => ITEMS.find(item=>!stamps.has(item.id)) ??
-    {...FRIENDS.find(friend=>friend.name==="Crow")!,instruction:texts.objetivos.crow};
+  const ITEMS = MAP.items;
+  const WORLD_TOP = Math.min(-350,...MAP.platforms.map(p=>p.y-500));
+  const WORLD_BOTTOM = Math.max(1050,...MAP.platforms.map(p=>p.y+350));
+  const crow = FRIENDS.find(friend=>friend.name==="Crow")!;
+  const finalIsland = MAP.platforms.find(p=>p.y===crow.y && p.x<=crow.x && p.x+p.width>=crow.x);
+  const right = Math.max(crow.x+120,finalIsland ? finalIsland.x+finalIsland.width-36 : crow.x+150);
+  const ENDING_AREA = {x:MAP.ending.x-24,y:MAP.ending.y-200,width:right-MAP.ending.x+24,height:300};
   return {MAP,platformRecords,PLATFORMS,SIDE_PLATFORMS,CHECKPOINTS,FRIENDS,ITEMS,
-    BENCHES:MAP.benches,WORLD_WIDTH:MAP.width,ENDING_GATE_X:MAP.ending.x,nextStop};
+    BENCHES:MAP.benches,WORLD_WIDTH:MAP.width,WORLD_TOP,WORLD_BOTTOM,ENDING_AREA,finalIsland,ENDING_GATE_X:MAP.ending.x};
 }
 
 // Default exports keep the route checks and dialogue types independent from the editor.
-export const {PLATFORMS,SIDE_PLATFORMS,CHECKPOINTS,FRIENDS,ITEMS,BENCHES,WORLD_WIDTH,ENDING_GATE_X,nextStop} = createLevel();
+export const {PLATFORMS,SIDE_PLATFORMS,CHECKPOINTS,FRIENDS,ITEMS,BENCHES,WORLD_WIDTH,ENDING_GATE_X} = createLevel();

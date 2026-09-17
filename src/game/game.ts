@@ -6,17 +6,20 @@ import texts from "./es.json";
 import { setButtonIcon } from "./button-icons";
 import { readStamps, readyForCrow } from "./progress";
 import { createLevel, type Platform } from "./level";
-import { defaultMap, type MapData } from "./map-data";
+import type { MapData } from "./map-data";
 import { STAMPS } from "./progress";
 
 // Exported for browser integration checks; Phaser remains the only game runtime.
 export let game: Phaser.Game;
 
-export async function startGame(options:{map?:MapData; editing?:boolean; sandbox?:boolean; spawn?:{x:number;y:number}; fullBag?:boolean} = {}): Promise<void> {
-  const {MAP,platformRecords,BENCHES,CHECKPOINTS,ENDING_GATE_X,FRIENDS,ITEMS,nextStop,PLATFORMS,SIDE_PLATFORMS,WORLD_WIDTH} = createLevel(options.map);
+export async function startGame(options:{map?:MapData; editing?:boolean; sandbox?:boolean; spawn?:{x:number;y:number}; fullBag?:boolean; fresh?:boolean} = {}): Promise<void> {
+  const {MAP,platformRecords,BENCHES,CHECKPOINTS,ENDING_GATE_X,ENDING_AREA,finalIsland,FRIENDS,ITEMS,PLATFORMS,SIDE_PLATFORMS,WORLD_WIDTH,WORLD_TOP,WORLD_BOTTOM} = createLevel(options.map);
+  const furnitureSink = 6;
+  const benchSink = 10;
   const root = document.createElement("main");
   root.id = "fonda";
   root.innerHTML = `<div id="platformer"></div>
+    <section id="start-screen" hidden aria-labelledby="start-title"><h1 id="start-title"></h1><p id="start-sound"></p><button id="start-game"></button></section>
     <header class="game-hud"><ul id="provisions"></ul><p id="objective" aria-live="polite"></p></header>
     <button id="sound" aria-pressed="false"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M11 4 6 8H3v8h3l5 4Z"/>
@@ -28,15 +31,18 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
     <button id="reset-preview" hidden></button>
     <p id="speech" role="status" hidden></p>
     <button id="interact" hidden></button>
-    <button id="read-letter" hidden></button>
     <dialog id="conversation" aria-labelledby="speaker"><p id="speaker"></p><p id="dialogue-text"></p><button id="close-conversation"></button></dialog>
-    <dialog id="gallery" aria-labelledby="gallery-title"><h1 id="gallery-title" tabindex="-1"></h1><div class="drawings"><img src="/game/marin-devil.png"><img src="/game/marin-bunny.png"></div><button id="close-gallery"></button></dialog>
+    <dialog id="gallery" aria-labelledby="gallery-title"><h1 id="gallery-title" tabindex="-1"></h1><div class="drawings"><button id="previous-drawing"></button><img><button id="next-drawing"></button></div><p id="drawing-caption" aria-live="polite"></p><button id="close-gallery"></button></dialog>
     <p class="keyboard-help"></p>
     <nav class="touch-controls"><div><button data-control="left"></button><button data-control="right"></button></div><button data-control="jump"></button></nav>
-    <dialog id="letter" aria-labelledby="letter-title"><h1 id="letter-title" tabindex="-1"></h1><div class="reunion"><img src="/game/chofis-happy.png"><span aria-hidden="true"></span><img src="/game/crow-happy.png"></div><p></p><button id="close-letter"></button></dialog>`;
+    <dialog id="letter" aria-labelledby="letter-title"><h1 id="letter-title" tabindex="-1"></h1><div class="reunion"><img src="/game/chofis-happy.png"><span aria-hidden="true"></span><img src="/game/crow-happy.png"></div><p></p><button id="exit-game"></button></dialog>`;
   // Editable copy is plain text, including quotes, angle brackets and line breaks.
   for (const [selector, text] of Object.entries({
     "#objective": texts.interfaz.cargando,
+    "#start-title": texts.inicio.titulo,
+    "#start-sound": texts.inicio.sonido,
+    "#start-game": texts.inicio.jugar,
+    "#exit-game": texts.carta.salir,
     "#intro-text": texts.intro.texto,
     "#gallery-title": texts.galeria.titulo,
     ".keyboard-help": texts.interfaz.controles.ayudaTeclado,
@@ -50,8 +56,8 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
     ["#interact","talk",texts.interfaz.interaccion.hablar],
     ["#close-conversation","continue",texts.interfaz.interaccion.seguir],
     ["#close-gallery","close",texts.galeria.volver],
-    ["#close-letter","close",texts.carta.volver],
-    ["#read-letter","letter",texts.final.releer],
+    ["#previous-drawing","left",texts.galeria.anterior],
+    ["#next-drawing","right",texts.galeria.siguiente],
     ["[data-control=left]","left",texts.interfaz.controles.moverIzquierda],
     ["[data-control=right]","right",texts.interfaz.controles.moverDerecha],
     ["[data-control=jump]","jump",texts.interfaz.controles.saltar],
@@ -67,8 +73,6 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
     ["[data-control=left]", "aria-label", texts.interfaz.controles.moverIzquierda],
     ["[data-control=right]", "aria-label", texts.interfaz.controles.moverDerecha],
     ["[data-control=jump]", "aria-label", texts.interfaz.controles.saltar],
-    [".drawings img:first-child", "alt", texts.galeria.marinDiablita],
-    [".drawings img:last-child", "alt", texts.galeria.marinConejita],
     [".reunion img:first-child", "alt", texts.personajes.Chofis],
     [".reunion img:last-child", "alt", texts.personajes.Crow],
   ]) root.querySelector(selector)!.setAttribute(attribute,text);
@@ -77,26 +81,28 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
   const sky = new Image();
   sky.src = "/game/cielo-fonda.webp";
   const skyReady = sky.decode().catch(() => {
-    root.style.backgroundImage = "linear-gradient(#353444,#62575e)";
+    root.style.backgroundImage = "linear-gradient(#536993,#a69bc5)";
   });
   const objective = root.querySelector<HTMLElement>("#objective")!;
   const speech = root.querySelector<HTMLElement>("#speech")!;
   const interact = root.querySelector<HTMLButtonElement>("#interact")!;
   const letter = root.querySelector<HTMLDialogElement>("#letter")!;
-  const readLetter = root.querySelector<HTMLButtonElement>("#read-letter")!;
+  const startScreen = root.querySelector<HTMLElement>("#start-screen")!;
+  const startButton = root.querySelector<HTMLButtonElement>("#start-game")!;
+  const exitButton = root.querySelector<HTMLButtonElement>("#exit-game")!;
   const conversation = root.querySelector<HTMLDialogElement>("#conversation")!;
   const gallery = root.querySelector<HTMLDialogElement>("#gallery")!;
   const soundButton = root.querySelector<HTMLButtonElement>("#sound")!;
   const introText = root.querySelector<HTMLElement>("#intro-text")!;
   const skipIntro = root.querySelector<HTMLButtonElement>("#skip-intro")!;
   const preview = isPreview;
-  const key = (preview ? "chofis-platformer-preview" : "chofis-platformer") + (MAP.id===defaultMap.id ? "" : `:${MAP.id}`);
+  const key = (preview ? "chofis-platformer-preview" : "chofis-platformer") + (MAP.id==="fonda-original" ? "" : `:${MAP.id}`);
   let saved: string | null = null;
   let savedCheckpoint: string | null = null;
   let introSeen = !!options.sandbox;
   let endingSeen = false;
   try {
-    if (!options.sandbox) {
+    if (!options.sandbox && !options.fresh) {
       saved = localStorage.getItem(key);
       savedCheckpoint = localStorage.getItem(`${key}:checkpoint`);
       introSeen = localStorage.getItem(`${key}:intro-seen`) === "1";
@@ -129,7 +135,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
   updateFood();
   let checkpointIndex = platformRecords.findIndex(p=>p.id===savedCheckpoint);
   // Old releases saved array positions. New saves use IDs so reordering a map is safe.
-  if (checkpointIndex<0 && MAP.id===defaultMap.id && savedCheckpoint!==null && /^\d+$/.test(savedCheckpoint)) {
+  if (checkpointIndex<0 && MAP.id==="fonda-original" && savedCheckpoint!==null && /^\d+$/.test(savedCheckpoint)) {
     checkpointIndex=platformRecords.findIndex(p=>p.id===`platform-${Number(savedCheckpoint)}`);
   }
   const hasCheckpoint = CHECKPOINTS.includes(checkpointIndex);
@@ -138,6 +144,19 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
   let pixelRatio = Math.min(window.devicePixelRatio || 1,3);
   const held = new Map<number, string>();
   const events = new AbortController();
+  const drawings = [
+    {src:"/game/marin-devil.png",label:texts.galeria.marinDiablita},
+    {src:"/game/marin-bunny.png",label:texts.galeria.marinConejita},
+  ];
+  let drawingIndex = 0;
+  const showDrawing = (index:number) => {
+    drawingIndex = (index+drawings.length)%drawings.length;
+    const drawing = drawings[drawingIndex], image = gallery.querySelector("img")!;
+    image.src = drawing.src;
+    image.alt = drawing.label;
+    gallery.querySelector("#drawing-caption")!.textContent = drawing.label;
+  };
+  showDrawing(0);
   let loadFailed = false;
 
   await new Promise<void>((resolve, reject) => {
@@ -171,6 +190,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
       soundEnabled = false;
       music?: Phaser.Sound.BaseSound;
       presented = false;
+      atStart = true;
       introActive = false;
       introElapsed = 0;
       introStatic = reduced;
@@ -179,16 +199,19 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
       endingPhase?: "walking" | "together" | "finished";
       endingElapsed = 0;
       endingStartX = ENDING_GATE_X;
+      endingEntryX = ENDING_GATE_X;
+      endingSide = -1;
       endingStartY = 650;
       endingLanding = 0;
       endingCameraStart = new Phaser.Math.Vector2();
       endingStatic = reduced;
       gate!: Phaser.GameObjects.Container;
+      barrier!: Phaser.Physics.Arcade.Image;
       gateLabel!: Phaser.GameObjects.Text;
       hearts: Phaser.GameObjects.Graphics[] = [];
 
       preload() {
-        const images = ["chofis-front", "chofis-happy", "ramada", "volantin", "copihue", ...MAP.decorations.filter(d=>d.image!=="garland").map(d=>d.image), ...FRIENDS.filter(f => !f.image.endsWith("-poses")).map(f => f.image), ...ITEMS.map(i => `sticker-${i.id}`)];
+        const images = ["chofis-front", "chofis-happy", "ramada", "volantin", "copihue", ...MAP.decorations.filter(d=>d.image!=="garland").map(d=>d.image), ...FRIENDS.filter(f => !f.image.endsWith("-poses")).map(f => f.image), ...ITEMS.map(i => `pickup-${i.id}`)];
         images.push("bench","lantern","flowerpot","sign");
         for (let i=0;i<4;i++) images.push(`distant-island-${i}`);
         for (const variant of ["stable","fragile"]) for (const size of ["small","medium","large"]) images.push(`island-${variant}-${size}`);
@@ -216,7 +239,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
           soundButton.setAttribute("aria-pressed",String(this.soundEnabled));
           soundButton.setAttribute("aria-label",this.soundEnabled ? texts.interfaz.sonido.silenciar : texts.interfaz.sonido.activar);
           playMusic();
-          this.game.canvas.focus({preventScroll:true});
+          if (!this.atStart) this.game.canvas.focus({preventScroll:true});
         },{signal:events.signal});
         for (const event of ["keydown","keyup"] as const) soundButton.addEventListener(event,e => {
           if (e.code === "Space" || e.code === "Enter") e.stopPropagation();
@@ -241,7 +264,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
           },{signal:events.signal});
         }
         this.keys = this.input.keyboard!.addKeys("LEFT,RIGHT,A,D,SPACE,UP,W,E") as typeof this.keys;
-        this.physics.world.setBounds(0, -500, WORLD_WIDTH, 2200);
+        this.physics.world.setBounds(0,WORLD_TOP,WORLD_WIDTH,WORLD_BOTTOM-WORLD_TOP+100);
         const ground = this.physics.add.group({allowGravity:false,immovable:true});
         [...PLATFORMS,...SIDE_PLATFORMS].forEach((definition,index) => {
           const [x,y,w,kind] = definition;
@@ -253,13 +276,11 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
           const size = w<=180 ? "small" : w<=280 ? "medium" : "large";
           const image = this.add.image(0,0,`island-${kind==="fragile" ? "fragile" : "stable"}-${size}`);
           // Prepared textures share a walkable edge at row 112; physics stays at y.
-          image.setOrigin(0,112/image.height).setDisplaySize(w,Math.min(210,w*.68));
+          image.setOrigin(0,112/image.height).setDisplaySize(w,
+            platformRecords[index].id===finalIsland?.id ? w*image.height/image.width : Math.min(210,w*.68));
           const markings = this.add.graphics();
           const art = this.add.container(x,y,[image,markings]).setData("mapId",platformRecords[index].id);
-          if (kind === "checkpoint") {
-            markings.lineStyle(2,0xe8d9ba,.7).lineBetween(65,0,65,-48);
-            markings.fillStyle(0xe8d9ba).fillTriangle(65,-48,90,-37,65,-26);
-          } else if (kind?.startsWith("moving")) {
+          if (kind?.startsWith("moving")) {
             markings.lineStyle(3,0xade2d1,.85).lineBetween(10,7,w-10,7);
             sprite.setVelocity(kind === "moving-x" ? 65 : 0,kind === "moving-y" ? 40 : 0);
           }
@@ -267,16 +288,16 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
           this.platforms.push({definition,sprite,art,crumbleAt:0,restoreAt:0});
         });
         this.decorations();
-        this.lastCheckpoint = hasCheckpoint ? checkpointIndex :
-          CHECKPOINTS.filter(index=>PLATFORMS[index][0]<=nextStop(stamps).x).at(-1) ?? CHECKPOINTS[0];
+        this.lastCheckpoint = hasCheckpoint ? checkpointIndex : -1;
         const checkpoint = PLATFORMS[this.lastCheckpoint];
-        this.spawn = options.spawn ?? (!hasCheckpoint && !stamps.size ? {...MAP.spawn} : { x:checkpoint[0]+Math.min(120,checkpoint[2]-25),y:checkpoint[1]-25 });
+        this.spawn = options.spawn ?? (hasCheckpoint ? { x:checkpoint[0]+Math.min(120,checkpoint[2]-25),y:checkpoint[1]-25 } : {...MAP.spawn});
         this.player = this.physics.add.sprite(this.spawn.x,this.spawn.y,"__WHITE").setOrigin(.5,1).setDisplaySize(40.625,58.75).setVisible(false);
         this.player.setBodySize(this.player.width,this.player.height).setOffset(0,0).setMaxVelocity(340,1100).setDragX(2800);
+        this.physics.add.collider(this.player,this.barrier);
         this.avatar = this.add.image(this.spawn.x,this.spawn.y,"chofis-front").setOrigin(.5,.9625).setDisplaySize(100,100).setDepth(5);
         this.events.on(Phaser.Scenes.Events.POST_UPDATE,(_time: number, delta: number) => {
-          this.avatar.setPosition(this.player.x,this.player.y-(this.seatedBench ? 28 : 0));
-          if (this.presented && !options.editing && !this.introActive && !this.focusedFriend) this.updatePlatforms(delta);
+          this.avatar.setPosition(this.player.x,this.player.y-(this.seatedBench ? this.seatedBench.height*28/92-benchSink : 0));
+          if (this.presented && !this.atStart && !options.editing && !this.introActive && !this.focusedFriend) this.updatePlatforms(delta);
         });
         this.events.on(Phaser.Scenes.Events.RENDER,() => this.positionInteraction());
         this.physics.add.collider(this.player,ground,(_player,platform) => {
@@ -295,14 +316,18 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         });
         for (const item of ITEMS) {
           if (stamps.has(item.id)) continue;
-          const halo = this.add.circle(item.x,item.y,44,0xffb6d1,.1).setStrokeStyle(1,0xffc3d9,.5);
-          const food = this.physics.add.staticImage(item.x,item.y,`sticker-${item.id}`).setData("mapId",item.id);
-          food.setScale(65/Math.max(food.width,food.height)).refreshBody();
-          // Keep pickup reach consistent even when the drawing is tall or narrow.
-          food.body!.setSize(72,72);
-          const label = this.add.text(item.x,item.y-62,texts.comida[item.id],{fontFamily:"Georgia",fontSize:"16px",color:"#ffe5ef",resolution:pixelRatio}).setOrigin(.5);
+          // The drawing moves; the pickup reach stays fixed for predictable jumps.
+          const food = this.physics.add.staticImage(item.x,item.y,"__WHITE").setVisible(false).setDisplaySize(72,72).refreshBody();
+          // The 100px texture contains 84px of food plus its baked glow.
+          const art = this.add.image(item.x,item.y,`pickup-${item.id}`).setDisplaySize(100,100).setData("mapId",item.id);
+          if (!reduced && !options.editing) this.tweens.add({
+            targets:art,y:item.y-6,angle:{from:-3,to:3},duration:1500,yoyo:true,repeat:-1,ease:"Sine.easeInOut",
+          });
+          const label = this.add.text(item.x,item.y-68,texts.comida[item.id],{fontFamily:"Georgia",fontSize:"16px",color:"#fff0cc",resolution:pixelRatio,
+            shadow:{color:"#443448",blur:4,fill:true}}).setOrigin(.5);
           this.physics.add.overlap(this.player,food,() => {
-            food.destroy(); halo.destroy(); label.destroy();
+            this.tweens.killTweensOf(art);
+            food.destroy(); art.destroy(); label.destroy();
             this.effect("coin",.3);
             if (!reduced) for (let i=0;i<7;i++) {
               const spark = this.add.circle(item.x,item.y,3,0xffd8b5).setDepth(6);
@@ -344,12 +369,20 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         resize();
         this.game.events.on(Phaser.Core.Events.BLUR,() => { held.clear(); this.keys && this.input.keyboard!.resetKeys(); this.bufferedUntil = 0; });
         interact.addEventListener("click",() => this.useInteraction(),{signal:events.signal});
-        readLetter.addEventListener("click",() => this.openLetter(),{signal:events.signal});
-        for (const dialog of [conversation,gallery,letter]) {
-          dialog.querySelector("button")!.addEventListener("click",() => dialog.close(),{signal:events.signal});
+        startButton.addEventListener("click",() => this.beginGame(),{signal:events.signal});
+        exitButton.addEventListener("click",() => void this.exitGame(),{signal:events.signal});
+        letter.addEventListener("cancel",e => e.preventDefault(),{signal:events.signal});
+        gallery.querySelector("#previous-drawing")!.addEventListener("click",() => showDrawing(drawingIndex-1),{signal:events.signal});
+        gallery.querySelector("#next-drawing")!.addEventListener("click",() => showDrawing(drawingIndex+1),{signal:events.signal});
+        for (const dialog of [conversation,gallery]) {
+          dialog.querySelector(`#close-${dialog.id}`)!.addEventListener("click",() => dialog.close(),{signal:events.signal});
           dialog.addEventListener("close",() => this.resumeGameplay(),{signal:events.signal});
           dialog.addEventListener("keydown",e => {
             if (e.code === "KeyE" && !e.repeat) { e.preventDefault(); dialog.close(); }
+            if (dialog === gallery && (e.code === "ArrowLeft" || e.code === "ArrowRight")) {
+              e.preventDefault(); e.stopPropagation();
+              showDrawing(drawingIndex+(e.code === "ArrowLeft" ? -1 : 1));
+            }
           },{signal:events.signal});
         }
         this.game.canvas.setAttribute("tabindex","0");
@@ -386,21 +419,18 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
           this.presented = true;
           root.inert = false;
           if (options.editing) {
+            this.atStart = false;
             root.classList.add("map-editing");
             this.avatar.setVisible(false);
             this.cameras.main.stopFollow().removeBounds();
             this.add.image(MAP.spawn.x,MAP.spawn.y,"chofis-front").setOrigin(.5,1)
               .setDisplaySize(100,100).setAlpha(.6).setDepth(8).setData("mapId",MAP.spawn.id);
-          } else if (endingSeen && readyForCrow(stamps)) this.startEnding(true);
-          else if (!introSeen && !stamps.size && !hasCheckpoint) {
-            this.introActive = true;
-            this.introStatic = motion.matches;
-            this.player.body!.reset(this.spawn.x,this.spawn.y);
-            root.classList.add("introducing");
-            skipIntro.hidden = false;
-            this.layoutIntro();
-            skipIntro.focus({preventScroll:true});
-          } else this.resumeGameplay(false);
+          } else if (options.sandbox && !options.fresh) this.beginGame();
+          else {
+            root.classList.add("at-start");
+            startScreen.hidden = false;
+            startButton.focus({preventScroll:true});
+          }
           // Commit opacity:0 before changing the class, including warm-cache loads.
           void root.offsetWidth;
           document.body.classList.add("playing");
@@ -414,6 +444,42 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
           document.addEventListener("visibilitychange",show,{signal:events.signal});
           show();
         });
+      }
+
+      beginGame() {
+        if (!this.atStart) return;
+        this.atStart = false;
+        startScreen.hidden = true;
+        root.classList.remove("at-start");
+        if (endingSeen && readyForCrow(stamps)) this.startEnding(true);
+        else if (!introSeen && !stamps.size && !hasCheckpoint) {
+          this.introActive = true;
+          this.introStatic = motion.matches;
+          this.player.body!.reset(this.spawn.x,this.spawn.y);
+          root.classList.add("introducing");
+          skipIntro.hidden = false;
+          this.layoutIntro();
+          skipIntro.focus({preventScroll:true});
+        } else this.resumeGameplay(false);
+      }
+
+      async exitGame() {
+        if (!this.won || exitButton.disabled) return;
+        exitButton.disabled = true;
+        this.sound.stopAll();
+        this.sound.setMute(true);
+        if (!options.sandbox) for (const suffix of ["",":checkpoint",":intro-seen",":ending-seen"]) {
+          try { localStorage.removeItem(`${key}${suffix}`); } catch { /* Fresh also resets this session if storage is unavailable. */ }
+        }
+        const previous = this.game;
+        await new Promise<void>(resolve => {
+          previous.events.once(Phaser.Core.Events.DESTROY,resolve);
+          previous.destroy(true);
+          previous.loop.wake();
+        });
+        root.remove();
+        try { await startGame({...options,spawn:undefined,fullBag:false,fresh:true}); }
+        catch { location.reload(); } // The existing load-error screen offers a retry.
       }
 
       layoutIntro() {
@@ -440,7 +506,6 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         introText.hidden = skipIntro.hidden = true;
         try { if (!options.sandbox) localStorage.setItem(`${key}:intro-seen`,"1"); } catch { /* Playing does not require storage. */ }
         this.resumeGameplay(false);
-        this.say(texts.personajes.Fonda,texts.intro.ayuda,5000);
       }
 
       decorations() {
@@ -469,10 +534,11 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
             this.add.container(x,y,[this.add.rectangle(0,15,340,65,0,0),lights])
               .setScale(height/60).setAngle(angle).setDepth(depth).setAlpha(alpha).setData("mapId",id);
           } else {
-            const art = this.add.image(x,y,image).setOrigin(.5,originY).setAngle(angle).setDepth(depth).setAlpha(alpha).setTint(tint).setData("mapId",id);
+            const sink = image.startsWith("ramada") || image==="lantern" ? furnitureSink : 0;
+            const art = this.add.image(x,y+sink,image).setOrigin(.5,originY).setAngle(angle).setDepth(depth).setAlpha(alpha).setTint(tint).setData("mapId",id);
             art.setScale(height/art.height);
-            if (image === "lantern") this.add.circle(x,y+height*.8,42*height/100,0xffd394,.07).setDepth(depth-1);
-            if (image === "ramada") this.add.ellipse(x,y-height*.33,230*height/300,260*height/300,0xffc397,.055).setDepth(depth-1);
+            if (image === "lantern") this.add.circle(x,y+sink+height*.8,42*height/100,0xffd394,.07).setDepth(depth-1);
+            if (image.startsWith("ramada")) this.add.ellipse(x,y-height*.33,230*height/300,260*height/300,0xffc397,.08).setDepth(depth-1);
             if (image === "volantin" && !reduced && !options.editing) this.tweens.add({targets:art,y:y-12,angle:angle+15,duration:3600+x/2,yoyo:true,repeat:-1,ease:"Sine.easeInOut"});
           }
         }
@@ -486,15 +552,24 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
           this.portraits.set(friend.name,image);
           image.setInteractive({useHandCursor:true}).on("pointerup",() => this.talk(friend));
         });
-        // A small wooden entrance, using the same cream and plum as the fonda.
-        const posts = this.add.graphics().setDepth(2);
-        posts.fillStyle(0x765448).fillRoundedRect(-43,-118,9,118,3).fillRoundedRect(34,-118,9,118,3);
-        posts.lineStyle(4,0xe8c6a0).lineBetween(-46,-118,46,-118);
+        // The barrier encloses only Crow's island; the routes pass around it.
+        const posts = this.add.graphics();
         const bars = this.add.graphics().fillStyle(0xb99069);
-        for (const x of [-30,-10,10,30]) bars.fillRoundedRect(x-4,-90,8,90,2);
-        bars.fillRect(-34,-68,68,8).fillRect(-34,-27,68,8);
-        this.gate = this.add.container(0,0,[bars]);
-        this.gateLabel = this.add.text(0,-140,"",{
+        const rightGate = ENDING_AREA.width-48;
+        for (const entrance of [0,rightGate]) {
+          posts.fillStyle(0x765448).fillRoundedRect(entrance-43,-200,9,200+furnitureSink,3)
+            .fillRoundedRect(entrance+34,-200,9,200+furnitureSink,3);
+          posts.lineStyle(4,0xe8c6a0).lineBetween(entrance-46,-200,entrance+46,-200);
+          for (const x of [-30,-10,10,30]) bars.fillRoundedRect(entrance+x-4,-180,8,180+furnitureSink,2);
+          bars.fillRect(entrance-34,-145,68,8).fillRect(entrance-34,-35,68,8);
+        }
+        const enclosure = this.add.graphics()
+          .fillStyle(0xd2a4c1,.035).fillRect(-24,-200,ENDING_AREA.width,200)
+          .lineStyle(1,0xe8c6a0,.45).lineBetween(0,-200,rightGate,-200);
+        this.gate = this.add.container(0,0,[enclosure,bars]);
+        this.barrier = this.physics.add.staticImage(ENDING_AREA.x+ENDING_AREA.width/2,ENDING_AREA.y+ENDING_AREA.height/2,"__WHITE")
+          .setVisible(false).setDisplaySize(ENDING_AREA.width,ENDING_AREA.height).refreshBody();
+        this.gateLabel = this.add.text(rightGate/2,-140,"",{
           fontFamily:"Georgia",fontSize:"16px",color:"#f1d7ae",align:"center",resolution:pixelRatio,
           shadow:{color:"#171320",blur:5,fill:true},
         }).setOrigin(.5,1);
@@ -508,8 +583,8 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         for (let i=0;i<5;i++) this.hearts.push(this.add.graphics().fillStyle(i%2 ? 0xf1d7ae : 0xffb6d1)
           .fillPoints(heart,true).setScale(.55).setDepth(6).setVisible(false));
         for (const bench of BENCHES) {
-          this.add.image(bench.x,bench.y,"bench").setOrigin(.5,1).setDepth(-1)
-            .setDisplaySize(140,bench.height).setData("mapId",bench.id).setInteractive({useHandCursor:true})
+          this.add.image(bench.x,bench.y+benchSink,"bench").setOrigin(.5,391/395).setDepth(-1)
+            .setDisplaySize(bench.height*600/395,bench.height).setData("mapId",bench.id).setInteractive({useHandCursor:true})
             .on("pointerup",() => this.useBench(bench));
         }
         for (const sign of MAP.signs) {
@@ -529,10 +604,10 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         const camera = this.cameras.main;
         camera.panEffect.reset(); camera.zoomEffect.reset();
         this.baseZoom = pixelRatio*Math.min(1.1,Math.max(.65,Math.min(root.clientHeight/850,root.clientWidth/580)));
-        camera.setBounds(0,-350,WORLD_WIDTH,1500);
+        camera.setBounds(0,WORLD_TOP,WORLD_WIDTH,WORLD_BOTTOM-WORLD_TOP);
         if (animate && !reduced) camera.zoomTo(this.baseZoom,250,"Sine.easeInOut");
         else camera.setZoom(this.baseZoom);
-        camera.startFollow(this.player,false,reduced ? 1 : .14,reduced ? 1 : .1,-this.scale.width*.12/this.baseZoom,this.scale.height*.17/this.baseZoom);
+        camera.startFollow(this.player,false,reduced ? 1 : .14,reduced ? 1 : .1,-this.scale.width*.12/this.baseZoom*this.facing,this.scale.height*.17/this.baseZoom);
       }
 
       focusCamera(friend: typeof FRIENDS[number], immediate=false) {
@@ -562,13 +637,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
       }
 
       resumeGameplay(animate=true) {
-        if (this.endingPhase) {
-          if (this.won) {
-            readLetter.hidden = false;
-            readLetter.focus({preventScroll:true});
-          }
-          return;
-        }
+        if (this.endingPhase || this.atStart) return;
         this.focusedFriend = undefined;
         held.clear();
         this.input.keyboard!.enabled = true;
@@ -584,6 +653,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
       updateGate() {
         const open = readyForCrow(stamps);
         this.gate.setVisible(!open);
+        this.barrier.body!.enable = !open;
         this.gateLabel.setText(open ? texts.final.entradaAbierta : texts.final.entradaCerrada);
       }
 
@@ -592,9 +662,13 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         const crow = FRIENDS.find(friend => friend.name === "Crow")!;
         this.endingPhase = "walking";
         this.endingStatic = motion.matches;
-        this.endingStartX = Phaser.Math.Clamp(this.player.x,ENDING_GATE_X,crow.x-82);
+        this.endingEntryX = this.player.x;
+        this.endingSide = !restored && this.player.x>crow.x ? 1 : -1;
+        this.endingStartX = Phaser.Math.Clamp(crow.x+this.endingSide*Math.max(140,Math.abs(this.player.x-crow.x)),
+          ENDING_GATE_X,ENDING_AREA.x+ENDING_AREA.width-24);
         this.endingStartY = this.player.y;
-        this.endingLanding = !restored && !this.endingStatic && Math.abs(this.player.y-crow.y)>5 ? 350 : 0;
+        this.endingLanding = !restored && !this.endingStatic &&
+          (Math.abs(this.player.y-crow.y)>5 || Math.abs(this.endingEntryX-this.endingStartX)>5) ? 350 : 0;
         this.endingElapsed = restored ? 5000 : this.endingStatic ? 3000 : 0;
         this.cameras.main.getWorldPoint(this.cameras.main.width/2,this.cameras.main.height/2,this.endingCameraStart);
         this.pauseGameplay(crow);
@@ -607,7 +681,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         this.portraits.get("Crow")!.setAngle(0).setFrame(1).setData("poseUntil",0);
         this.avatar.setCrop().setDisplaySize(100,100).setAngle(0);
         this.drawEnding();
-        if (restored) this.finishEnding(false);
+        if (restored) this.finishEnding();
       }
 
       drawEnding() {
@@ -615,15 +689,16 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         const elapsed = Math.max(0,this.endingElapsed-this.endingLanding);
         const progress = this.endingStatic ? 1 : Math.min(1,elapsed/3000);
         const landing = this.endingLanding ? Math.min(1,this.endingElapsed/this.endingLanding) : 1;
-        this.player.setPosition(Phaser.Math.Linear(this.endingStartX,crow.x-82,progress),
+        this.player.setPosition(landing<1 ? Phaser.Math.Linear(this.endingEntryX,this.endingStartX,landing) :
+          Phaser.Math.Linear(this.endingStartX,crow.x+this.endingSide*82,progress),
           Phaser.Math.Linear(this.endingStartY,crow.y,landing));
-        this.avatar.setPosition(this.player.x,this.player.y).setFlipX(false);
+        this.avatar.setPosition(this.player.x,this.player.y).setFlipX(this.endingSide>0);
         if (landing < 1) this.avatar.setTexture("chofis-jump",1);
         else if (progress < 1) this.avatar.setTexture("chofis-run",Math.floor(elapsed/180)%3);
         else {
           this.endingPhase = this.won ? "finished" : "together";
-          this.avatar.setTexture("chofis-happy").setAngle(5);
-          this.portraits.get("Crow")!.setFrame(2).setFlipX(true).setAngle(-5);
+          this.avatar.setTexture("chofis-happy").setAngle(-5*this.endingSide);
+          this.portraits.get("Crow")!.setFrame(2).setFlipX(this.endingSide<0).setAngle(5*this.endingSide);
         }
         const camera = this.cameras.main;
         const focus = this.endingStatic ? 1 : Phaser.Math.Easing.Sine.InOut(Math.min(1,this.endingElapsed/2000));
@@ -634,11 +709,11 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         for (const [i,heart] of this.hearts.entries()) {
           const rise = this.endingStatic ? 0 : Math.min(1,Math.max(0,(elapsed-3000-i*120)/1100));
           heart.setVisible(progress===1).setAlpha(this.endingStatic ? .8 : rise*.8)
-            .setPosition(crow.x-41+(i-2)*22,crow.y-118-(i%2)*22-rise*30);
+            .setPosition(crow.x+41*this.endingSide+(i-2)*22,crow.y-118-(i%2)*22-rise*30);
         }
       }
 
-      finishEnding(showLetter=true) {
+      finishEnding() {
         if (this.won) return;
         this.won = true;
         this.endingPhase = "finished";
@@ -646,11 +721,8 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         objective.textContent = this.lastObjective = texts.interfaz.objetivoFinal;
         this.game.canvas.setAttribute("aria-label",texts.interfaz.zonaFinal);
         try { if (!options.sandbox) localStorage.setItem(`${key}:ending-seen`,"1"); } catch { /* The ending still works without storage. */ }
-        readLetter.hidden = false;
-        if (showLetter) {
-          this.effect("power_up",.3);
-          this.openLetter();
-        }
+        this.effect("power_up",.3);
+        this.openLetter();
       }
 
       openLetter() {
@@ -661,7 +733,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
 
       positionInteraction() {
         const target = this.seatedBench ?? this.nearby ?? this.nearbyBench;
-        if (options.editing || !target || !this.presented || this.introActive || this.focusedFriend) { interact.hidden = true; return; }
+        if (options.editing || this.atStart || !target || !this.presented || this.introActive || this.focusedFriend) { interact.hidden = true; return; }
         const camera = this.cameras.main;
         const half = interact.offsetWidth/2+12;
         // The game camera pans and zooms without rotation.
@@ -710,13 +782,13 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
 
       canSit(bench: typeof BENCHES[number]) {
         const body = this.player.body as Phaser.Physics.Arcade.Body;
-        return this.presented && !this.introActive && !this.focusedFriend && (body.blocked.down || body.touching.down)
+        return this.presented && !this.atStart && !this.introActive && !this.focusedFriend && (body.blocked.down || body.touching.down)
           && Math.abs(body.velocity.y)<1 && Math.abs(this.player.x-bench.x)<90
           && Math.abs(body.bottom-bench.y)<12;
       }
 
       useBench(bench: typeof BENCHES[number]) {
-        if (options.editing || !this.presented || this.introActive || this.focusedFriend) return;
+        if (options.editing || this.atStart || !this.presented || this.introActive || this.focusedFriend) return;
         if (this.seatedBench) {
           if (this.seatedBench === bench) this.stand();
           return;
@@ -748,13 +820,13 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
       }
 
       talk(friend = this.nearby) {
-        if (options.editing || !friend || !this.presented || this.introActive || this.focusedFriend || Math.abs(friend.x-this.player.x)>=100 || Math.abs(friend.y-this.player.body!.bottom)>=85) return;
+        if (options.editing || this.atStart || !friend || !this.presented || this.introActive || this.focusedFriend || Math.abs(friend.x-this.player.x)>=100 || Math.abs(friend.y-this.player.body!.bottom)>=85) return;
         if (friend.name === "Crow") return; // His encounter starts at the entrance, never on tap.
         const portrait = this.portraits.get(friend.name)!;
         this.tweens.killTweensOf(portrait);
         portrait.setY(friend.y).setAngle(0);
         if (friend.image.endsWith("-poses")) {
-          portrait.setFrame(1).setData("poseUntil",this.time.now+2200);
+          portrait.setFrame(1).setFlipX(false).setData("poseUntil",this.time.now+2200);
         }
         if (!reduced && friend.name !== "Tus dibujos") {
           const angle = {Marin:3,Pibble:6,Supergirl:2,Krypto:8}[friend.name];
@@ -767,6 +839,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         }
         this.pauseGameplay(friend);
         if (friend.name === "Tus dibujos") {
+          showDrawing(0);
           gallery.showModal();
           root.querySelector<HTMLElement>("#gallery-title")!.focus({preventScroll:true});
           return;
@@ -778,7 +851,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
       }
 
       update(time: number, delta=0) {
-        if (options.editing || !this.player || !this.presented) return;
+        if (options.editing || this.atStart || !this.player || !this.presented) return;
         if (this.endingPhase) {
           if (document.hidden || this.won) return;
           this.endingElapsed += Math.min(delta,50);
@@ -796,8 +869,8 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         for (const friend of FRIENDS) {
           const portrait = this.portraits.get(friend.name)!;
           const until = portrait.getData("poseUntil");
-          if (until && time > until) portrait.setFrame(0).setData("poseUntil",0);
-          else if (until && portrait.texture.key === "marin-poses" && time > until-1500) portrait.setFrame(2);
+          if (until && time > until) portrait.setFrame(0).setFlipX(false).setData("poseUntil",0);
+          else if (until && portrait.texture.key === "marin-poses" && time > until-1500) portrait.setFrame(2).setFlipX(true);
           // Krypto's drawing faces right. A dead zone avoids flickering as Chofis crosses him.
           const distance = this.player.x-friend.x;
           if (friend.name === "Krypto" && !this.focusedFriend && Math.abs(distance)>40 &&
@@ -808,10 +881,8 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         if (this.focusedFriend) return;
         const body = this.player.body as Phaser.Physics.Arcade.Body;
         const grounded = body.blocked.down || body.touching.down;
-        if (!readyForCrow(stamps) && this.player.x>ENDING_GATE_X-24) {
-          this.player.x = ENDING_GATE_X-24;
-          this.player.setVelocityX(Math.min(0,body.velocity.x));
-        } else if (readyForCrow(stamps) && this.player.x>=ENDING_GATE_X && body.bottom>=MAP.ending.y-220 && body.bottom<=MAP.ending.y+12) {
+        if (readyForCrow(stamps) && this.player.x>=ENDING_GATE_X && this.player.x<=ENDING_AREA.x+ENDING_AREA.width &&
+            body.bottom>=MAP.ending.y-220 && body.bottom<=MAP.ending.y+12) {
           this.startEnding();
           return;
         }
@@ -842,6 +913,10 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         if (this.player.x < 25) { this.player.x=25; this.player.setVelocityX(Math.max(0,body.velocity.x)); }
         if (this.player.x > WORLD_WIDTH-25) { this.player.x=WORLD_WIDTH-25; this.player.setVelocityX(Math.min(0,body.velocity.x)); }
         if (direction) this.facing = direction;
+        this.cameras.main.followOffset.x = -this.scale.width*.12/this.baseZoom*this.facing;
+        const crow = FRIENDS.find(friend=>friend.name==="Crow")!;
+        const belowCrow = Math.abs(this.player.x-crow.x)<850 && this.player.y>crow.y+200 && this.player.y<crow.y+750;
+        this.cameras.main.followOffset.y = this.scale.height*(belowCrow ? .25 : .17)/this.baseZoom;
         if (direction || Math.abs(body.velocity.x)>35) this.lastMoving = time;
         const moving = time-this.lastMoving < 120;
         if (!grounded) this.avatar.setTexture("chofis-jump",body.velocity.y < 0 ? 0 : 1).setFlipX(this.facing < 0);
@@ -856,7 +931,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
           this.avatar.setTexture(this.won ? "chofis-happy" : "chofis-front")
             .setCrop(0,0,320,270).setFlipX(false).setAngle(0);
         }
-        if (this.player.y > 1050) {
+        if (this.player.y > WORLD_BOTTOM) {
           this.stand();
           body.reset(this.spawn.x,this.spawn.y);
           this.player.setVelocity(0);
@@ -870,10 +945,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
           this.fallExplained = true;
           if (reminder) this.say(texts.personajes.Fonda,reminder,3000);
         }
-        const next = nextStop(stamps);
-        const text = !readyForCrow(stamps) && this.player.x>ENDING_GATE_X-180
-          ? replyFor("Crow",stamps)
-          : formatText(texts.interfaz.objetivo,{instruccion:next.instruction,direccion:next.x < this.player.x-60 ? texts.interfaz.direccionIzquierda : ""});
+        const text = readyForCrow(stamps) ? texts.final.entradaAbierta : texts.interfaz.misionInicial;
         if (text !== this.lastObjective) { objective.textContent=text; this.lastObjective=text; }
         this.nearby = FRIENDS.find(friend => friend.name !== "Crow" && Math.abs(friend.x-this.player.x)<100 && Math.abs(friend.y-body.bottom)<85);
         this.nearbyBench = BENCHES.find(bench => this.canSit(bench));
@@ -898,7 +970,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         root.querySelectorAll<HTMLButtonElement>("[data-control]").forEach(button => {
           button.addEventListener("pointerdown",event => {
             const scene = game.scene.scenes[0] as Fonda;
-            if (!scene.presented || scene.introActive || scene.focusedFriend) return;
+            if (!scene.presented || scene.atStart || scene.introActive || scene.focusedFriend) return;
             event.preventDefault();
             button.setPointerCapture(event.pointerId);
             held.set(event.pointerId,button.dataset.control!);

@@ -5,7 +5,7 @@ import { STAMPS, type Stamp } from "./progress";
 export const CHARACTER_NAMES = ["Marin","Tus dibujos","Pibble","Supergirl","Krypto","Crow"] as const;
 export type CharacterName = typeof CHARACTER_NAMES[number];
 export const PLATFORM_KINDS = ["solid","checkpoint","moving-x","moving-y","fragile"] as const;
-export const DECORATIONS = ["ramada","lantern","flowerpot","volantin","copihue","sign","garland"] as const;
+export const DECORATIONS = ["ramada","ramada-empanadas","ramada-completos","ramada-terremotos","picnic","lantern","flowerpot","volantin","copihue","sign","garland"] as const;
 type Point = { id:string; x:number; y:number };
 export type MapPlatform = Point & { width:number; kind:typeof PLATFORM_KINDS[number]; branch:boolean };
 export type MapFriend = Point & { name:CharacterName; image:string; height:number };
@@ -54,7 +54,7 @@ export function parseMap(value:unknown):MapData {
     const p=record(v),id=string(p.id,80,"Identificador");
     if (!/^[a-zA-Z0-9-]+$/.test(id) || ids.has(id)) fail("Cada elemento necesita un identificador único.");
     ids.add(id);
-    return {id,x:number(p.x,0,width,"X"),y:number(p.y,-300,1000,"Y")};
+    return {id,x:number(p.x,0,width,"X"),y:number(p.y,-5000,5000,"Y")};
   };
   const list=<T>(key:string,read:(v:Record<string,unknown>)=>T):T[]=>{
     const values=data[key];
@@ -86,7 +86,6 @@ export function parseMap(value:unknown):MapData {
   const crow=map.friends.find(f=>f.name==="Crow")!;
   if (crow.image!=="crow-poses") fail("Crow necesita sus poses para el encuentro final.");
   if (crow.x<map.ending.x+85 || crow.y!==map.ending.y) fail("Crow debe estar a la derecha de la entrada final y a la misma altura.");
-  if (map.spawn.x>=map.ending.x) fail("El inicio debe quedar antes de la zona final.");
   return map;
 }
 

@@ -6,7 +6,8 @@ it("round-trips the published map without moving or losing its objects",()=>{
   const map=parseMap(JSON.parse(JSON.stringify(defaultMap)));
   expect(map).toEqual(defaultMap);
   expect(new Set(allEntities(map).map(item=>item.id)).size).toBe(allEntities(map).length);
-  expect(createLevel(map).PLATFORMS).toHaveLength(40);
+  expect(createLevel(map).WORLD_TOP).toBeLessThan(map.items.find(i=>i.id==="terremoto")!.y);
+  expect(createLevel(map).WORLD_BOTTOM).toBeGreaterThan(map.spawn.y);
   expect(createLevel(map).SIDE_PLATFORMS).toHaveLength(2);
   const id=map.platforms[9].id;
   map.platforms.unshift({...map.platforms[0],id:"extra",kind:"solid"});

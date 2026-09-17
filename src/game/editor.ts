@@ -5,11 +5,12 @@ import {setButtonIcon} from "./button-icons";
 import {allEntities,defaultMap,parseMap,type MapData} from "./map-data";
 
 const $=<T extends HTMLElement>(id:string)=>document.getElementById(id) as T;
-const DRAFT_KEY="chofis-map-editor-v1";
+const DRAFT_KEY=`chofis-map-editor-v1:${defaultMap.id}`;
 let map=structuredClone(defaultMap),selected=map.spawn.id,busy=false,testing=false;
-let view={x:600,y:500,zoom:.8},outline:Phaser.GameObjects.Graphics;
+let outline:Phaser.GameObjects.Graphics;
 const status=(text:string,error=false)=>{$("status").textContent=text;$("status").classList.toggle("error",error)};
 try {const saved=localStorage.getItem(DRAFT_KEY);if(saved)map=parseMap(JSON.parse(saved));}catch{/* A damaged draft never replaces the published map. */}
+let view={x:map.spawn.x,y:map.spawn.y-180,zoom:.8};
 export const editor={get map(){return structuredClone(map)},get busy(){return busy}};
 const scene=()=>game.scene.scenes[0];
 type Art=Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Transform & {getBounds():Phaser.Geom.Rectangle;depth:number};

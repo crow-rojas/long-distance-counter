@@ -22,7 +22,6 @@ it("keeps the documented placeholders valid in the editable templates", () => {
   for (const [template, keys] of [
     [texts.dialogos.Crow.faltaUno, ["comida"]],
     [texts.dialogos.Crow.faltanVarios, ["comida"]],
-    [texts.interfaz.objetivo, ["instruccion", "direccion"]],
     [texts.interfaz.progreso.estado, ["comida", "estado"]],
     [texts.interfaz.subtitulo, ["personaje", "texto"]],
     [texts.interfaz.interaccion.conPersonaje, ["personaje"]],

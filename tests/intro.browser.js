@@ -4,6 +4,13 @@
   const url=performance.getEntriesByType("resource").findLast(entry=>new URL(entry.name).pathname==="/src/game/game.ts").name;
   const module=await import(url);
   const {game}=module, scene=game.scene.scenes[0];
+  const start=document.querySelector("#start-game");
+  check(scene.atStart && !document.querySelector("#start-screen").hidden && scene.physics.world.isPaused,"Arrival must wait at Start");
+  const levelTime=scene.levelTime;
+  scene.update(performance.now(),9000);
+  check(scene.levelTime===levelTime && !scene.introActive && !scene.soundEnabled && !scene.music.isPlaying,"Start advanced the world or autoplayed sound");
+  check(document.querySelector("#start-sound").textContent.includes("altavoz"),"Start lost its manual sound notice");
+  start.click();
   const skip=document.querySelector("#skip-intro");
   check(skip && !skip.hidden && scene.physics.world.isPaused,"Fresh arrival has no intro or skip button");
   game.loop.stop();
@@ -15,8 +22,8 @@
     "Intro accepted movement or interaction");
   skip.click();
   check(!scene.physics.world.isPaused && document.activeElement===game.canvas,"Skipping did not restore physics and focus");
-  check(localStorage.getItem("chofis-platformer-preview:intro-seen")==="1" &&
-    localStorage.getItem("chofis-platformer:intro-seen")===null,"Intro completion mixed preview and real saves");
+  check(localStorage.getItem("chofis-platformer-preview:fonda-plaza:intro-seen")==="1" &&
+    localStorage.getItem("chofis-platformer:fonda-plaza:intro-seen")===null,"Intro completion mixed preview and real saves");
   check(!scene.keys.RIGHT.isDown && !scene.touchJump,"Skipping retained held controls");
   check(!scene.introActive && skip.hidden,"Skipping left the intro active");
   const restart = async () => {
@@ -24,17 +31,18 @@
     document.querySelector("#fonda").remove();
     document.body.classList.remove("playing");
     await module.startGame();
+    document.querySelector("#start-game").click();
     module.game.loop.stop();
     return module.game.scene.scenes[0];
   };
   let next=await restart();
   check(!next.introActive && !next.physics.world.isPaused,"Reload repeated a completed intro");
-  localStorage.removeItem("chofis-platformer-preview:intro-seen");
-  localStorage.setItem("chofis-platformer-preview:checkpoint","9");
+  localStorage.removeItem("chofis-platformer-preview:fonda-plaza:intro-seen");
+  localStorage.setItem("chofis-platformer-preview:fonda-plaza:checkpoint","plaza-0");
   next=await restart();
-  check(!next.introActive && next.player.x===3380,"Legacy save replayed intro or lost its checkpoint");
-  localStorage.setItem("chofis-platformer-preview:checkpoint"," ");
-  localStorage.setItem("chofis-platformer-preview","broken");
+  check(!next.introActive && next.player.x===5620,"Saved map replayed intro or lost its checkpoint");
+  localStorage.setItem("chofis-platformer-preview:fonda-plaza:checkpoint"," ");
+  localStorage.setItem("chofis-platformer-preview:fonda-plaza","broken");
   next=await restart();
   check(next.introActive,"Malformed save skipped the first intro");
   const advance=ms=>{for(let left=ms;left>0;left-=16)next.update(performance.now(),Math.min(16,left))};
@@ -57,7 +65,7 @@
     "Camera jumped when normal follow resumed");
   advance(1000);
   check(!next.introActive && document.querySelector("#skip-intro").hidden,"Intro returned after finishing");
-  localStorage.removeItem("chofis-platformer-preview:intro-seen");
+  localStorage.removeItem("chofis-platformer-preview:fonda-plaza:intro-seen");
   next=await restart();
   // Resume from a hidden tab with readable text instead of running missed animation.
   const hidden=Object.getOwnPropertyDescriptor(document,"hidden");
@@ -79,7 +87,7 @@
     else delete document.hidden;
   }
   const match=window.matchMedia;
-  localStorage.removeItem("chofis-platformer-preview:intro-seen");
+  localStorage.removeItem("chofis-platformer-preview:fonda-plaza:intro-seen");
   try {
     window.matchMedia=query=>{
       const media=match.call(window,query);
