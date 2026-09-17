@@ -12,6 +12,9 @@
   const scene=game.scene.scenes[0], player=scene.player, body=player.body, world=scene.physics.world;
   if (scene.introActive) document.querySelector("#skip-intro").click();
   const check=(ok,message)=>{if(!ok)throw Error(message)};
+  const foodSlots=[...document.querySelectorAll("#provisions [data-food]")];
+  check(foodSlots.length===3 && foodSlots.every(slot=>!slot.classList.contains("collected") && slot.getAttribute("aria-label")),
+    "HUD must show three named, initially missing foods");
   const canvasBounds=game.canvas.getBoundingClientRect();
   const density=Math.min(devicePixelRatio || 1,3);
   check(Math.abs(game.canvas.width/canvasBounds.width-density)<.02 &&
@@ -51,7 +54,7 @@
   check(document.querySelector("#letter > p").textContent===texts.carta.texto,"Letter did not use editable copy");
   check(document.querySelector("#letter-title").textContent===texts.carta.titulo,"Letter title did not use editable copy");
   const sound=document.querySelector("#sound");
-  for(let i=0;i<2;i++) { sound.focus(); sound.click(); check(sound.textContent===(i===0?texts.interfaz.sonido.activado:texts.interfaz.sonido.desactivado),"Sound label ignored JSON"); check(document.activeElement===game.canvas,"Sound kept keyboard focus"); }
+  for(let i=0;i<2;i++) { sound.focus(); sound.click(); check(sound.title===(i===0?texts.interfaz.sonido.activado:texts.interfaz.sonido.desactivado) && sound.querySelector("svg") && sound.getAttribute("aria-pressed")===String(i===0),"Sound lost its icon or accessible state"); check(document.activeElement===game.canvas,"Sound kept keyboard focus"); }
   sound.focus();
   try {
     sound.dispatchEvent(new KeyboardEvent("keydown",{code:"ArrowRight",keyCode:39,bubbles:true}));
@@ -269,7 +272,12 @@
     resetIslands();reset(1710,260);press("RIGHT");
     for(let i=0;i<150;i++) {if(player.x>=1810)release("RIGHT");frame()}
     check(body.touching.down && Math.abs(body.bottom-355)<1,"Cannot step off the drawings branch back to the main route");connections++;
-    for(const item of ITEMS) {reset(item.x,item.y+35);advance(10)}
+    for(const item of ITEMS) {
+      reset(item.x,item.y+35);advance(10);
+      check(document.querySelector(`#provisions [data-food="${item.id}"]`).classList.contains("collected"),
+        "Food HUD did not match collected items");
+    }
+    check(foodSlots.every(slot=>slot.classList.contains("collected")),"Completed food HUD has missing items");
     check(JSON.parse(localStorage.getItem("chofis-platformer-preview")).length===3,"Not all food was collected");
     scene.foodRecoveryExplained=false;
     body.reset(player.x,1200);scene.update(time);

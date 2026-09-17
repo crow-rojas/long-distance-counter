@@ -13,8 +13,12 @@ export async function startGame(): Promise<void> {
   const root = document.createElement("main");
   root.id = "fonda";
   root.innerHTML = `<div id="platformer"></div>
-    <header class="game-hud"><span></span><p id="objective" aria-live="polite"></p></header>
-    <button id="sound" aria-pressed="false"></button>
+    <header class="game-hud"><ul id="provisions"></ul><p id="objective" aria-live="polite"></p></header>
+    <button id="sound" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M11 4 6 8H3v8h3l5 4Z"/>
+      <path class="sound-on" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>
+      <path class="sound-off" d="m16 9 5 6m0-6-5 6"/>
+    </svg></button>
     <p id="intro-text" role="status" hidden></p>
     <button id="skip-intro" hidden></button>
     <button id="reset-preview" hidden></button>
@@ -27,9 +31,7 @@ export async function startGame(): Promise<void> {
     <dialog id="letter" aria-labelledby="letter-title"><h1 id="letter-title" tabindex="-1"></h1><div class="reunion"><img src="/game/chofis-happy.png"><span aria-hidden="true"></span><img src="/game/crow-happy.png"></div><p></p><button id="close-letter"></button></dialog>`;
   // Editable copy is plain text, including quotes, angle brackets and line breaks.
   for (const [selector, text] of Object.entries({
-    ".game-hud span": texts.interfaz.misionInicial,
     "#objective": texts.interfaz.cargando,
-    "#sound": texts.interfaz.sonido.desactivado,
     "#intro-text": texts.intro.texto,
     "#skip-intro": texts.intro.saltar,
     "#reset-preview": texts.interfaz.reiniciar,
@@ -48,6 +50,8 @@ export async function startGame(): Promise<void> {
   })) root.querySelector(selector)!.textContent = text;
   for (const [selector, attribute, text] of [
     ["#sound", "aria-label", texts.interfaz.sonido.activar],
+    ["#sound", "title", texts.interfaz.sonido.desactivado],
+    ["#provisions", "aria-label", texts.interfaz.misionInicial],
     ["#reset-preview", "title", texts.interfaz.atajoReiniciar],
     ["#interact", "data-prefix", texts.interfaz.interaccion.prefijoTecla],
     ["#close-conversation", "data-prefix", texts.interfaz.interaccion.prefijoTecla],
@@ -87,6 +91,29 @@ export async function startGame(): Promise<void> {
     introSeen = localStorage.getItem(`${key}:intro-seen`) === "1";
   } catch { /* Storage is optional. */ }
   const stamps = readStamps(saved);
+  const provisions = root.querySelector("#provisions")!;
+  for (const item of ITEMS) {
+    const slot = document.createElement("li");
+    slot.dataset.food = item.id;
+    const image = document.createElement("img");
+    image.src = `/game/sticker-${item.id}.png`;
+    image.alt = "";
+    slot.append(image);
+    provisions.append(slot);
+  }
+  const updateFood = () => {
+    for (const item of ITEMS) {
+      const slot = provisions.querySelector<HTMLElement>(`[data-food="${item.id}"]`)!;
+      const collected = stamps.has(item.id);
+      slot.classList.toggle("collected",collected);
+      slot.title = formatText(texts.interfaz.progreso.estado,{
+        comida:texts.comida[item.id],
+        estado:collected ? texts.interfaz.progreso.lista : texts.interfaz.progreso.pendiente,
+      });
+      slot.setAttribute("aria-label",slot.title);
+    }
+  };
+  updateFood();
   const hasCheckpoint = savedCheckpoint !== null && savedCheckpoint.trim() !== "" && CHECKPOINTS.includes(Number(savedCheckpoint));
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const reduced = motion.matches;
@@ -157,7 +184,7 @@ export async function startGame(): Promise<void> {
         soundButton.addEventListener("click",() => {
           this.soundEnabled = !this.soundEnabled;
           this.sound.setMute(!this.soundEnabled);
-          soundButton.textContent = this.soundEnabled ? texts.interfaz.sonido.activado : texts.interfaz.sonido.desactivado;
+          soundButton.title = this.soundEnabled ? texts.interfaz.sonido.activado : texts.interfaz.sonido.desactivado;
           soundButton.setAttribute("aria-pressed",String(this.soundEnabled));
           soundButton.setAttribute("aria-label",this.soundEnabled ? texts.interfaz.sonido.silenciar : texts.interfaz.sonido.activar);
           playMusic();
@@ -254,6 +281,7 @@ export async function startGame(): Promise<void> {
               this.tweens.add({targets:spark,x:item.x+Math.cos(i*Math.PI*2/7)*65,y:item.y+Math.sin(i*Math.PI*2/7)*65,alpha:0,scale:0,duration:450,onComplete:() => spark.destroy()});
             }
             stamps.add(item.id);
+            updateFood();
             try { localStorage.setItem(key,JSON.stringify([...stamps])); } catch { /* Keep this session playable. */ }
             this.say(texts.personajes.Chofis,texts.recogida[item.id],2500);
           });
@@ -594,7 +622,7 @@ export async function startGame(): Promise<void> {
           this.effect("power_up",.3);
           portrait.setFrame(2).setData("poseUntil",Infinity);
           this.won = true;
-          root.querySelector(".game-hud span")!.textContent = texts.interfaz.zonaFinal;
+          root.querySelector(".game-hud")!.setAttribute("aria-label",texts.interfaz.zonaFinal);
           objective.textContent = this.lastObjective = texts.interfaz.objetivoFinal;
           this.player.setVelocity(0);
           this.avatar.setTexture("chofis-happy").setFlipX(false).setAngle(0);
@@ -681,11 +709,7 @@ export async function startGame(): Promise<void> {
           if (reminder) this.say(texts.personajes.Fonda,reminder,3000);
         }
         const next = nextStop(stamps);
-        let zone: typeof ZONES[number] = ZONES[0];
-        for (const candidate of ZONES) if (this.player.x >= candidate.x) zone = candidate;
-        const zoneLabel = root.querySelector(".game-hud span")!;
-        if (!this.won && zoneLabel.textContent !== zone.name) zoneLabel.textContent = zone.name;
-        const text = this.won ? texts.interfaz.objetivoFinal : formatText(texts.interfaz.objetivo,{cantidad:stamps.size,instruccion:next.instruction,direccion:next.x < this.player.x-60 ? texts.interfaz.direccionIzquierda : ""});
+        const text = this.won ? texts.interfaz.objetivoFinal : formatText(texts.interfaz.objetivo,{instruccion:next.instruction,direccion:next.x < this.player.x-60 ? texts.interfaz.direccionIzquierda : ""});
         if (text !== this.lastObjective) { objective.textContent=text; this.lastObjective=text; }
         this.nearby = FRIENDS.find(friend => Math.abs(friend.x-this.player.x)<100 && Math.abs(friend.y-body.bottom)<85);
         this.nearbyBench = BENCHES.find(bench => this.canSit(bench));

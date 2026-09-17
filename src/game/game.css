@@ -6,20 +6,27 @@ body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s
 #fonda button { color: inherit; background: #26132bdd; border: 1px solid #be7fa2; padding: 11px 19px; font: 15px system-ui,sans-serif; border-radius: 7px; cursor: pointer; touch-action: none; }
 #fonda button:focus-visible, #fonda canvas:focus-visible { outline: 2px solid #ffc3df; outline-offset: 4px; }
 #fonda [hidden] { display: none !important; }
-.game-hud { position: absolute; top: calc(var(--letterbox) + 18px); left: max(24px,env(safe-area-inset-left)); right: 24px; pointer-events: none; text-shadow: 0 2px 14px #10051d; }
-.game-hud span { display: block; min-height: 36px; padding-right: 110px; font: 14px/1.5 system-ui,sans-serif; color: #edbad3; }
-#fonda #sound { position: absolute; right: max(24px,env(safe-area-inset-right)); top: calc(var(--letterbox) + 12px); font-size: 12px; padding: 8px 12px; }
+.game-hud { position: absolute; top: calc(var(--letterbox) + 12px); left: max(20px,env(safe-area-inset-left)); right: max(80px,calc(env(safe-area-inset-right) + 60px)); pointer-events: none; text-shadow: 0 2px 4px #10051d,0 0 14px #10051d; }
+#provisions { display: flex; gap: 8px; list-style: none; padding: 0; margin: 0 0 8px; }
+#provisions li { position: relative; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #171320b8; border: 1px solid #f1d7ae40; pointer-events: auto; }
+#provisions img { width: 27px; height: 27px; object-fit: contain; opacity: .4; filter: grayscale(1); }
+#provisions .collected { border-color: #f1d7ae; }
+#provisions .collected img { opacity: 1; filter: none; }
+#provisions .collected::after { content: ""; position: absolute; bottom: -1px; right: -1px; width: 4px; height: 8px; border: solid #f1d7ae; border-width: 0 2px 2px 0; transform: rotate(45deg); filter: drop-shadow(0 1px 2px #10051d); }
+#fonda #sound { position: absolute; right: max(20px,env(safe-area-inset-right)); top: calc(var(--letterbox) + 10px); width: 44px; height: 44px; padding: 10px; border-radius: 50%; background: #171320cc; border-color: #f1d7ae66; }
+#sound svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+#sound[aria-pressed="false"] .sound-on, #sound[aria-pressed="true"] .sound-off { display: none; }
 #fonda #reset-preview { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--letterbox) + 10px); padding: 3px 7px; border: 0; background: transparent; font-size: 10px; color: #bcb4c7; }
-#objective { font: 400 clamp(17px,2.4vw,25px)/1.35 "Fraunces Variable",Georgia,serif; margin: 5px 0; max-width: 720px; }
+#objective { font: 400 18px/1.4 "Fraunces Variable",Georgia,serif; margin: 0; max-width: 480px; }
 #speech { position: absolute; left: 50%; bottom: calc(var(--letterbox) + 78px); transform: translateX(-50%); margin: 0; width: min(570px,calc(100% - 36px)); color: #fff3f9; text-align: center; text-shadow: 0 2px 3px #16071f, 0 0 8px #16071f, 0 0 18px #16071f; font: 500 15px/1.6 system-ui,sans-serif; pointer-events: none; }
-#interact { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+#fonda #interact { position: absolute; transform: translateX(-50%); white-space: nowrap; min-height: 44px; padding: 8px 14px; border-radius: 24px; border-color: #f1d7ae80; background: #171320e6; font-size: 13px; }
 #interact::before { content: attr(data-prefix); }
 .keyboard-help { position: absolute; bottom: calc(var(--letterbox) + 7px); left: 24px; font: 12px system-ui,sans-serif; color: #e8bad3; pointer-events: none; }
 .touch-controls { display: none; position: absolute; bottom: calc(var(--letterbox) + 14px); left: max(18px,env(safe-area-inset-left)); right: max(18px,env(safe-area-inset-right)); justify-content: space-between; pointer-events: none; }
 .touch-controls div { display: flex; gap: 10px; }
-.touch-controls button { width: 57px; height: 54px; font-size: 25px !important; padding: 0 !important; pointer-events: auto; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+#fonda .touch-controls button { width: 58px; height: 58px; font-size: 14px; font-weight: 500; padding: 0; border-radius: 50%; border-color: #f1d7ae66; background: #171320d9; pointer-events: auto; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .touch-controls button:active { background: #794262 !important; }
-.touch-controls button[data-control="jump"] { width: 72px; font-size: 15px !important; }
+#fonda .touch-controls button[data-control="jump"] { width: 78px; border-radius: 30px; }
 #fonda dialog { width: min(430px,calc(100% - 40px)); max-height: calc(100dvh - 48px); box-sizing: border-box; color: #ffe4ef; background: #22122fec; border: 1px solid #a76b90; border-radius: 12px; padding: 30px; }
 #fonda dialog::backdrop { background: #0a041899; }
 #fonda dialog h1 { font-size: 30px; font-weight: 400; margin: 0 0 14px; }
@@ -42,11 +49,8 @@ body.playing #hero, body.playing > footer { opacity: 0; transition: opacity 1.4s
   #fonda #sound, #fonda #interact, #fonda dialog button { min-height: 44px; }
   .touch-controls { display: flex; }
   .keyboard-help { display: none; }
-  .game-hud { left: 19px; top: calc(var(--letterbox) + 12px); }
-  .game-hud span { font-size: 12px; }
-  #objective { font-size: 18px; max-width: 340px; }
+  #objective { font-size: 16px; }
   #speech { bottom: calc(var(--letterbox) + 139px); font-size: 13px; }
-  #interact { font-size: 12px !important; padding: 8px 12px !important; }
   #interact::before, #close-conversation::before { content: none; }
   #fonda #conversation { top: calc(var(--letterbox) + 20px); }
   #fonda #conversation #dialogue-text { font-size: 14px; }

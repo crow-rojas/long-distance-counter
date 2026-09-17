@@ -16,9 +16,9 @@ No hace falta editar TypeScript ni instalar una librería de i18n. El archivo se
 | `dialogos` | Frases de Marin, Pibble, Supergirl, Krypto y Crow, con variantes según comida recogida. |
 | `personajes` | Nombres visibles y quién aparece hablando. Las claves identifican personajes y no se renombran. |
 | `comida` | Etiquetas de los objetos y sus nombres en la lista que pide Crow. |
-| `interfaz` | Título del juego, objetivo, sonido, controles, interacción y textos del final. |
+| `interfaz` | Título, objetivo, descripciones del progreso, sonido, controles, interacción y textos del final. |
 | `objetivos` | Siguiente instrucción para cada objeto y para llegar a Crow. |
-| `zonas` | Nombres de las cuatro zonas. |
+| `zonas` | Nombres de las cuatro zonas del mapa; la UI compacta no los muestra. |
 | `recogida` | Reacciones de Chofis al recoger comida. |
 | `caidas` | Avisos de checkpoint y conservación de comida. |
 | `intro` | Frase de llegada, botones Saltar intro/Jugar e indicación de hablar con Marin. |
@@ -37,7 +37,8 @@ Conserva estos campos entre llaves. Puedes moverlos dentro de la frase:
 | Campo del JSON | Variables |
 | --- | --- |
 | `dialogos.Crow.faltaUno`, `dialogos.Crow.faltanVarios` | `{comida}` contiene solo lo pendiente, con la lista unida en español. |
-| `interfaz.objetivo` | `{cantidad}`, `{instruccion}` y `{direccion}`. La dirección queda vacía si el destino está adelante. |
+| `interfaz.objetivo` | `{instruccion}` y `{direccion}`. La dirección queda vacía si el destino está adelante. |
+| `interfaz.progreso.estado` | `{comida}` y `{estado}`. Describe cada dibujo como pendiente o recogido. |
 | `interfaz.subtitulo` | `{personaje}` y `{texto}`. |
 | `interfaz.interaccion.conPersonaje` | `{personaje}`. |
 
@@ -48,6 +49,8 @@ JSON usa `\n` para un salto de línea y `\"` para escribir comillas dentro de un
 ```
 
 Los textos se muestran literalmente: `<3`, comillas y emojis funcionan. No admiten HTML ni Markdown. Conviene mantener cortos los botones y los carteles.
+
+El objetivo muestra solo la siguiente instrucción. Los tres dibujos de comida indican el progreso: al recoger uno recupera su color y aparece una marca. Sus descripciones y tooltips usan `interfaz.progreso`. El altavoz conserva las etiquetas de `interfaz.sonido` para lectores de pantalla y el tooltip de su estado.
 
 ## Cuándo aparece cada variante
 

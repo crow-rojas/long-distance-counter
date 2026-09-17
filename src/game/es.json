@@ -38,7 +38,12 @@
     "titulo": "La fonda entre estrellas",
     "misionInicial": "Lleva la comida a Crow",
     "cargando": "Cargando la fonda...",
-    "objetivo": "Comida para Crow: {cantidad}/3. {instruccion}{direccion}",
+    "objetivo": "{instruccion}{direccion}",
+    "progreso": {
+      "estado": "{comida}: {estado}",
+      "lista": "ya está",
+      "pendiente": "falta"
+    },
     "direccionIzquierda": ", a tu izquierda",
     "zonaFinal": "De México a Chile, juntos al fin",
     "objetivoFinal": "La fonda es nuestra, amorcito",

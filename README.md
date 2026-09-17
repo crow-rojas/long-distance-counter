@@ -33,7 +33,8 @@ Las islas con marcas verdes se mueven y transportan al personaje. Las agrietadas
 - Sentarse: E o un tap en una banca cercana, con Chofis en el suelo. Moverse, saltar, pulsar E o tocar Levantarse permite seguir. El mundo sigue activo y la banca no aumenta la altura de salto.
 - La cámara se acerca durante la conversación y el texto aparece arriba. E, Escape o Seguir cierran el diálogo. La física y los desafíos se pausan durante las conversaciones, la galería y la carta.
 - En móvil aparecen botones de dirección y salto. Con movimiento reducido, se omiten las transiciones de cámara y los efectos decorativos de movimiento.
-- Sonido opcional con un botón: efectos CC0 de Brackeys y Piano 3 de AlkaKrab. Empieza en silencio.
+- El objetivo muestra la siguiente instrucción y tres dibujos indican la comida pendiente o recogida. Al recogerla aparece a color con una marca; sus descripciones también funcionan con lectores de pantalla.
+- Sonido opcional con el botón de altavoz: efectos CC0 de Brackeys y Piano 3 de AlkaKrab. Empieza en silencio.
 - El canvas y sus textos se dibujan según la densidad de pantalla, hasta 3×. El tamaño visible del mapa y las colisiones no cambian; el giro del celular o cambio de densidad del monitor reajusta canvas, textos y cámara sin recargar.
 - Chofis tiene tres frames de carrera y dos de salto. Marin saluda y señala al hablar; Crow cambia de expresión. Supergirl, Krypto y Pibble conservan sus dibujos.
 - Para escribir más diálogos, leer primero los [criterios y ejemplos de Crow](docs/dialogues.md#criterios-para-los-próximos-textos) y aplicar humanizer respetando sus expresiones.
