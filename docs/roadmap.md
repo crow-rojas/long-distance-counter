@@ -11,7 +11,7 @@ Estas ideas quedan pendientes; no forman parte de esta entrega. El orden es una 
 - [ ] **Escribir la carta final.** Crow la hará después.
 - [x] **UI más mínima y con etiquetas claras.** Objetivo corto, tres dibujos de comida con estado e iconos en los controles e interacciones. Conserva nombres accesibles, tooltips y áreas cómodas para tocar. Saltar intro y el reintento de carga mantienen texto visible.
 - [x] **Sentarse en las bancas.** E o un tap desde cerca para sentarse. Moverse, saltar, E o Levantarse para continuar. Las dos bancas usan el dibujo actual de Chofis, con el mundo activo y la misma altura de salto.
-- [ ] **Personajes con más vida.** Probar parpadeos, pequeños cambios de postura y reacciones al interactuar. Mantener los diálogos manuales y evitar rebotes constantes; respetar movimiento reducido.
+- [x] **Personajes con más vida.** Krypto mira hacia Chofis; al interactuar, Pibble se balancea, Krypto inclina la cabeza, Supergirl hace un gesto leve y Marin y Crow saludan con sus poses actuales. Gestos breves, sin deformar sprites ni rebotes constantes. Con movimiento reducido se omiten las inclinaciones. Los parpadeos quedan para cuando haya nuevos frames.
 
 ## Después: contar la llegada
 

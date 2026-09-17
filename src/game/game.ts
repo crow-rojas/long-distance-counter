@@ -610,11 +610,19 @@ export async function startGame(): Promise<void> {
         if (!friend || !this.presented || this.introActive || this.focusedFriend || Math.abs(friend.x-this.player.x)>=100 || Math.abs(friend.y-this.player.body!.bottom)>=85) return;
         const portrait = this.portraits.get(friend.name)!;
         this.tweens.killTweensOf(portrait);
-        portrait.setY(friend.y);
+        portrait.setY(friend.y).setAngle(0);
         if (friend.image.endsWith("-poses")) {
           portrait.setFrame(1).setData("poseUntil",this.time.now+2200);
         }
-        if (!reduced) this.tweens.add({targets:portrait,y:friend.y-9,duration:160,yoyo:true,ease:"Sine.easeOut"});
+        if (!reduced && friend.name !== "Tus dibujos") {
+          const angle = {Marin:3,Pibble:6,Supergirl:2,Krypto:8,Crow:4}[friend.name];
+          this.tweens.add({
+            targets:portrait,angle:angle*(this.player.x < friend.x ? -1 : 1),
+            duration:friend.name === "Krypto" ? 280 : 180,
+            hold:friend.name === "Krypto" ? 350 : 80,
+            yoyo:true,repeat:friend.name === "Pibble" ? 1 : 0,ease:"Sine.easeInOut",
+          });
+        }
         this.pauseGameplay(friend);
         if (friend.name === "Tus dibujos") {
           gallery.showModal();
@@ -648,10 +656,17 @@ export async function startGame(): Promise<void> {
           if (this.introElapsed >= 8000) this.finishIntro();
           return;
         }
-        for (const portrait of this.portraits.values()) {
+        for (const friend of FRIENDS) {
+          const portrait = this.portraits.get(friend.name)!;
           const until = portrait.getData("poseUntil");
           if (until && time > until) portrait.setFrame(0).setData("poseUntil",0);
           else if (until && portrait.texture.key === "marin-poses" && time > until-1500) portrait.setFrame(2);
+          // Krypto's drawing faces right. A dead zone avoids flickering as Chofis crosses him.
+          const distance = this.player.x-friend.x;
+          if (friend.name === "Krypto" && !this.focusedFriend && Math.abs(distance)>40 &&
+              Math.abs(distance)<240 && Math.abs(this.player.body!.bottom-friend.y)<100) {
+            portrait.setFlipX(distance<0);
+          }
         }
         if (this.focusedFriend) return;
         const body = this.player.body as Phaser.Physics.Arcade.Body;

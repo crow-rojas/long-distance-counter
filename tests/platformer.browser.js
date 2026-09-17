@@ -206,6 +206,23 @@
       check(!scene.focusedFriend,"NPC started a conversation from proximity");
       check(scene.tweens.getTweensOf(scene.portraits.get(friend.name)).length===0,"NPC animated from proximity");
     }
+    const krypto=FRIENDS.find(f=>f.name==="Krypto"),dog=scene.portraits.get("Krypto");
+    reset(krypto.x-70,krypto.y);check(dog.flipX,"Krypto did not face Chofis on his left");
+    reset(krypto.x+70,krypto.y);check(!dog.flipX,"Krypto did not face Chofis on his right");
+    reset(krypto.x-10,krypto.y);check(!dog.flipX,"Krypto flickered inside the facing dead zone");
+    for(const friend of FRIENDS.filter(f=>f.name!=="Tus dibujos")) {
+      reset(friend.x-60,friend.y);
+      const portrait=scene.portraits.get(friend.name),width=portrait.displayWidth,height=portrait.displayHeight;
+      scene.talk(friend);
+      const gestures=scene.tweens.getTweensOf(portrait);
+      check(gestures.length===1 && gestures[0].data.every(track=>track.key==="angle"),
+        "Greeting should use a finite tilt without bouncing or stretching");
+      gestures[0].seek(0); // Phaser computes duration when the pending tween starts.
+      gestures[0].seek(gestures[0].totalDuration+50);
+      check(Math.abs(portrait.angle)<.01 && portrait.y===friend.y &&
+        portrait.displayWidth===width && portrait.displayHeight===height,"Greeting did not restore the original pose");
+      await close();
+    }
     reset(350,700);press("E");frame();release("E");
     check(document.querySelector("#conversation").open && document.querySelector("#speaker").textContent===texts.personajes.Marin,"E did not open the nearby conversation");
     check(world.isPaused && !scene.input.keyboard.enabled,"Conversation did not pause gameplay");
@@ -225,6 +242,7 @@
     reset(120,700);scene.portraits.get("Marin").emit("pointerup");
     check(!scene.focusedFriend,"An out-of-range NPC tap worked");
     const gallery=FRIENDS.find(f=>f.name==="Tus dibujos");reset(gallery.x,gallery.y);scene.talk(gallery);
+    check(scene.tweens.getTweensOf(scene.portraits.get(gallery.name)).length===0,"Gallery art should stay still");
     check(document.querySelector("#gallery").open,"Optional drawings did not open");await close();
     if(JSON.parse(localStorage.getItem("chofis-platformer-preview")??"[]").length<3) {
       const crow=FRIENDS.find(f=>f.name==="Crow");reset(crow.x-50,crow.y);scene.talk(crow);
