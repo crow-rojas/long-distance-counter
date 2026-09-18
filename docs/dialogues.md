@@ -1,6 +1,6 @@
 # Textos de la fonda
 
-El archivo editable es [src/game/es.json](../src/game/es.json). Contiene los textos actuales del juego, incluidas las frases de Crow y la carta provisional. Este documento explica cómo editarlo; no mantiene una segunda copia de los diálogos.
+El archivo editable es [src/game/es.json](../src/game/es.json). Contiene los textos actuales del juego, incluidas las frases de Crow y su carta. Este documento explica cómo editarlo; no mantiene una segunda copia de los diálogos.
 
 ## Cómo cambiar un texto
 
@@ -19,14 +19,13 @@ No hace falta editar TypeScript ni instalar una librería de i18n. El archivo se
 | `interfaz` | Título, objetivo, descripciones del progreso, sonido, controles, interacción y textos del final. |
 | `zonas` | Nombres de las cuatro zonas del mapa; la UI compacta no los muestra. |
 | `recogida` | Reacciones de Chofis al recoger comida. |
-| `caidas` | Avisos de checkpoint y conservación de comida. |
 | `intro` | Frase de llegada y botones Saltar intro/Jugar. |
-| `bancas` | Botones para sentarse y levantarse, y la indicación para volver a moverse. |
-| `carteles` | Textos de los letreros del mundo. |
-| `galeria` | Título, cierre, botones `anterior` y `siguiente`, y descripciones de los dibujos. |
+| `bancas` | Botones para sentarse y levantarse, y la frase de Chofis al sentarse. |
+| `carteles` | El cartel de La Fonda de Don Crow. |
+| `galeria` | Título, cierre, botones `anterior` y `siguiente`, y la lista `dibujos`, con `archivo` y `descripcion` para cada imagen. |
 | `inicio` | Título, aviso para activar el altavoz y botón Jugar. |
-| `carta` | `titulo`, `texto`, botón `salir` y corazón entre los personajes. El cuerpo sigue provisional. |
-| `final` | Cartel de entrada cerrado/abierto. |
+| `carta` | `titulo`, `texto`, botón `salir` y corazón entre los personajes. El cuerpo contiene la carta escrita por Crow. |
+| `final` | Objetivo al completar la comida. |
 | `carga` | Mensaje y botón para reintentar si falla el arranque del juego. |
 
 Las etiquetas no cambian las teclas, nombres de assets, posiciones del mapa, reglas de conversación ni claves del guardado. La portada del contador conserva sus textos en sus archivos actuales; este JSON reúne los textos del juego.
@@ -58,13 +57,13 @@ Los botones usan iconos SVG. Sus nombres siguen en este JSON y se muestran al pa
 
 Marin, Pibble y Supergirl cambian de respuesta según el objeto correspondiente. Las variantes de Crow conservan sus frases, aunque el encuentro actual usa la cinemática y la carta, sin mostrar ese diálogo. El HUD queda oculto al comenzar el encuentro.
 
-Con los tres objetos, cruzar la entrada final activa la caminata y el encuentro sin tocar a Crow. Después aparece `carta.titulo` y `carta.texto`. Cerrar la carta deja a ambos juntos y un sobre con la etiqueta `final.releer`; no se vuelve al recorrido. El final guardado conserva esta pantalla al recargar.
+Con los tres objetos, cruzar la entrada final activa la caminata y el encuentro sin tocar a Crow. Después aparece `carta.titulo` y `carta.texto`. La carta solo se cierra con Salir, que borra el progreso de esa partida y vuelve a Jugar. Al recargar un final guardado, Jugar abre la carta.
 
-Las bancas ofrecen `bancas.sentarse` cuando Chofis está cerca y en el suelo. Sentada, el botón cambia a `bancas.levantarse` y aparece `bancas.ayuda` durante tres segundos. También puede levantarse al moverse o saltar; la cámara conserva el encuadre normal.
+Las bancas ofrecen `bancas.sentarse` cuando Chofis está cerca y en el suelo. Sentada, el botón cambia a `bancas.levantarse` y Chofis dice `bancas.frase` durante tres segundos. También puede levantarse al moverse o saltar; la cámara conserva el encuadre normal.
 
 La primera llegada muestra `intro.texto` al terminar el descenso de cámara. Las partidas guardadas no repiten esta presentación. Con movimiento reducido, el texto aparece directamente y `intro.jugar` permite continuar sin un tiempo de lectura obligatorio.
 
-La galería abre al interactuar con "Tus dibujos". Los avisos de caída aparecen una vez por sesión cuando corresponden. Recargar reinicia esos avisos, pero conserva comida y checkpoint.
+La galería abre al interactuar con "Tus dibujos" y muestra los 23 recortes originales de uno en uno. `galeria.dibujos` determina su orden; los archivos están en `public/game/`. Las caídas conservan comida y checkpoint sin anuncios. La comida no lleva nombres flotantes, pero Chofis conserva sus reacciones de `recogida`.
 
 ## Criterios para los próximos textos
 
@@ -73,9 +72,9 @@ Los diálogos de `src/game/es.json` son la referencia para escribir más. Leerlo
 - Mezclar cariño con bromas de chat: "mi princesa", "yei", "omgg", "carnal", "AJSD" y "te amooooo". Usarlas cuando encajen, sin repetirlas en cada frase.
 - Conservar mayúsculas, repeticiones, emoticones y emojis que escribió Crow. No corregirlos para que suenen formales ni agregar emojis como decoración automática.
 - Mantener los chistes de Pibble Martillo e iTownGamePlays en sus conversaciones. Las bromas nuevas y los recuerdos de pareja necesitan contexto de Crow.
-- Escribir instrucciones cortas y concretas. Krypto puede ladrar y explicar entre paréntesis; Crow habla con cariño directo.
+- Escribir instrucciones cortas y concretas. Krypto ladra; Crow habla con cariño directo.
 - Evitar guiones largos, puntos medios, viñetas decorativas y flechas de texto en controles, carteles y contador. Usar palabras, espacios y puntuación corriente. Los iconos SVG funcionales de dirección, salto y continuar están aprobados; no son adornos tipográficos.
-- Editar estos textos no cambia el mapa ni la dificultad. El cuerpo de la carta queda pendiente de Crow.
+- Editar estos textos no cambia el mapa ni la dificultad. La carta escrita por Crow se conserva tal cual.
 
 ## Comprobación
 

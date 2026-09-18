@@ -121,7 +121,7 @@ El runner abre una sesión nueva silenciada, espera a que termine la carga y la 
 
 La prueba de intro comprueba bloqueo de controles, salto y final natural, continuidad del encuadre, guardados anteriores, rotación, vuelta de segundo plano y movimiento reducido. La prueba del mapa salta la intro mediante su botón antes de recorrer el mundo.
 
-Comprueba densidad del canvas y textos, cambios de tamaño, recordatorios de caída, el foco y las teclas tras cambiar el sonido, giros rápidos, salto variable, coyote time, salto anticipado, ausencia de doble salto, transporte sobre islas móviles, caída y recuperación de islas frágiles, pausa durante conversaciones, 125 conexiones, las cinco bancas, desvío de dibujos, recogida, checkpoints y carta final. La prueba busca un momento de salto viable en las conexiones móviles; no presupone que cualquier momento funcione. Esta comprobación de navegador es local; no forma parte de CI.
+Comprueba densidad del canvas y textos, cambios de tamaño, caídas sin avisos, el foco y las teclas tras cambiar el sonido, giros rápidos, salto variable, coyote time, salto anticipado, ausencia de doble salto, transporte sobre islas móviles, caída y recuperación de islas frágiles, pausa durante conversaciones, 125 conexiones, las cinco bancas, galería de 23 recortes originales, recogida, checkpoints y carta final. La prueba busca un momento de salto viable en las conexiones móviles; no presupone que cualquier momento funcione. Esta comprobación de navegador es local; no forma parte de CI.
 
 GitHub Pages publica al hacer push a `main`. La procedencia de música e imágenes queda documentada en `docs/`.
 

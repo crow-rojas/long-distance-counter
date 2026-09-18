@@ -1,6 +1,6 @@
 # Assets para la sorpresa de Chofis
 
-La extracción original produce 23 PNG con transparencia. La web incluye 32 PNG entre dibujos originales, hojas de animación y decoraciones, más el cielo en WebP. Las copias de reserva se conservan en `~/Downloads/Chofis/assets/reserva-web/`.
+La extracción original produce 23 PNG con transparencia. La galería incluye los 23 recortes originales, con sus poses y stickers, reutilizando los PNG de `public/game/`. Las hojas de animación y decoraciones generadas se usan en el mundo, fuera de la galería. Las copias de reserva se conservan en `~/Downloads/Chofis/assets/reserva-web/`.
 
 Los originales están en `~/Downloads/Chofis/originales/`. La lámina `contact-sheet.jpg`, el inventario `manifest.json` y los 23 recortes se conservan en `~/Downloads/Chofis/assets/`. La tabla describe el pack completo, no solo los archivos de `public/game/`.
 

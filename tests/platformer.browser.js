@@ -103,6 +103,9 @@
   };
   game.loop.sleep();
   try {
+    const worldLabels=scene.children.list.flatMap(child=>child.type==="Container"?child.list:[child]).filter(child=>child.type==="Text");
+    check(worldLabels.length===1 && worldLabels[0].text===texts.carteles.fonda,
+      "Only Don Crow's sign should remain in the world");
     for(const item of ITEMS) {
       const art=scene.children.list.find(child=>child.getData("mapId")===item.id);
       const pickup=world.staticBodies.entries.find(b=>b.center.x===item.x && b.center.y===item.y && b.width===72);
@@ -118,7 +121,7 @@
     check(!localStorage.getItem("chofis-platformer-preview:fonda-plaza"),"Use a fresh browser session");
     body.reset(start.x,WORLD_BOTTOM+50);scene.update(time);
     const speech=document.querySelector("#speech");
-    check(speech.textContent===formatText(texts.interfaz.subtitulo,{personaje:texts.personajes.Fonda,texto:texts.caidas.primeraSinComida}),"First fall claims food before collecting any");
+    check(speech.hidden,"Falling should not announce a tutorial");
     const firstReminder=scene.speechUntil;
     body.reset(start.x,WORLD_BOTTOM+50);time+=100;scene.update(time);
     check(scene.speechUntil===firstReminder,"Repeated falls repeat the tutorial");
@@ -136,6 +139,8 @@
       check(document.querySelector("#interact").dataset.icon==="sit","Bench has no sitting icon");
       press("E");frame();release("E");advance(2);
       check(scene.seatedBench?.x===bench.x && scene.avatar.isCropped,"E did not seat Chofis");
+      check(speech.textContent===formatText(texts.interfaz.subtitulo,{personaje:texts.personajes.Chofis,texto:texts.bancas.frase}),
+        "Sitting should show Chofis's line, not a tutorial");
       check(document.querySelector("#interact").dataset.icon==="stand" &&
         document.querySelector("#interact").getAttribute("aria-label")===texts.bancas.levantarse,
         "Seated interaction did not change its icon and accessible action");
@@ -270,7 +275,16 @@
     document.querySelector("#next-drawing").click();
     check(galleryDialog.open && galleryImage.src!==firstDrawing && world.isPaused,"Next drawing closed the gallery or resumed gameplay");
     galleryDialog.dispatchEvent(new KeyboardEvent("keydown",{code:"ArrowLeft",bubbles:true}));
-    check(galleryImage.src===firstDrawing && galleryImage.alt===texts.galeria.marinDiablita,"Keyboard navigation lost the first drawing or alt text");
+    check(galleryImage.src===firstDrawing && galleryImage.alt===texts.galeria.dibujos[0].descripcion,"Keyboard navigation lost the first drawing or alt text");
+    const shown = new Set();
+    for(const drawing of texts.galeria.dibujos) {
+      await galleryImage.decode();
+      check(galleryImage.src.endsWith(`/game/${drawing.archivo}`) && galleryImage.alt===drawing.descripcion &&
+        galleryImage.naturalWidth>0,"Gallery drawing or description is missing");
+      shown.add(galleryImage.src);
+      document.querySelector("#next-drawing").click();
+    }
+    check(shown.size===23 && galleryImage.src===firstDrawing,"Gallery should cycle through all 23 original cutouts");
     document.querySelector("#previous-drawing").click();
     check(galleryImage.src!==firstDrawing,"Previous drawing should wrap to the last");
     await close();
@@ -352,10 +366,9 @@
     }
     check(foodSlots.every(slot=>slot.classList.contains("collected")),"Completed food HUD has missing items");
     check(JSON.parse(localStorage.getItem("chofis-platformer-preview:fonda-plaza")).length===3,"Not all food was collected");
-    scene.foodRecoveryExplained=false;
-    body.reset(player.x,WORLD_BOTTOM+50);scene.update(time);
-    check(speech.textContent===formatText(texts.interfaz.subtitulo,{personaje:texts.personajes.Fonda,texto:texts.caidas.conComida}),"Food recovery reminder is missing");
     const foodReminder=scene.speechUntil;
+    body.reset(player.x,WORLD_BOTTOM+50);scene.update(time);
+    check(scene.speechUntil===foodReminder,"Falling with food should not add an announcement");
     body.reset(player.x,WORLD_BOTTOM+50);time+=100;scene.update(time);
     check(scene.speechUntil===foodReminder,"Food recovery reminder repeats");
     resetIslands();const cp=CHECKPOINTS[5];reset(PLATFORMS[cp][0]+120,PLATFORMS[cp][1]);

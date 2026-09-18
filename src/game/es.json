@@ -1,13 +1,12 @@
 {
   "personajes": {
     "Chofis": "Chofis",
-    "Fonda": "Fonda",
     "Marin": "Marin",
     "Pibble": "Pibble",
     "Supergirl": "Supergirl",
     "Krypto": "Krypto",
     "Crow": "Crow",
-    "Tus dibujos": "Tus dibujos"
+    "Tus dibujos": "Dibujos"
   },
   "comida": {
     "empanada": "empanada",
@@ -16,7 +15,7 @@
   },
   "dialogos": {
     "Marin": {
-      "sinEmpanada": "¡Omg! Hola Chofis 🫪",
+      "sinEmpanada": "¡Omg! Hola Chofis 🫪 Sigue el camino y encontrarás lo que quieres!",
       "conEmpanada": "¡Encontraste la empanada! ¡Yei!"
     },
     "Pibble": {
@@ -24,7 +23,7 @@
       "conCompleto": "Ya tienes el completo, Pibble Martillo estaría orgulloso."
     },
     "Supergirl": {
-      "sinTerremoto": "Cuidado con las réplicas.",
+      "sinTerremoto": "Cuidado con las réplicas. Más arriba está lo que quieres.",
       "conTerremoto": "¡Conseguiste el terremoto! No te vayas a marear, cuidado con las réplica AJSD"
     },
     "Krypto": "Woof woof woof woof 🥳",
@@ -35,16 +34,16 @@
     }
   },
   "interfaz": {
-    "titulo": "La fonda entre estrellas",
-    "misionInicial": "Junta la comida para Crow",
+    "titulo": "Y... esto?",
+    "misionInicial": "Junta la comida para reunirte con Crow",
     "cargando": "Cargando la fonda...",
     "progreso": {
       "estado": "{comida}: {estado}",
       "lista": "ya está",
       "pendiente": "falta"
     },
-    "zonaFinal": "De México a Chile, juntos al fin",
-    "objetivoFinal": "La fonda es nuestra, amorcito",
+    "zonaFinal": "De México a Chile 🇲🇽🇨🇱",
+    "objetivoFinal": "Juntaste todo amor!!",
     "subtitulo": "{personaje}: {texto}",
     "sonido": {
       "activado": "Sonido: sí",
@@ -80,50 +79,131 @@
     "crow": "Camino a Crow"
   },
   "recogida": {
-    "empanada": "Empanada lista, yei",
-    "completo": "Ya tengo el completo omgg",
-    "terremoto": "Ya tengo el terremoto carnal"
-  },
-  "caidas": {
-    "primeraSinComida": "Volviste al checkpoint.",
-    "primeraConComida": "Volviste al checkpoint, no perdiste nada:)",
-    "conComida": "No perdiste nada:)"
+    "empanada": "Empanada lista, yei :D",
+    "completo": "Ya tengo el completo omgg :o",
+    "terremoto": "Ya tengo el terremoto carnal 🇲🇽🗣️"
   },
   "intro": {
-    "texto": "Llegaste a Chile, pero este cuervo dónde se metió",
+    "texto": "Llegaste a un Chile extraño... dónde estará tu amorcito??",
     "saltar": "Saltar intro",
     "jugar": "Jugar"
   },
   "bancas": {
     "sentarse": "Sentarse",
     "levantarse": "Levantarse",
-    "ayuda": "Muévete o salta para levantarte"
+    "frase": "Que rico está sentarse cabrón"
   },
   "carteles": {
-    "entrada": "Salta",
-    "islasMoviles": "Espera y\nsalta",
-    "grietas": "Pisa y\nsalta",
-    "luces": "Sigue las\nluces",
-    "dibujos": "Tus dibujos arriba",
-    "fonda": "la fonda\nde los dos"
+    "fonda": "La Fonda\nde Don Crow"
   },
   "galeria": {
-    "titulo": "Un rincón para tus dibujos",
+    "titulo": "Dibujos",
     "volver": "Volver al camino",
-    "marinDiablita": "Marin diablita dibujada por Chofis",
-    "marinConejita": "Marin conejita dibujada por Chofis",
     "anterior": "Dibujo anterior",
-    "siguiente": "Dibujo siguiente"
+    "siguiente": "Dibujo siguiente",
+    "dibujos": [
+      {
+        "archivo": "marin-devil.png",
+        "descripcion": "Marin diablita"
+      },
+      {
+        "archivo": "marin-bunny.png",
+        "descripcion": "Marin conejita"
+      },
+      {
+        "archivo": "marin-school.png",
+        "descripcion": "Marin con uniforme"
+      },
+      {
+        "archivo": "supergirl-krypto.png",
+        "descripcion": "Supergirl y Krypto"
+      },
+      {
+        "archivo": "supergirl.png",
+        "descripcion": "Supergirl"
+      },
+      {
+        "archivo": "krypto.png",
+        "descripcion": "Krypto"
+      },
+      {
+        "archivo": "pibble.png",
+        "descripcion": "Pibble"
+      },
+      {
+        "archivo": "chofis-front.png",
+        "descripcion": "Chofis de frente"
+      },
+      {
+        "archivo": "chofis-left.png",
+        "descripcion": "Chofis mirando a la izquierda"
+      },
+      {
+        "archivo": "chofis-right.png",
+        "descripcion": "Chofis mirando a la derecha"
+      },
+      {
+        "archivo": "chofis-happy.png",
+        "descripcion": "Chofis feliz"
+      },
+      {
+        "archivo": "chofis-angry.png",
+        "descripcion": "Chofis con enojo"
+      },
+      {
+        "archivo": "chofis-sad.png",
+        "descripcion": "Chofis triste"
+      },
+      {
+        "archivo": "crow-front.png",
+        "descripcion": "Crow de frente"
+      },
+      {
+        "archivo": "crow-left.png",
+        "descripcion": "Crow mirando a la izquierda"
+      },
+      {
+        "archivo": "crow-right.png",
+        "descripcion": "Crow mirando a la derecha"
+      },
+      {
+        "archivo": "crow-happy.png",
+        "descripcion": "Crow feliz"
+      },
+      {
+        "archivo": "crow-angry.png",
+        "descripcion": "Crow con enojo"
+      },
+      {
+        "archivo": "crow-sad.png",
+        "descripcion": "Crow triste"
+      },
+      {
+        "archivo": "sticker-empanada.png",
+        "descripcion": "Empanada"
+      },
+      {
+        "archivo": "sticker-completo.png",
+        "descripcion": "Completo"
+      },
+      {
+        "archivo": "sticker-terremoto.png",
+        "descripcion": "Terremoto"
+      },
+      {
+        "archivo": "sticker-crow.png",
+        "descripcion": "Crow dieciochero"
+      }
+    ]
   },
   "carta": {
-    "titulo": "Ven acá, mi princesa ❤️",
-    "texto": "Chofis, qué ganas tenía de abrazarte. Ya estás aquí. Quiero pasear contigo, probar cosas ricas y tener tus dibujos por toda la casa. Te amo, amorcito. Tu Crow.",
+    "titulo": "Mi princesa,",
+    "texto": "Gracias por encontrarme! Ya estaba cagao de hambre. Na, de verdad que estoy muy feliz de que por fin estés aquí conmigo en Chile (aunque es un poco extraño esta versión en el espacio). Te amo con todo mi corazón, infinitamente inconmensurable, y espero que disfrutes mucho tu estadía en mi lindo país, ya que SOMOS EL MEJOR PAÍS DE CHILE 🔥🗣️. Siempre tuyo, Crow.",
     "corazon": "♥",
     "salir": "Salir"
   },
   "final": {
-    "entradaAbierta": "Crow te espera",
-    "entradaCerrada": "Trae la comida"
+    "entradaAbierta": "Crow te espera"
   },
   "carga": {
     "error": "Tu sorpresa está lista.",

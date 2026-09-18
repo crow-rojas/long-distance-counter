@@ -144,17 +144,14 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
   let pixelRatio = Math.min(window.devicePixelRatio || 1,3);
   const held = new Map<number, string>();
   const events = new AbortController();
-  const drawings = [
-    {src:"/game/marin-devil.png",label:texts.galeria.marinDiablita},
-    {src:"/game/marin-bunny.png",label:texts.galeria.marinConejita},
-  ];
+  const drawings = texts.galeria.dibujos;
   let drawingIndex = 0;
   const showDrawing = (index:number) => {
     drawingIndex = (index+drawings.length)%drawings.length;
     const drawing = drawings[drawingIndex], image = gallery.querySelector("img")!;
-    image.src = drawing.src;
-    image.alt = drawing.label;
-    gallery.querySelector("#drawing-caption")!.textContent = drawing.label;
+    image.src = `/game/${drawing.archivo}`;
+    image.alt = drawing.descripcion;
+    gallery.querySelector("#drawing-caption")!.textContent = drawing.descripcion;
   };
   showDrawing(0);
   let loadFailed = false;
@@ -173,8 +170,6 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
       nearbyBench?: typeof BENCHES[number];
       seatedBench?: typeof BENCHES[number];
       speechUntil = 0;
-      fallExplained = false;
-      foodRecoveryExplained = false;
       lastObjective = "";
       won = false;
       wasGrounded = true;
@@ -207,7 +202,6 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
       endingStatic = reduced;
       gate!: Phaser.GameObjects.Container;
       barrier!: Phaser.Physics.Arcade.Image;
-      gateLabel!: Phaser.GameObjects.Text;
       hearts: Phaser.GameObjects.Graphics[] = [];
 
       preload() {
@@ -323,11 +317,9 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
           if (!reduced && !options.editing) this.tweens.add({
             targets:art,y:item.y-6,angle:{from:-3,to:3},duration:1500,yoyo:true,repeat:-1,ease:"Sine.easeInOut",
           });
-          const label = this.add.text(item.x,item.y-68,texts.comida[item.id],{fontFamily:"Georgia",fontSize:"16px",color:"#fff0cc",resolution:pixelRatio,
-            shadow:{color:"#443448",blur:4,fill:true}}).setOrigin(.5);
           this.physics.add.overlap(this.player,food,() => {
             this.tweens.killTweensOf(art);
-            food.destroy(); art.destroy(); label.destroy();
+            food.destroy(); art.destroy();
             this.effect("coin",.3);
             if (!reduced) for (let i=0;i<7;i++) {
               const spark = this.add.circle(item.x,item.y,3,0xffd8b5).setDepth(6);
@@ -569,11 +561,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         this.gate = this.add.container(0,0,[enclosure,bars]);
         this.barrier = this.physics.add.staticImage(ENDING_AREA.x+ENDING_AREA.width/2,ENDING_AREA.y+ENDING_AREA.height/2,"__WHITE")
           .setVisible(false).setDisplaySize(ENDING_AREA.width,ENDING_AREA.height).refreshBody();
-        this.gateLabel = this.add.text(rightGate/2,-140,"",{
-          fontFamily:"Georgia",fontSize:"16px",color:"#f1d7ae",align:"center",resolution:pixelRatio,
-          shadow:{color:"#171320",blur:5,fill:true},
-        }).setOrigin(.5,1);
-        this.add.container(ENDING_GATE_X,MAP.ending.y,[this.add.rectangle(0,-75,100,150,0,0),posts,this.gate,this.gateLabel])
+        this.add.container(ENDING_GATE_X,MAP.ending.y,[this.add.rectangle(0,-75,100,150,0,0),posts,this.gate])
           .setDepth(2).setData("mapId",MAP.ending.id);
         this.updateGate();
         const heart = Array.from({length:48},(_,i) => {
@@ -654,7 +642,6 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         const open = readyForCrow(stamps);
         this.gate.setVisible(!open);
         this.barrier.body!.enable = !open;
-        this.gateLabel.setText(open ? texts.final.entradaAbierta : texts.final.entradaCerrada);
       }
 
       startEnding(restored=false) {
@@ -672,7 +659,6 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         this.endingElapsed = restored ? 5000 : this.endingStatic ? 3000 : 0;
         this.cameras.main.getWorldPoint(this.cameras.main.width/2,this.cameras.main.height/2,this.endingCameraStart);
         this.pauseGameplay(crow);
-        this.gateLabel.setVisible(false);
         root.classList.remove("conversing");
         root.classList.add("ending");
         this.cameras.main.panEffect.reset();
@@ -801,7 +787,7 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
         this.bufferedUntil = 0;
         this.touchJump = false;
         this.landingUntil = 0;
-        this.say(texts.personajes.Fonda,texts.bancas.ayuda,3000);
+        this.say(texts.personajes.Chofis,texts.bancas.frase,3000);
         this.game.canvas.focus({preventScroll:true});
       }
 
@@ -937,13 +923,6 @@ export async function startGame(options:{map?:MapData; editing?:boolean; sandbox
           this.player.setVelocity(0);
           this.lastGrounded = -1000;
           this.bufferedUntil = 0;
-          let reminder = this.fallExplained ? "" : texts.caidas.primeraSinComida;
-          if (stamps.size && !this.foodRecoveryExplained) {
-            reminder = this.fallExplained ? texts.caidas.conComida : texts.caidas.primeraConComida;
-            this.foodRecoveryExplained = true;
-          }
-          this.fallExplained = true;
-          if (reminder) this.say(texts.personajes.Fonda,reminder,3000);
         }
         const text = readyForCrow(stamps) ? texts.final.entradaAbierta : texts.interfaz.misionInicial;
         if (text !== this.lastObjective) { objective.textContent=text; this.lastObjective=text; }

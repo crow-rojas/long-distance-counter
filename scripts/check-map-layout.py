@@ -99,7 +99,7 @@ for item in MAP['benches']+MAP['friends']+MAP['decorations']:
     add(item, b, name, parent)
 
 for item in MAP['items']:
-    add(item, [item['x']-54,item['y']-86,item['x']+54,item['y']+54], 'pickup')
+    add(item, [item['x']-54,item['y']-60,item['x']+54,item['y']+54], 'pickup')
 for item in MAP['signs']:
     b=[item['x']-87.5,item['y']-135,item['x']+87.5,item['y']]
     add(item,b,'sign',ground(item,b))
